@@ -1,0 +1,17 @@
+{
+  "name": "fixture-typecheck-rn-0.76",
+  "private": true,
+  "description": "Type-check consumer fixture pinned to the RN 0.76 era (new architecture default, RN-bundled types).",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ruban-labs/react-native-progress": "file:./ruban-local.tgz",
+    "react": "18.3.1",
+    "react-native": "^0.76.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "typescript": "^5.8.0"
+  }
+}

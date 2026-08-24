@@ -19,3 +19,66 @@ jobs:
       - run: pnpm -r typecheck
       - run: pnpm -r test
       - run: pnpm -r build
+      - name: Layer 1 - syntax floor (ES2019)
+        run: node scripts/ci/check-syntax-floor.mjs
+
+  typecheck-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - fixture: rn-0.66
+            era-node: 16
+          - fixture: rn-0.76
+            era-node: 18
+          - fixture: rn-latest
+            era-node: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - name: Switch to era Node ${{ matrix.era-node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.era-node }}
+      - name: Layer 2 - consumer typecheck (${{ matrix.fixture }})
+        run: node scripts/ci/typecheck-matrix.mjs --fixture ${{ matrix.fixture }}
+
+  bundle-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - era: rn-0.66
+            era-node: 16
+          - era: rn-0.76
+            era-node: 18
+          - era: rn-latest
+            era-node: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - name: Layer 4 - pack tarball
+        run: node scripts/ci/bundle-smoke.mjs pack --era ${{ matrix.era }}
+      - name: Switch to era Node ${{ matrix.era-node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.era-node }}
+      - name: Layer 4 - init template app and install
+        run: node scripts/ci/bundle-smoke.mjs app --era ${{ matrix.era }}
+      - name: Layer 4 - metro bundle
+        run: node scripts/ci/bundle-smoke.mjs bundle --era ${{ matrix.era }}

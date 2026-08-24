@@ -13,9 +13,11 @@
     "typecheck": "pnpm -r run typecheck",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "check:syntax": "node scripts/ci/check-syntax-floor.mjs"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.29.0"
+    "@changesets/cli": "^2.29.0",
+    "acorn": "^8.18.0"
   }
 }

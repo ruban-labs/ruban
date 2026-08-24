@@ -1,0 +1,18 @@
+{
+  "name": "fixture-typecheck-rn-0.66",
+  "private": true,
+  "description": "Type-check consumer fixture pinned to the RN 0.66 era (React 17, @types/react-native).",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ruban-labs/react-native-progress": "file:./ruban-local.tgz",
+    "react": "17.0.2",
+    "react-native": "0.66.4"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.80",
+    "@types/react-native": "^0.66.32",
+    "typescript": "^5.8.0"
+  }
+}

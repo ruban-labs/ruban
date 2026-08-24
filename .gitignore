@@ -3,3 +3,5 @@ lib/
 *.tsbuildinfo
 .DS_Store
 coverage/
+.bundle-smoke/
+ruban-local.tgz

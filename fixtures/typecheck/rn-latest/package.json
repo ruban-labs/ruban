@@ -1,0 +1,17 @@
+{
+  "name": "fixture-typecheck-rn-latest",
+  "private": true,
+  "description": "Type-check consumer fixture pinned to the latest RN (React 19).",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ruban-labs/react-native-progress": "file:./ruban-local.tgz",
+    "react": "19.2.8",
+    "react-native": "^0.87.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "typescript": "^5.8.0"
+  }
+}
