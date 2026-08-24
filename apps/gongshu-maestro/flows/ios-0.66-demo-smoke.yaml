@@ -1,0 +1,66 @@
+appId: org.reactjs.native.example.gongshu066
+---
+# Gongshu demo smoke (ios, era 0.66). Maestro 2.x syntax.
+# Deterministic state walk over the Gongshu Bench screen:
+# bar 20% -> 30% -> 20%, circle 40% -> 60%, pie 60% -> 50%, snail toggle.
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: "gongshu-header"
+- assertVisible:
+    id: "gongshu-era"
+    text: "era 0.66"
+- assertVisible:
+    id: "bar-value"
+    text: "20%"
+- tapOn:
+    id: "bar-inc"
+- assertVisible:
+    id: "bar-value"
+    text: "30%"
+- tapOn:
+    id: "bar-dec"
+- assertVisible:
+    id: "bar-value"
+    text: "20%"
+- assertVisible:
+    id: "bar-indeterminate"
+- scrollUntilVisible:
+    element:
+      id: "section-circle"
+    direction: DOWN
+    timeout: 20000
+- assertVisible:
+    id: "circle-value"
+    text: "40%"
+- tapOn:
+    id: "circle-inc"
+- tapOn:
+    id: "circle-inc"
+- assertVisible:
+    id: "circle-value"
+    text: "60%"
+- scrollUntilVisible:
+    element:
+      id: "section-pie"
+    direction: DOWN
+    timeout: 20000
+- assertVisible:
+    id: "pie-value"
+    text: "60%"
+- tapOn:
+    id: "pie-dec"
+- assertVisible:
+    id: "pie-value"
+    text: "50%"
+- scrollUntilVisible:
+    element:
+      id: "section-snail"
+    direction: DOWN
+    timeout: 20000
+- assertVisible:
+    id: "snail-main"
+- tapOn:
+    id: "snail-toggle"
+- tapOn:
+    id: "snail-toggle"

@@ -1,0 +1,38 @@
+# gongshu-maestro
+
+Maestro harness for the gongshu sample apps. One deterministic demo-smoke
+flow per platform per era, generated from a single template.
+
+## Layout
+
+- `templates/demo-smoke.<platform>.yaml.tpl` - single source of truth, with
+  `{{appId}}` / `{{era}}` placeholders.
+- `src/gen-flows.mjs` - era table (app ids) + generator. Run `yarn gen`.
+- `flows/` - generated, committed, so CI can gate on `maestro check-syntax`
+  without running the generator.
+
+Era app ids must stay in sync with `apps/gongshu-*`:
+
+| era    | android           | ios                                  |
+| ------ | ----------------- | ------------------------------------ |
+| 0.66   | com.gongshu066    | org.reactjs.native.example.gongshu066 |
+| 0.76   | com.gongshu.rn076 | com.gongshu.rn076                    |
+| latest | com.gongshu.latest| com.gongshu.latest                   |
+
+## Running
+
+Install the target gongshu app on a connected device first (Android: gradle
+assembleDebug + adb install; iOS: Xcode to device/simulator), then:
+
+```sh
+maestro test flows/android-latest-demo-smoke.yaml --device <adb-serial>
+maestro test flows/ios-latest-demo-smoke.yaml
+```
+
+The flow walks Gongshu Bench deterministically: bar 20% -> 30% -> 20%,
+circle 40% -> 60%, pie 60% -> 50%, snail start/stop. Conventions follow
+RabbyHub/rabby-mobile: platform-prefixed flow names, hierarchy-driven
+selectors (ids, never coordinates), `maestro check-syntax` as the cheap gate.
+
+Pixel 10 Pro (serial 59271FDCH002CB) is reserved by another session - do not
+target it.

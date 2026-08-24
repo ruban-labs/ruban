@@ -1,0 +1,10 @@
+{
+  "name": "gongshu-maestro",
+  "private": true,
+  "description": "Maestro harness for the gongshu sample apps - one deterministic demo-smoke flow per platform per era.",
+  "type": "module",
+  "scripts": {
+    "gen": "node src/gen-flows.mjs",
+    "check": "node src/gen-flows.mjs && for f in flows/*.yaml; do maestro check-syntax \"$f\"; done"
+  }
+}
