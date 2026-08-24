@@ -1,0 +1,9 @@
+@ruban-labs/react-native-progress is a refurbishment of react-native-progress
+(https://github.com/oblador/react-native-progress), originally written by Joel
+Arvidsson and released under the MIT License:
+
+  Copyright (c) 2015 Joel Arvidsson
+
+The public component API is derived from that project. This package is a
+ground-up TypeScript rewrite with zero runtime dependencies; see the README
+for behavioral differences.
