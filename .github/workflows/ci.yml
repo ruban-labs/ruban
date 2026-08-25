@@ -149,7 +149,7 @@ jobs:
             -scheme ${{ matrix.proj }} \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -destination "generic/platform=iOS Simulator" \
             -derivedDataPath build \
             build
       - name: Boot simulator and install app
