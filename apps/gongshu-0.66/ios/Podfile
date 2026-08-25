@@ -28,17 +28,15 @@ target 'gongshu066' do
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
     # Xcode 14.3+/15 compat: RN 0.66's yoga trips -Wbitwise-instead-of-logical,
     # which the pod builds with -Werror. Demote it for the Yoga target only.
-    installer.pods_project.targets.each do |target|
-      if target.name == "Yoga"
-        # -Werror is baked into the podspec compiler_flags (xcconfig), so
-        # build settings cannot demote it; strip it from the xcconfig files.
-        target.build_configurations.each do |config|
-          ref = config.base_configuration_reference
-          next unless ref && ref.real_path && File.exist?(ref.real_path)
-          text = File.read(ref.real_path)
-          File.write(ref.real_path, text.gsub(/(\s)-Werror(\s)/, '\1\2'))
-        end
-      end
+    # -Werror is baked into the Yoga podspec compiler_flags (xcconfig), so
+    # build settings cannot demote it; strip it from the xcconfig files on disk.
+    yoga_xcconfigs = Dir.glob(File.join(installer.sandbox.root, 'Target Support Files', 'Yoga', '*.xcconfig'))
+    puts "[gongshu-compat] yoga xcconfigs: #{yoga_xcconfigs.inspect}"
+    yoga_xcconfigs.each do |f|
+      text = File.read(f)
+      stripped = text.gsub(/\s-Werror(?=\s)/, ' ')
+      puts "[gongshu-compat] #{File.basename(f)}: -Werror #{text.include?('-Werror') ? 'found' : 'absent'} -> stripped=#{stripped != text}"
+      File.write(f, stripped)
     end
   end
 end
