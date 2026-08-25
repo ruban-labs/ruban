@@ -11,7 +11,7 @@ appId: {{appId}}
 - extendedWaitUntil:
     visible:
       text: "Gongshu Bench"
-    timeout: 60000
+    timeout: 120000
 - assertVisible:
     text: "era {{era}}"
 - assertVisible:

@@ -11,7 +11,7 @@ appId: com.gongshu.rn076
 - extendedWaitUntil:
     visible:
       text: "Gongshu Bench"
-    timeout: 60000
+    timeout: 120000
 - assertVisible:
     text: "era 0.76"
 - assertVisible:

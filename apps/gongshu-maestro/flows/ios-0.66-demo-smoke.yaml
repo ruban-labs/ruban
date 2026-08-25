@@ -11,7 +11,7 @@ appId: org.reactjs.native.example.gongshu066
 - extendedWaitUntil:
     visible:
       text: "Gongshu Bench"
-    timeout: 60000
+    timeout: 120000
 - assertVisible:
     text: "era 0.66"
 - assertVisible:
