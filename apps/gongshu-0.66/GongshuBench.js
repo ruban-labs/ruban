@@ -45,19 +45,19 @@ export default function GongshuBench({ era }) {
 
       <Section title="Bar" testID="section-bar">
         <Text testID="bar-value" style={styles.readout}>
-          {Math.round(barProgress * 100)}%
+          bar {Math.round(barProgress * 100)}%
         </Text>
         <Bar testID="bar-main" progress={barProgress} width={240} color="#c0392b" />
         <Bar testID="bar-indeterminate" indeterminate width={240} color="#c0392b" style={styles.spaced} />
         <View style={styles.controls}>
-          <ControlButton testID="bar-dec" label="-10%" onPress={() => setBarProgress(clamp01(barProgress - 0.1))} />
-          <ControlButton testID="bar-inc" label="+10%" onPress={() => setBarProgress(clamp01(barProgress + 0.1))} />
+          <ControlButton testID="bar-dec" label="bar -10%" onPress={() => setBarProgress(clamp01(barProgress - 0.1))} />
+          <ControlButton testID="bar-inc" label="bar +10%" onPress={() => setBarProgress(clamp01(barProgress + 0.1))} />
         </View>
       </Section>
 
       <Section title="Circle" testID="section-circle">
         <Text testID="circle-value" style={styles.readout}>
-          {Math.round(circleProgress * 100)}%
+          circle {Math.round(circleProgress * 100)}%
         </Text>
         <View style={styles.row}>
           <Circle testID="circle-main" progress={circleProgress} size={64} showsText color="#c0392b" />
@@ -65,22 +65,22 @@ export default function GongshuBench({ era }) {
           <Circle testID="circle-indeterminate" indeterminate size={64} color="#c0392b" />
         </View>
         <View style={styles.controls}>
-          <ControlButton testID="circle-dec" label="-10%" onPress={() => setCircleProgress(clamp01(circleProgress - 0.1))} />
-          <ControlButton testID="circle-inc" label="+10%" onPress={() => setCircleProgress(clamp01(circleProgress + 0.1))} />
+          <ControlButton testID="circle-dec" label="circle -10%" onPress={() => setCircleProgress(clamp01(circleProgress - 0.1))} />
+          <ControlButton testID="circle-inc" label="circle +10%" onPress={() => setCircleProgress(clamp01(circleProgress + 0.1))} />
         </View>
       </Section>
 
       <Section title="Pie" testID="section-pie">
         <Text testID="pie-value" style={styles.readout}>
-          {Math.round(pieProgress * 100)}%
+          pie {Math.round(pieProgress * 100)}%
         </Text>
         <View style={styles.row}>
           <Pie testID="pie-main" progress={pieProgress} size={64} color="#c0392b" />
           <Pie testID="pie-indeterminate" indeterminate size={64} direction="counter-clockwise" color="#c0392b" />
         </View>
         <View style={styles.controls}>
-          <ControlButton testID="pie-dec" label="-10%" onPress={() => setPieProgress(clamp01(pieProgress - 0.1))} />
-          <ControlButton testID="pie-inc" label="+10%" onPress={() => setPieProgress(clamp01(pieProgress + 0.1))} />
+          <ControlButton testID="pie-dec" label="pie -10%" onPress={() => setPieProgress(clamp01(pieProgress - 0.1))} />
+          <ControlButton testID="pie-inc" label="pie +10%" onPress={() => setPieProgress(clamp01(pieProgress + 0.1))} />
         </View>
       </Section>
 
