@@ -99,13 +99,13 @@ jobs:
           - era: "0.76"
             app: gongshu-0.76
             proj: gongshu076
-            runs-on: macos-15
+            runs-on: macos-14
             era-node: 18
-            xcode: oldest
+            xcode: default
           - era: "0.66"
             app: gongshu-0.66
             proj: gongshu066
-            runs-on: macos-13
+            runs-on: macos-14
             era-node: 16
             xcode: oldest
     steps:
@@ -115,6 +115,9 @@ jobs:
       - name: Select oldest Xcode
         if: matrix.xcode == 'oldest'
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode_[0-9]*.app | sort -V | head -1)"
+      - name: Download simulator runtime for selected Xcode
+        if: matrix.xcode == 'oldest'
+        run: sudo xcodebuild -downloadPlatform iOS
       - name: Xcode version
         run: xcodebuild -version
       - uses: pnpm/action-setup@v4
