@@ -117,12 +117,19 @@ jobs:
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode_[0-9]*.app | sort -V | head -1)"
       - name: Xcode version
         run: xcodebuild -version
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ruban-labs/react-native-progress build
+      - name: Switch to era Node ${{ matrix.era-node }}
+        uses: actions/setup-node@v4
+        with:
           node-version: ${{ matrix.era-node }}
-      - name: Install app deps
-        working-directory: apps/${{ matrix.app }}
-        run: npm ci
+      - name: Sync app (demo + tarball + deps)
+        run: node scripts/dev/sync-gongshu.mjs --app ${{ matrix.app }}
       - name: Pod install
         working-directory: apps/${{ matrix.app }}/ios
         run: pod install
