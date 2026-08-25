@@ -30,8 +30,13 @@ target 'gongshu066' do
     # which the pod builds with -Werror. Demote it for the Yoga target only.
     installer.pods_project.targets.each do |target|
       if target.name == "Yoga"
+        # -Werror is baked into the podspec compiler_flags (xcconfig), so
+        # build settings cannot demote it; strip it from the xcconfig files.
         target.build_configurations.each do |config|
-          config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+          ref = config.base_configuration_reference
+          next unless ref && ref.real_path && File.exist?(ref.real_path)
+          text = File.read(ref.real_path)
+          File.write(ref.real_path, text.gsub(/(\s)-Werror(\s)/, '\1\2'))
         end
       end
     end
