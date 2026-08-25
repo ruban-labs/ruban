@@ -31,7 +31,7 @@ target 'gongshu066' do
     installer.pods_project.targets.each do |target|
       if target.name == "Yoga"
         target.build_configurations.each do |config|
-          config.build_settings['WARNING_CFLAGS'] = ['$(inherited)', '-Wno-bitwise-instead-of-logical']
+          config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
         end
       end
     end
