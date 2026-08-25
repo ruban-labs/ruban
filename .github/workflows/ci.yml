@@ -96,18 +96,21 @@ jobs:
             runs-on: macos-15
             era-node: 22
             xcode: default
+            metro-env: 
           - era: "0.76"
             app: gongshu-0.76
             proj: gongshu076
             runs-on: macos-14
             era-node: 18
             xcode: default
+            metro-env: 
           - era: "0.66"
             app: gongshu-0.66
             proj: gongshu066
             runs-on: macos-14
-            era-node: 16
+            era-node: 18
             xcode: oldest
+            metro-env: NODE_OPTIONS=--openssl-legacy-provider
     steps:
       - uses: actions/checkout@v4
       - name: Xcode inventory
@@ -164,7 +167,7 @@ jobs:
       - name: Start Metro
         working-directory: apps/${{ matrix.app }}
         run: |
-          nohup npx --no-install react-native start --port 8081 > /tmp/metro.log 2>&1 &
+          nohup env ${{ matrix.metro-env }} npx --no-install react-native start --port 8081 > /tmp/metro.log 2>&1 &
           for i in $(seq 1 30); do
             curl -s http://localhost:8081/status | grep -q packager-status && break
             sleep 2
