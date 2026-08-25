@@ -136,6 +136,12 @@ jobs:
           node-version: ${{ matrix.era-node }}
       - name: Sync app (demo + tarball + deps)
         run: node scripts/dev/sync-gongshu.mjs --app ${{ matrix.app }}
+      - name: Patch 0.66 boost mirror (jfrog retired 2023)
+        if: matrix.era == '0.66'
+        working-directory: apps/${{ matrix.app }}
+        run: >
+          perl -pi -e 's|https://boostorg\.jfrog\.io/artifactory/main/release/1\.76\.0/source/boost_1_76_0\.tar\.bz2|https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2|'
+          node_modules/react-native/third-party-podspecs/boost.podspec
       - name: Pod install
         working-directory: apps/${{ matrix.app }}/ios
         run: pod install

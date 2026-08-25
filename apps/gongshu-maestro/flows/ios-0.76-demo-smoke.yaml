@@ -48,11 +48,14 @@ appId: com.gongshu.rn076
     text: "pie -10%"
 - assertVisible:
     text: "pie 50%"
-- scrollUntilVisible:
-    element:
-      text: "stop"
-    direction: DOWN
-    timeout: 20000
+- swipe:
+    start: 50%, 80%
+    end: 50%, 30%
+    duration: 800
+- swipe:
+    start: 50%, 80%
+    end: 50%, 30%
+    duration: 800
 - assertVisible:
     text: "CircleSnail"
 - tapOn:
