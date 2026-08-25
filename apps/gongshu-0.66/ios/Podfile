@@ -26,5 +26,14 @@ target 'gongshu066' do
   post_install do |installer|
     react_native_post_install(installer)
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
+    # Xcode 14.3+/15 compat: RN 0.66's yoga trips -Wbitwise-instead-of-logical,
+    # which the pod builds with -Werror. Demote it for the Yoga target only.
+    installer.pods_project.targets.each do |target|
+      if target.name == "Yoga"
+        target.build_configurations.each do |config|
+          config.build_settings['WARNING_CFLAGS'] = ['$(inherited)', '-Wno-bitwise-instead-of-logical']
+        end
+      end
+    end
   end
 end
