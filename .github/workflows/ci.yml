@@ -183,3 +183,12 @@ jobs:
       - name: Metro log on failure
         if: failure()
         run: tail -80 /tmp/metro.log || true
+      - name: Upload debug artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ matrix.era }}-debug
+          path: |
+            /tmp/metro.log
+            /Users/runner/.maestro/tests
+          if-no-files-found: ignore
