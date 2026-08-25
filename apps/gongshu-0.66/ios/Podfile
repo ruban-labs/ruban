@@ -26,20 +26,5 @@ target 'gongshu066' do
   post_install do |installer|
     react_native_post_install(installer)
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
-    # Xcode 14.3+/15 compat: RN 0.66's yoga trips -Wbitwise-instead-of-logical,
-    # which the pod builds with -Werror. Demote it for the Yoga target only.
-    # -Werror is baked into the Yoga podspec compiler_flags, which CocoaPods
-    # stores in the pod target's OTHER_CFLAGS build setting; strip it there.
-    installer.pods_project.targets.each do |target|
-      next unless target.name == "Yoga"
-      target.build_configurations.each do |config|
-        flags = config.build_settings['OTHER_CFLAGS']
-        next unless flags
-        arr = flags.is_a?(Array) ? flags : flags.to_s.split(/\s+/)
-        cleaned = arr.reject { |f| f == '-Werror' }
-        puts "[gongshu-compat] Yoga #{config.name} OTHER_CFLAGS #{arr.inspect} -> #{cleaned.inspect}"
-        config.build_settings['OTHER_CFLAGS'] = cleaned
-      end
-    end
   end
 end
