@@ -82,3 +82,91 @@ jobs:
         run: node scripts/ci/bundle-smoke.mjs app --era ${{ matrix.era }}
       - name: Layer 4 - metro bundle
         run: node scripts/ci/bundle-smoke.mjs bundle --era ${{ matrix.era }}
+
+  ios-smoke:
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - era: latest
+            app: gongshu-latest
+            proj: gongshulatest
+            runs-on: macos-15
+            era-node: 22
+            xcode: default
+          - era: "0.76"
+            app: gongshu-0.76
+            proj: gongshu076
+            runs-on: macos-15
+            era-node: 18
+            xcode: oldest
+          - era: "0.66"
+            app: gongshu-0.66
+            proj: gongshu066
+            runs-on: macos-13
+            era-node: 16
+            xcode: oldest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode inventory
+        run: ls -d /Applications/Xcode*.app
+      - name: Select oldest Xcode
+        if: matrix.xcode == 'oldest'
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_[0-9]*.app | sort -V | head -1)"
+      - name: Xcode version
+        run: xcodebuild -version
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.era-node }}
+      - name: Install app deps
+        working-directory: apps/${{ matrix.app }}
+        run: npm ci
+      - name: Pod install
+        working-directory: apps/${{ matrix.app }}/ios
+        run: pod install
+      - name: Pick first available iPhone simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          udid = next(dev['udid'] for rt in d['devices'].values() for dev in rt if dev['name'].startswith('iPhone') and dev['isAvailable'])
+          print(udid)")
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+      - name: Build (simulator)
+        working-directory: apps/${{ matrix.app }}/ios
+        run: |
+          xcodebuild -workspace ${{ matrix.proj }}.xcworkspace \
+            -scheme ${{ matrix.proj }} \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath build \
+            build
+      - name: Boot simulator and install app
+        run: |
+          xcrun simctl boot "${{ steps.sim.outputs.udid }}" || true
+          xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}"
+          xcrun simctl install "${{ steps.sim.outputs.udid }}" \
+            "apps/${{ matrix.app }}/ios/build/Build/Products/Debug-iphonesimulator/${{ matrix.proj }}.app"
+      - name: Start Metro
+        working-directory: apps/${{ matrix.app }}
+        run: |
+          nohup npx --no-install react-native start --port 8081 > /tmp/metro.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -s http://localhost:8081/status | grep -q packager-status && break
+            sleep 2
+          done
+          curl -s http://localhost:8081/status
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Run flow
+        working-directory: apps/gongshu-maestro
+        run: maestro test flows/ios-${{ matrix.era }}-demo-smoke.yaml
+      - name: Metro log on failure
+        if: failure()
+        run: tail -80 /tmp/metro.log || true
