@@ -146,6 +146,12 @@ jobs:
           perl -pi -e 's/hadOverflow\(\) \|$/hadOverflow() ||/' \
             node_modules/react-native/ReactCommon/yoga/yoga/Yoga.cpp
           grep -c 'hadOverflow() ||' node_modules/react-native/ReactCommon/yoga/yoga/Yoga.cpp
+      - name: Patch 0.66 boost hash for C++17 (Xcode 15 libc++)
+        if: matrix.era == '0.66'
+        working-directory: apps/${{ matrix.app }}/ios
+        run: |
+          perl -pi -e 's/ : std::unary_function<T, std::size_t>//g' Pods/boost/boost/container_hash/hash.hpp
+          grep -c "struct hash_base {};" Pods/boost/boost/container_hash/hash.hpp
       - name: Pod install
         working-directory: apps/${{ matrix.app }}/ios
         run: pod install
