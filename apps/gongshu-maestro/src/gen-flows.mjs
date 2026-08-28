@@ -12,9 +12,21 @@ const harnessRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname)
 
 // Keep in sync with apps/gongshu-* package/bundle identifiers.
 const APPS = [
-  { era: '0.66', android: 'com.gongshu066', ios: 'org.reactjs.native.example.gongshu066' },
-  { era: '0.76', android: 'com.gongshu.rn076', ios: 'com.gongshu.rn076' },
-  { era: 'latest', android: 'com.gongshu.latest', ios: 'com.gongshu.latest' },
+  {
+    era: '0.66',
+    android: 'com.rubanlabs.mobile.gongshu.rn066.debug',
+    ios: 'com.rubanlabs.mobile.gongshu.rn066.debug',
+  },
+  {
+    era: '0.76',
+    android: 'com.rubanlabs.mobile.gongshu.rn076.debug',
+    ios: 'com.rubanlabs.mobile.gongshu.rn076.debug',
+  },
+  {
+    era: 'latest',
+    android: 'com.rubanlabs.mobile.debug',
+    ios: 'com.rubanlabs.mobile.debug',
+  },
 ];
 
 const TEMPLATES = ['android', 'ios'];

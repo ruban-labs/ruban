@@ -14,9 +14,17 @@
 import { spawn, spawnSync } from 'node:child_process';
 
 const ERAS = {
-  latest: { scheme: 'gongshu-latest', metroPort: 8081, appId: 'com.gongshu.latest' },
-  '0.76': { scheme: 'gongshu-0.76', metroPort: 8082, appId: 'com.gongshu.rn076' },
-  '0.66': { scheme: 'gongshu-0.66', metroPort: 8083, appId: 'com.gongshu066' },
+  latest: { scheme: 'gongshu-latest', metroPort: 8081, appId: 'com.rubanlabs.mobile.debug' },
+  '0.76': {
+    scheme: 'gongshu-0.76',
+    metroPort: 8082,
+    appId: 'com.rubanlabs.mobile.gongshu.rn076.debug',
+  },
+  '0.66': {
+    scheme: 'gongshu-0.66',
+    metroPort: 8083,
+    appId: 'com.rubanlabs.mobile.gongshu.rn066.debug',
+  },
 };
 
 const argv = process.argv.slice(2);

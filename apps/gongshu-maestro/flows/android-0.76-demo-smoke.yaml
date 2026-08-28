@@ -1,4 +1,4 @@
-appId: com.gongshu.rn076
+appId: com.rubanlabs.mobile.gongshu.rn076.debug
 ---
 # Gongshu demo smoke (android, era 0.76). Maestro 2.x syntax.
 # Text-based selectors on purpose: RN exposes testID to the automation

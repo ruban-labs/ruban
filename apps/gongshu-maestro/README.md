@@ -13,11 +13,11 @@ flow per platform per era, generated from a single template.
 
 Era app ids must stay in sync with `apps/gongshu-*`:
 
-| era    | android           | ios                                  |
-| ------ | ----------------- | ------------------------------------ |
-| 0.66   | com.gongshu066    | org.reactjs.native.example.gongshu066 |
-| 0.76   | com.gongshu.rn076 | com.gongshu.rn076                    |
-| latest | com.gongshu.latest| com.gongshu.latest                   |
+| era    | android                                           | ios                                               |
+| ------ | ------------------------------------------------- | ------------------------------------------------- |
+| 0.66   | com.rubanlabs.mobile.gongshu.rn066.debug          | com.rubanlabs.mobile.gongshu.rn066.debug          |
+| 0.76   | com.rubanlabs.mobile.gongshu.rn076.debug          | com.rubanlabs.mobile.gongshu.rn076.debug          |
+| latest | com.rubanlabs.mobile.debug                        | com.rubanlabs.mobile.debug                        |
 
 ## Running
 
