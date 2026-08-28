@@ -12,11 +12,11 @@ appId: {{appId}}
       text: "Components"
     timeout: 120000
 - assertVisible:
-    text: "Button"
+    text: "01 Button.*"
 - assertVisible:
     text: "Playground"
 - tapOn:
-    text: "Button"
+    text: "01 Button.*"
 - extendedWaitUntil:
     visible:
       text: "← COMPONENTS"
@@ -48,14 +48,14 @@ appId: {{appId}}
       text: "Settings"
     timeout: 20000
 - assertVisible:
-    text: "Appearance"
+    text: "Appearance.*"
 - scrollUntilVisible:
     element:
-      text: "Build & matrix"
+      text: "Build & matrix.*"
     direction: DOWN
     timeout: 20000
 - tapOn:
-    text: "Build & matrix"
+    text: "Build & matrix.*"
 - extendedWaitUntil:
     visible:
       text: "Build & Matrix"
