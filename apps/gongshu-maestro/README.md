@@ -29,10 +29,12 @@ maestro test flows/android-latest-demo-smoke.yaml --device <adb-serial>
 maestro test flows/ios-latest-demo-smoke.yaml
 ```
 
-The flow walks Gongshu Bench deterministically: bar 20% -> 30% -> 20%,
-circle 40% -> 60%, pie 60% -> 50%, snail start/stop. Conventions follow
+The flow walks the shared Ruban app shell deterministically: Home inventory ->
+Button showcase -> Playground -> Settings -> Build & Matrix. It also verifies
+that bottom tabs are hidden on a component detail screen. Conventions follow
 RabbyHub/rabby-mobile: platform-prefixed flow names, hierarchy-driven
-selectors (ids, never coordinates), `maestro check-syntax` as the cheap gate.
+selectors (visible product labels, never coordinates), `maestro check-syntax`
+as the cheap gate.
 
 Pixel 10 Pro (serial 59271FDCH002CB) is reserved by another session - do not
 target it.
