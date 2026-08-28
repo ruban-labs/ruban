@@ -18,7 +18,7 @@ importers:
         specifier: 7.18.10
         version: 7.18.10(@react-navigation/native@7.3.18(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1))(react-native-safe-area-context@5.4.0(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1))(react-native-screens@4.9.2(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1))(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
       '@ruban-labs/react-native-progress':
-        specifier: file:ruban-local.tgz
+        specifier: file:./ruban-local.tgz
         version: file:ruban-local.tgz(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
       react:
         specifier: 18.3.1
