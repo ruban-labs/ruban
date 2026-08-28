@@ -12,11 +12,11 @@ appId: {{appId}}
       text: "Components"
     timeout: 120000
 - assertVisible:
-    text: "01 Button.*"
+    text: "01.*Button.*"
 - assertVisible:
     text: "Playground"
 - tapOn:
-    text: "01 Button.*"
+    text: "01.*Button.*"
 - extendedWaitUntil:
     visible:
       text: "← COMPONENTS"
