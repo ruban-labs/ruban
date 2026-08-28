@@ -5,9 +5,9 @@ import fs from 'node:fs';
 import process from 'node:process';
 
 const eras = {
-  latest: {scheme: 'gongshu-latest', appId: 'com.gongshu.latest'},
-  '0.76': {scheme: 'gongshu-0.76', appId: 'com.gongshu.rn076'},
-  '0.66': {scheme: 'gongshu-0.66', appId: 'com.gongshu066'},
+  latest: {scheme: 'gongshu-latest', appId: 'com.rubanlabs.mobile'},
+  '0.76': {scheme: 'gongshu-0.76', appId: 'com.rubanlabs.mobile.gongshu.rn076'},
+  '0.66': {scheme: 'gongshu-0.66', appId: 'com.rubanlabs.mobile.gongshu.rn066'},
 };
 
 const argv = process.argv.slice(2);
@@ -28,6 +28,7 @@ const architecture = arg('--arch');
 const manifestPath = arg('--manifest');
 const timeoutMs = Number(arg('--timeout') || 90000);
 const config = eras[era];
+const appId = arg('--app-id') || config?.appId;
 
 if (!config || !device || (architecture !== 'old' && architecture !== 'new')) {
   fail('expected --era <0.66|0.76|latest> --device <serial> --arch <old|new>');
@@ -40,7 +41,7 @@ function adb(...args) {
 adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP');
 adb('shell', 'wm', 'dismiss-keyguard');
 adb('shell', 'cmd', 'statusbar', 'collapse');
-adb('shell', 'am', 'force-stop', config.appId);
+adb('shell', 'am', 'force-stop', appId);
 adb('logcat', '-c');
 
 const runId = `r${Date.now().toString(36)}`;

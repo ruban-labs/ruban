@@ -85,7 +85,7 @@ android {
 
     namespace "com.gongshu.latest"
     defaultConfig {
-        applicationId "com.gongshu.latest"
+        applicationId "com.rubanlabs.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -102,13 +102,24 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            applicationIdSuffix ".debug"
+            resValue "string", "app_name", "Ruban Dev"
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
+            resValue "string", "app_name", "Ruban"
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+        regression {
+            initWith release
+            applicationIdSuffix ".regression"
+            manifestPlaceholders = [usesCleartextTraffic: "false"]
+            matchingFallbacks = ["release"]
+            signingConfig signingConfigs.debug
+            resValue "string", "app_name", "Ruban Regression"
         }
     }
 }

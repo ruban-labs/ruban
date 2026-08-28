@@ -176,6 +176,46 @@ Ruban 应该像一张现代而精确的工作台：
 - 每个页面在实现前必须明确文案预算；删掉一句不影响理解，就应该删掉。
 - Playground 可以使用样本文字展示字形与排版，但样本文字不承担产品说明职责。
 
+## 品牌识别核心
+
+Ruban 的稳定识别符是 **Ruler Angle R**：一个精确的大写 `R`，有经过测量的上半圆、
+斜腿、完整尺寸版本左竖上的三道校准缺口，以及内侧的一枚小 cobalt 蓝对齐三角。其构造
+必须有结构感而不显笨重：上半圆内腔、三角与斜腿之间必须保留清晰且充足的留白。蓝色
+三角放入略大一圈的透明三角槽中，绝不能叠在主体填色上；三角内部保留两道微小的透明
+尺刻度。它用
+“精确”同时表达尺、工具和工场，不把鲁班做成字面的木工图案。不得加入木纹、锤子、锯、
+凿、印章、书法、丝带、React atom、泛 AI 图形、渐变或装饰特效。
+
+默认透明母版是 [`brand/ruban-core.svg`](./brand/ruban-core.svg)：主图形固定为 Ruban
+acid 黄 `#d9ff45`，内侧对齐三角则是识别关键的 cobalt 蓝 `#2563eb`。黄色刻意与现有产品
+的 `acid-100` 色相对齐，但不是产品语义状态。默认黄图形应放在墨黑或其他足够深的底上，
+不可当作浅色表面的文字色。明确的深色呈现版本是
+[`brand/ruban-core-dark.svg`](./brand/ruban-core-dark.svg)：黑色 `#101114` 底、纯白
+`#ffffff` 图形和提亮 cobalt `#4c8dff` 三角。蓝色三角是完整尺寸标志必须保留的识别点，
+不是可随意去掉的状态色；16–24 px 微标是有意采用单色的例外，其他单色技术制版也仅在
+无法使用双色油墨时才省略三角。
+
+同一套几何根据场景组成不同版本：
+
+- App 和小程序图标只用符号；深色圆角图标参考
+  [`brand/ruban-app-icon-dark.svg`](./brand/ruban-app-icon-dark.svg)；
+- 16–24 px favicon 使用简化的一色版
+  [`brand/ruban-mark-micro.svg`](./brand/ruban-mark-micro.svg)，不能把三道校准缺口
+  直接缩小成噪点；
+- 网站导航使用横版：符号在左，右侧是大写 `RUBAN`，共用一条视觉基线；符号为 28 px
+  时，净间距为 10 px，不使用上下堆叠；矢量源文件为
+  [`brand/ruban-lockup-horizontal.svg`](./brand/ruban-lockup-horizontal.svg)；
+- 封面或发布页面可以使用“符号在上、`RUBAN` 在下”的竖版；矢量源文件为
+  [`brand/ruban-lockup-stacked.svg`](./brand/ruban-lockup-stacked.svg)。
+
+符号负责识别，`RUBAN` 负责正式署名；它们的组合不是另一枚 Logo。品牌黄是稳定的识别
+选择，不是 live/status 等产品状态；不要通过改变 Logo 几何或颜色去表达 App 状态。
+
+涉及品牌资产时，先读取设计路由
+[`skills/ruban-design/SKILL.md`](./skills/ruban-design/SKILL.md) 与其
+[`ruban-brand-identity` 子 skill](./skills/ruban-brand-identity/SKILL.md)。本轮生成的
+PNG 只用于决策，不纳入仓库资产。
+
 ## 组件展示页规范
 
 Home 是组件目录；每个可用组件进入独立展示页。展示页既是产品文档，也是确定性

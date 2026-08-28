@@ -13,6 +13,7 @@ const releaseCli = path.join(repoRoot, 'scripts', 'release', 'metro-cli.cjs');
 const releaseHealth = path.join(repoRoot, 'scripts', 'device', 'release-health.mjs');
 const modes = ['release-fast', 'release-clean', 'release-repro'];
 const platforms = ['android', 'ios'];
+const lanes = ['production', 'regression'];
 const hermesMagic = Buffer.from('c61fbc03c103191f', 'hex');
 const excludedDirectories = new Set([
   '.cache',
@@ -32,7 +33,11 @@ const apps = {
     reactNative: '0.66.4',
     architectures: ['old'],
     scheme: 'gongshu066',
-    appId: 'com.gongshu066',
+    appIds: {
+      production: 'com.rubanlabs.mobile.gongshu.rn066',
+      regression: 'com.rubanlabs.mobile.gongshu.rn066.regression',
+      debug: 'com.rubanlabs.mobile.gongshu.rn066.debug',
+    },
     legacyOpenSsl: true,
     exactJavaMajor: 17,
   },
@@ -42,7 +47,11 @@ const apps = {
     reactNative: '0.76.9',
     architectures: ['old', 'new'],
     scheme: 'gongshu076',
-    appId: 'com.gongshu.rn076',
+    appIds: {
+      production: 'com.rubanlabs.mobile.gongshu.rn076',
+      regression: 'com.rubanlabs.mobile.gongshu.rn076.regression',
+      debug: 'com.rubanlabs.mobile.gongshu.rn076.debug',
+    },
     exactJavaMajor: 17,
   },
   latest: {
@@ -51,7 +60,11 @@ const apps = {
     reactNative: '0.87.0',
     architectures: ['new'],
     scheme: 'gongshulatest',
-    appId: 'com.gongshu.latest',
+    appIds: {
+      production: 'com.rubanlabs.mobile',
+      regression: 'com.rubanlabs.mobile.regression',
+      debug: 'com.rubanlabs.mobile.debug',
+    },
     minimumJavaMajor: 17,
   },
 };
@@ -66,13 +79,14 @@ function usage() {
   node scripts/release/package.mjs \\
     --app <0.66|0.76|latest> \\
     --platform <android|ios> \\
+    [--lane <production|regression>] \\
     [--arch <old|new>] \\
     [--mode <release-fast|release-clean|release-repro>] \\
     [--device <android-serial>] [--skip-sync] [--dry-run]
 
 Examples:
-  pnpm gongshu:package --app 0.66 --platform android --mode release-fast
-  pnpm gongshu:package --app 0.76 --platform android --arch old --mode release-clean
+  pnpm gongshu:package --app 0.66 --platform android --lane regression --mode release-fast
+  pnpm gongshu:package --app 0.76 --platform android --lane production --arch old --mode release-clean
   pnpm gongshu:package --app latest --platform ios --mode release-repro`);
 }
 
@@ -81,6 +95,7 @@ function parseOptions(argv) {
     app: null,
     platform: null,
     architecture: null,
+    lane: 'production',
     mode: 'release-fast',
     device: null,
     sync: true,
@@ -106,6 +121,7 @@ function parseOptions(argv) {
     if (current === '--app') options.app = value;
     else if (current === '--platform') options.platform = value;
     else if (current === '--arch') options.architecture = value;
+    else if (current === '--lane') options.lane = value;
     else if (current === '--mode') options.mode = value;
     else if (current === '--device') options.device = value;
     else fail(`unknown argument ${current}`, 2);
@@ -123,6 +139,7 @@ function validateOptions(options) {
   const resolvedApp = resolveApp(options.app);
   if (!resolvedApp) fail('expected --app <0.66|0.76|latest>', 2);
   if (!platforms.includes(options.platform)) fail('expected --platform <android|ios>', 2);
+  if (!lanes.includes(options.lane)) fail('expected --lane <production|regression>', 2);
   if (!modes.includes(options.mode)) {
     fail('expected --mode <release-fast|release-clean|release-repro>', 2);
   }
@@ -211,6 +228,7 @@ function inputKey(appDir, options, app) {
       schemaVersion: 1,
       era: app.reactNative,
       platform: options.platform,
+      lane: options.lane,
       architecture: options.architecture,
       mode: options.mode,
       node: process.version,
@@ -243,6 +261,7 @@ function nativeCacheKey(appDir, options, app) {
       schemaVersion: 1,
       reactNative: app.reactNative,
       platform: options.platform,
+      lane: options.lane,
       architecture: options.architecture,
       node: process.version,
       os: process.platform,
@@ -486,6 +505,37 @@ function prepareReactNative076Ios(appDir) {
   }
 }
 
+function selectLatestReactNativeCore(appDir, configuration, env) {
+  const podsDir = path.join(appDir, 'ios', 'Pods');
+  const prebuiltDir = path.join(podsDir, 'React-Core-prebuilt');
+  const switchScript = path.join(
+    appDir,
+    'node_modules',
+    'react-native',
+    'scripts',
+    'replace-rncore-version.js',
+  );
+  const markerPath = path.join(prebuiltDir, '.last_build_configuration');
+  if (!fs.existsSync(prebuiltDir) || !fs.existsSync(switchScript)) {
+    fail('RN latest prebuilt iOS core is not installed');
+  }
+
+  fs.writeFileSync(markerPath, configuration === 'Debug' ? 'Release' : 'Debug');
+  command(
+    process.execPath,
+    [
+      switchScript,
+      '--configuration',
+      configuration,
+      '--reactNativeVersion',
+      '0.87.0',
+      '--podsRoot',
+      podsDir,
+    ],
+    {cwd: podsDir, env},
+  );
+}
+
 function patchLegacyBoostHash(appDir) {
   const hashHeader = path.join(
     appDir,
@@ -707,7 +757,9 @@ function buildAndroidOnce(context, runIndex, captureRoot) {
   if (app.architectures.length > 1 || app.directory === 'gongshu-latest') {
     args.push(`-PnewArchEnabled=${options.architecture === 'new'}`);
   }
-  args.push(':app:assembleRelease');
+  const buildType = options.lane === 'regression' ? 'Regression' : 'Release';
+  const buildTypeLower = buildType.toLowerCase();
+  args.push(`:app:assemble${buildType}`);
 
   console.log(
     `gongshu-package: Android ${app.directory}/${options.architecture}/${options.mode} run ${runIndex}`,
@@ -715,7 +767,7 @@ function buildAndroidOnce(context, runIndex, captureRoot) {
   command('./gradlew', args, {cwd: androidDir, env});
 
   const apkCandidates = findFiles(
-    path.join(androidDir, 'app', 'build', 'outputs', 'apk', 'release'),
+    path.join(androidDir, 'app', 'build', 'outputs', 'apk', buildTypeLower),
     filePath => filePath.endsWith('.apk'),
   );
   if (apkCandidates.length !== 1) {
@@ -727,7 +779,7 @@ function buildAndroidOnce(context, runIndex, captureRoot) {
     ? [legacyPrebundle.sourceMapPath]
     : findFiles(
         path.join(androidDir, 'app', 'build'),
-        filePath => filePath.endsWith('.map') && filePath.toLowerCase().includes('release'),
+        filePath => filePath.endsWith('.map') && filePath.toLowerCase().includes(buildTypeLower),
       ).sort((left, right) => {
         const leftScore = left.includes('index.android.bundle') ? 0 : 1;
         const rightScore = right.includes('index.android.bundle') ? 0 : 1;
@@ -785,13 +837,15 @@ function buildIosOnce(context, runIndex, captureRoot) {
   command('pod', ['install'], {cwd: iosDir, env});
   if (era === '0.66') patchLegacyBoostHash(appDir);
 
+  const configuration = options.lane === 'regression' ? 'Regression' : 'Release';
+  const scheme = options.lane === 'regression' ? `${app.scheme}Regression` : app.scheme;
   const args = [
     '-workspace',
     `${app.scheme}.xcworkspace`,
     '-scheme',
-    app.scheme,
+    scheme,
     '-configuration',
-    'Release',
+    configuration,
     '-sdk',
     'iphonesimulator',
     '-destination',
@@ -805,13 +859,18 @@ function buildIosOnce(context, runIndex, captureRoot) {
   console.log(
     `gongshu-package: iOS ${app.directory}/${options.architecture}/${options.mode} run ${runIndex}`,
   );
-  command('xcodebuild', args, {cwd: iosDir, env});
+  if (era === 'latest') selectLatestReactNativeCore(appDir, 'Release', env);
+  const buildResult = command('xcodebuild', args, {cwd: iosDir, env, allowFailure: true});
+  if (era === 'latest') selectLatestReactNativeCore(appDir, 'Debug', env);
+  if (buildResult.status !== 0) {
+    fail(`xcodebuild ${args.join(' ')} exited with ${buildResult.status}`);
+  }
 
   const appBundle = path.join(
     derivedData,
     'Build',
     'Products',
-    'Release-iphonesimulator',
+    `${configuration}-iphonesimulator`,
     `${app.scheme}.app`,
   );
   if (!fs.existsSync(appBundle)) fail(`iOS release app not found: ${app.scheme}.app`);
@@ -822,7 +881,7 @@ function buildIosOnce(context, runIndex, captureRoot) {
   if (!fs.existsSync(sourceMapPath)) {
     const sourceMapCandidates = findFiles(
       derivedData,
-      filePath => filePath.endsWith('.map') && filePath.includes('Release'),
+      filePath => filePath.endsWith('.map') && filePath.includes(configuration),
     );
     if (sourceMapCandidates.length === 0) fail('iOS release source map was not produced');
     copyBuildOutput(sourceMapCandidates[0], sourceMapPath);
@@ -853,6 +912,8 @@ function writeManifest(context, buildResults, finalArtifact, finalSourceMap, rep
     app: app.directory,
     reactNative: app.reactNative,
     platform: options.platform,
+    lane: options.lane,
+    appId: app.appIds[options.lane],
     architecture: options.architecture,
     mode: options.mode,
     hermes: {
@@ -924,6 +985,7 @@ const outputDir = path.join(
   'artifacts',
   app.directory,
   options.platform,
+  options.lane,
   options.architecture,
   options.mode,
   cacheKey,
@@ -936,6 +998,8 @@ if (options.dryRun) {
         app: app.directory,
         reactNative: app.reactNative,
         platform: options.platform,
+        lane: options.lane,
+        appId: app.appIds[options.lane],
         architecture: options.architecture,
         mode: options.mode,
         cacheKey,
@@ -989,7 +1053,7 @@ const reproducibility = {
 const extension = options.platform === 'android' ? 'apk' : 'app';
 const finalArtifact = path.join(
   outputDir,
-  `ruban-${era}-${options.platform}-${options.architecture}-${options.mode}.${extension}`,
+  `ruban-${era}-${options.platform}-${options.lane}-${options.architecture}-${options.mode}.${extension}`,
 );
 const finalSourceMap = path.join(outputDir, 'source-map.map');
 copyBuildOutput(buildResults[0].artifactPath, finalArtifact);
@@ -1017,6 +1081,8 @@ if (options.device) {
     options.device,
     '--arch',
     options.architecture,
+    '--app-id',
+    app.appIds[options.lane],
     '--manifest',
     manifestPath,
   ]);

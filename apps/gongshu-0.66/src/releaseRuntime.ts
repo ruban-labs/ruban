@@ -7,7 +7,9 @@ const runIdPattern = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$/;
 
 function handleUrl(url: string | null | undefined): void {
   const prefix = 'gongshu-0.66://release-health?';
-  if (!url || url.indexOf(prefix) !== 0) return;
+  if (!url || url.indexOf(prefix) !== 0) {
+    return;
+  }
 
   const params: Record<string, string> = {};
   url
@@ -16,9 +18,8 @@ function handleUrl(url: string | null | undefined): void {
     .forEach(pair => {
       const separator = pair.indexOf('=');
       if (separator > 0) {
-        params[decodeURIComponent(pair.slice(0, separator))] = decodeURIComponent(
-          pair.slice(separator + 1),
-        );
+        params[decodeURIComponent(pair.slice(0, separator))] =
+          decodeURIComponent(pair.slice(separator + 1));
       }
     });
 
@@ -33,7 +34,8 @@ function handleUrl(url: string | null | undefined): void {
   }
 
   claimedRunIds[runId] = true;
-  const actualArchitecture = buildInfo.architecture === 'newArch' ? 'new' : 'old';
+  const actualArchitecture =
+    buildInfo.architecture === 'newArch' ? 'new' : 'old';
   const passed =
     buildInfo.channel === 'release' &&
     buildInfo.engine === 'Hermes' &&
@@ -49,9 +51,13 @@ export function useReleaseRuntimeHealth(): void {
   React.useEffect(() => {
     let active = true;
     Linking.getInitialURL().then(url => {
-      if (active) handleUrl(url);
+      if (active) {
+        handleUrl(url);
+      }
     });
-    const subscription = Linking.addEventListener('url', event => handleUrl(event.url));
+    const subscription = Linking.addEventListener('url', event =>
+      handleUrl(event.url),
+    );
     console.log('[RUBAN-RELEASE] health-listener=READY');
     return () => {
       active = false;

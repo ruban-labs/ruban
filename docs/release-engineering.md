@@ -1,8 +1,31 @@
 # Gongshu Release Engineering
 
-Gongshu uses four explicit runtime/build lanes:
+Gongshu keeps distribution identity and build-cache policy as independent axes.
 
-- `dev`: Metro-backed UI iteration; never a performance baseline.
+## Distribution Identities
+
+Every app has three co-installable identities on Android and iOS:
+
+| App | Production | Regression | Debug |
+| --- | --- | --- | --- |
+| Ruban latest | `com.rubanlabs.mobile` | `com.rubanlabs.mobile.regression` | `com.rubanlabs.mobile.debug` |
+| Gongshu 0.76 | `com.rubanlabs.mobile.gongshu.rn076` | `com.rubanlabs.mobile.gongshu.rn076.regression` | `com.rubanlabs.mobile.gongshu.rn076.debug` |
+| Gongshu 0.66 | `com.rubanlabs.mobile.gongshu.rn066` | `com.rubanlabs.mobile.gongshu.rn066.regression` | `com.rubanlabs.mobile.gongshu.rn066.debug` |
+
+- `debug` is Metro-backed UI iteration and never a performance baseline.
+- `regression` uses a release runtime and is signed for direct device distribution.
+- `production` is the formal identity. Only `com.rubanlabs.mobile` is uploaded to App Store or Google Play; the Gongshu production identities remain directly distributable sample apps.
+
+Apple signing uses Team `X4CK8ZXA45`. The explicit Ruban identities own separate App Store,
+Ad Hoc, and Development profiles. Gongshu apps share the
+`com.rubanlabs.mobile.gongshu.*` Development and Ad Hoc profiles.
+
+Android production and regression builds temporarily use development signing until the Ruban
+Google Play/signing credential is provisioned. They are buildable and installable, but not yet
+store-uploadable.
+
+## Build Modes
+
 - `release-fast`: release runtime with content-keyed Metro and native caches.
 - `release-clean`: clean high-order outputs while retaining dependency downloads.
 - `release-repro`: two isolated no-build-cache runs whose payload and source-map hashes must match.
@@ -13,6 +36,7 @@ Package one valid matrix cell from the repository root:
 pnpm gongshu:package \
   --app 0.76 \
   --platform android \
+  --lane regression \
   --arch new \
   --mode release-fast
 ```
@@ -26,8 +50,17 @@ Android can install and verify the produced release package on a real device in 
 pnpm gongshu:package \
   --app 0.66 \
   --platform android \
+  --lane regression \
   --mode release-fast \
   --device <adb-serial>
+```
+
+`--lane` accepts `production|regression` and defaults to `production`. Debug remains a normal
+app-local native build because it is coupled to Metro:
+
+```bash
+cd apps/gongshu-latest
+pnpm android
 ```
 
 The runtime health deep link verifies three facts from the running package: release mode,
@@ -50,6 +83,11 @@ multi-gigabyte toolchains and Maven files.
 iOS package commands also use an isolated `ios-home` below the same cache root. React Native
 prebuilt tarballs and CocoaPods state therefore stay on the configured development volume instead
 of silently growing `~/Library/Caches` on the internal disk.
+
+RN latest ships configuration-specific prebuilt React Native Core frameworks. The release
+dispatcher selects the Release framework before packaging and restores the Debug framework before
+returning, including after an Xcode build failure. A release package must never leave the shared
+Pods tree in a state that breaks the next Metro-backed Debug build.
 
 ## iOS Simulator Matrix
 
@@ -90,7 +128,7 @@ tracked and cacheable while `release-fast` reuses the content-keyed prebundle.
 Outputs live under:
 
 ```text
-artifacts/<app>/<platform>/<architecture>/<mode>/<content-key>/
+artifacts/<app>/<platform>/<lane>/<architecture>/<mode>/<content-key>/
 ```
 
 Each output includes the package/app, source map and `manifest.json`. The manifest records the

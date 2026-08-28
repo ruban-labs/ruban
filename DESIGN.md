@@ -223,6 +223,59 @@ Ruban should feel like a precise modern workbench:
 - Playground specimen text may demonstrate type and composition, but it must
   not become product explanation.
 
+## Brand Identity Core
+
+Ruban's stable recognizer is the **Ruler Angle R**: a precise uppercase `R`
+with a measured bowl, diagonal leg, three calibration cuts in its full-size
+stem, and one small cobalt-blue alignment triangle. Its construction must feel
+structural rather than blocky: preserve a clearly open counter, separation
+between the triangle and leg, and generous internal negative space. The blue
+triangle sits in a slightly larger transparent socket—never on top of the
+primary fill—and contains two tiny transparent ruler ticks. It expresses the ruler, tools,
+and workbench as precision rather than literal carpentry. It must not acquire
+wood grain, a hammer, saw, chisel, Chinese seal, calligraphy, ribbon, React
+atom, generic AI imagery, gradients, or decorative effects.
+
+The default source of truth is the transparent
+[`brand/ruban-core.svg`](./brand/ruban-core.svg), whose main mark is Ruban acid
+yellow `#d9ff45` and whose essential alignment triangle is cobalt blue
+`#2563eb`. This deliberately aligns with the established `acid-100` product
+hue without making it a semantic product state. Present the default mark on an
+ink-black or other sufficiently dark field; it is not a light-surface text
+color. The explicit dark presentation is
+[`brand/ruban-core-dark.svg`](./brand/ruban-core-dark.svg): black `#101114`
+field, pure-white `#ffffff` mark, and lifted cobalt `#4c8dff` triangle. The
+blue triangle is a required full-size recognition accent, not a disposable
+state color. The micro mark is the deliberate one-color exception at 16–24 px;
+other one-color technical reproductions omit the triangle only when their
+production constraint makes two inks impossible.
+
+Identity uses one source geometry with context-specific compositions:
+
+- app and mini-program icons use the mark alone; the reference dark tile is
+  [`brand/ruban-app-icon-dark.svg`](./brand/ruban-app-icon-dark.svg);
+- favicons from 16–24 px use the simplified, one-color
+  [`brand/ruban-mark-micro.svg`](./brand/ruban-mark-micro.svg), not a tiny
+  rendering of the calibration cuts;
+- website navigation uses a horizontal lockup: mark left, uppercase `RUBAN`
+  right, one optical baseline, a 10 px clear gap for a 28 px mark, and no
+  stacked composition; its vector source is
+  [`brand/ruban-lockup-horizontal.svg`](./brand/ruban-lockup-horizontal.svg);
+- covers and launch surfaces may use the stacked mark-over-`RUBAN` lockup;
+  its vector source is
+  [`brand/ruban-lockup-stacked.svg`](./brand/ruban-lockup-stacked.svg).
+
+The mark is the recognizer; `RUBAN` is the formal signature. Lockups compose
+these two elements and are not separate logos. The yellow is a stable brand
+choice, not a live/status semantic; do not change the logo geometry or treat
+the mark as a product-state indicator.
+
+For identity work, read the routing
+[`skills/ruban-design/SKILL.md`](./skills/ruban-design/SKILL.md) and its
+[`ruban-brand-identity` sub-skill](./skills/ruban-brand-identity/SKILL.md).
+The selected raster explorations were only decision aids and are deliberately
+not tracked as product assets.
+
 ## Component Showcase Contract
 
 Home is the component catalogue. Every usable component opens a dedicated
