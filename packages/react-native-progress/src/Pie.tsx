@@ -68,13 +68,24 @@ export function Pie({
   });
 
   const half = size / 2;
-  const disk = {
+  const halfDiskBase = {
     position: 'absolute' as const,
     top: 0,
-    width: size,
+    width: half,
     height: size,
-    borderRadius: half,
     backgroundColor: color,
+  };
+  const leftHalfDisk = {
+    ...halfDiskBase,
+    left: 0,
+    borderTopLeftRadius: half,
+    borderBottomLeftRadius: half,
+  };
+  const rightHalfDisk = {
+    ...halfDiskBase,
+    left: half,
+    borderTopRightRadius: half,
+    borderBottomRightRadius: half,
   };
   const windowBase = {
     position: 'absolute' as const,
@@ -89,13 +100,6 @@ export function Pie({
     width: size,
     height: size,
   };
-  const clipBase = {
-    position: 'absolute' as const,
-    top: 0,
-    width: half,
-    height: size,
-    overflow: 'hidden' as const,
-  };
 
   return (
     <View
@@ -109,6 +113,8 @@ export function Pie({
         style={{
           width: size,
           height: size,
+          borderRadius: half,
+          overflow: 'hidden',
           transform: [{ rotate: rotationInterpolation }],
         }}
       >
@@ -140,29 +146,29 @@ export function Pie({
                 { left: -half, transform: [{ rotate: sweepRight }] },
               ]}
             >
-              <View style={[clipBase, { left: 0 }]}>
-                <View style={[disk, { left: 0 }]} />
-              </View>
+              <View style={leftHalfDisk} />
             </Animated.View>
           </View>
           {/* Solid right half shown from 50% on. */}
           <View style={[windowBase, { left: half }]}>
             <Animated.View
-              style={[rotatorBase, { left: -half, opacity: halfFillOpacity }]}
-            >
-              <View style={[clipBase, { left: half }]}>
-                <View style={[disk, { left: 0 }]} />
-              </View>
-            </Animated.View>
+              style={[
+                halfDiskBase,
+                {
+                  left: 0,
+                  borderTopRightRadius: half,
+                  borderBottomRightRadius: half,
+                  opacity: halfFillOpacity,
+                },
+              ]}
+            />
           </View>
           {/* Phase 2: right half-disk rotates into the left window (50..100%). */}
           <View style={[windowBase, { left: 0 }]}>
             <Animated.View
               style={[rotatorBase, { left: 0, transform: [{ rotate: sweepLeft }] }]}
             >
-              <View style={[clipBase, { left: half }]}>
-                <View style={[disk, { left: 0 }]} />
-              </View>
+              <View style={rightHalfDisk} />
             </Animated.View>
           </View>
         </View>

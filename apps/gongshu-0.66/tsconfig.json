@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "esModuleInterop": true,
+    "jsx": "react-native",
+    "lib": ["es2019"],
+    "moduleResolution": "node",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es2019",
+    "types": ["react", "react-native"]
+  },
+  "include": ["App.tsx", "src/**/*.ts", "src/**/*.tsx"]
+}

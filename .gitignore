@@ -5,3 +5,5 @@ lib/
 coverage/
 .bundle-smoke/
 ruban-local.tgz
+.cache/
+artifacts/

@@ -78,9 +78,21 @@ apply from: "react.gradle"` line.
  * ]
  */
 
+def rubanReleaseCli = System.getenv("RUBAN_RELEASE_CLI")
+def rubanPrebundledAssets = System.getenv("RUBAN_PREBUNDLED_ASSETS_DIR")
+def rubanPrebundledResources = System.getenv("RUBAN_PREBUNDLED_RES_DIR")
+
 project.ext.react = [
-    enableHermes: false,  // clean and rebuild if changing
+    enableHermes: true,
 ]
+
+if (rubanReleaseCli) {
+    project.ext.react.cliPath = rubanReleaseCli
+}
+
+if (rubanPrebundledAssets) {
+    project.ext.react.bundleInRelease = false
+}
 
 apply from: "../../node_modules/react-native/react.gradle"
 
@@ -142,6 +154,16 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+    }
+    sourceSets {
+        main {
+            if (rubanPrebundledAssets) {
+                assets.srcDir rubanPrebundledAssets
+            }
+            if (rubanPrebundledResources) {
+                res.srcDir rubanPrebundledResources
+            }
+        }
     }
     splits {
         abi {

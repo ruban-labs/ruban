@@ -14,7 +14,9 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm build && changeset publish",
-    "check:syntax": "node scripts/ci/check-syntax-floor.mjs"
+    "check:syntax": "node scripts/ci/check-syntax-floor.mjs",
+    "gongshu:package": "node scripts/release/package.mjs",
+    "gongshu:release-health": "node scripts/device/release-health.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.0",

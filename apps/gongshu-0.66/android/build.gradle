@@ -36,3 +36,13 @@ allprojects {
         maven { url 'https://www.jitpack.io' }
     }
 }
+
+subprojects {
+    afterEvaluate {
+        tasks.matching { task ->
+            task.name.startsWith("compile") && task.name.endsWith("Kotlin")
+        }.configureEach {
+            kotlinOptions.jvmTarget = "1.8"
+        }
+    }
+}
