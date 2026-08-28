@@ -231,7 +231,8 @@ stem, and one small cobalt-blue alignment triangle. Its construction must feel
 structural rather than blocky: preserve a clearly open counter, separation
 between the triangle and leg, and generous internal negative space. The blue
 triangle sits in a slightly larger transparent socket—never on top of the
-primary fill—and contains two tiny transparent ruler ticks. It expresses the ruler, tools,
+primary fill—and contains two tiny transparent ruler ticks. Keep the socket
+visibly open on all four sides, including the triangle's upper-right bevel. It expresses the ruler, tools,
 and workbench as precision rather than literal carpentry. It must not acquire
 wood grain, a hammer, saw, chisel, Chinese seal, calligraphy, ribbon, React
 atom, generic AI imagery, gradients, or decorative effects.

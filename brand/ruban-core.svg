@@ -3,9 +3,9 @@
   <defs>
     <mask id="ruban-accent-socket" maskUnits="userSpaceOnUse" x="0" y="0" width="96" height="96">
       <rect width="96" height="96" fill="#ffffff"/>
-      <path d="M31 52 48 69H31V52Z" fill="#000000"/>
+      <path d="M31 51 49 69H31V51Z" fill="#000000"/>
     </mask>
   </defs>
   <path fill="#d9ff45" fill-rule="evenodd" mask="url(#ruban-accent-socket)" d="M18 13h37c15 0 25 11 25 26 0 11-5 19-14 23l18 22H63L46 63H30v21H18V13Zm12 14v21h24c8 0 13-4 13-10s-5-11-13-11H30Zm-12 21h8v3h-8v-3Zm0 9h8v3h-8v-3Zm0 9h8v3h-8v-3Z"/>
-  <path fill="#2563eb" fill-rule="evenodd" d="M33 54 45 66H33V54ZM34 57h2v1h-2v-1Zm0 4h4v1h-4v-1Z"/>
+  <path fill="#2563eb" fill-rule="evenodd" d="M33 55 44 66H33V55ZM34 58h2v1h-2v-1Zm0 4h4v1h-4v-1Z"/>
 </svg>

@@ -34,8 +34,9 @@ The selected identity is **Ruler Angle R**:
 - precision and reduction, never literal carpentry.
 
 Preserve this silhouette, its open counter, the transparent socket around the
-accent, the space between diagonal leg and accent, and the accent's position.
-The mark may change color by context, but it must not gain
+accent on all four sides (including its upper-right bevel), the space between
+diagonal leg and accent, and the accent's position. The mark may change color
+by context, but it must not gain
 gradients, shadows, outlines, rounded mascot features, wood grain, a hammer,
 a saw, a Chinese seal, calligraphy, a ribbon, a React atom, or AI sparkle.
 
