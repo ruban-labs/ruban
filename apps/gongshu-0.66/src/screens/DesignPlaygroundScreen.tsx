@@ -35,7 +35,7 @@ const serifFont = Platform.select({
   default: 'serif',
 });
 const monoFont = Platform.select({
-  ios: 'SF Mono',
+  ios: 'Menlo',
   android: 'monospace',
   default: 'monospace',
 });
