@@ -30,7 +30,7 @@ type Props = {
 };
 
 const serifFont = Platform.select({
-  ios: 'New York',
+  ios: 'Georgia',
   android: 'serif',
   default: 'serif',
 });
@@ -40,7 +40,7 @@ const monoFont = Platform.select({
   default: 'monospace',
 });
 const condensedFont = Platform.select({
-  ios: 'Arial Narrow',
+  ios: 'Helvetica Neue',
   android: 'sans-serif-condensed',
   default: undefined,
 });

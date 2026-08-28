@@ -212,7 +212,7 @@ jobs:
             exit 0
           fi
 
-          if find "$HOME/.maestro/tests" -type f -name commands.json -print -quit | grep -q .; then
+          if find "$HOME/.maestro/tests" -type f -name 'commands*.json' -print -quit | grep -q .; then
             exit "$status"
           fi
 
