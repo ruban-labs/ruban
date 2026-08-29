@@ -14,6 +14,8 @@ const releaseHealth = path.join(repoRoot, 'scripts', 'device', 'release-health.m
 const modes = ['release-fast', 'release-clean', 'release-repro'];
 const platforms = ['android', 'ios'];
 const lanes = ['production', 'regression'];
+const iosDistributions = ['simulator', 'ad-hoc'];
+const cocoaPodsVersion = '1.15.2';
 const hermesMagic = Buffer.from('c61fbc03c103191f', 'hex');
 const excludedDirectories = new Set([
   '.cache',
@@ -38,6 +40,7 @@ const apps = {
       regression: 'com.rubanlabs.mobile.gongshu.rn066.regression',
       debug: 'com.rubanlabs.mobile.gongshu.rn066.debug',
     },
+    iosAdHoc: {teamId: 'X4CK8ZXA45', profile: 'Ruban Gongshu Samples Ad Hoc'},
     legacyOpenSsl: true,
     exactJavaMajor: 17,
   },
@@ -52,6 +55,7 @@ const apps = {
       regression: 'com.rubanlabs.mobile.gongshu.rn076.regression',
       debug: 'com.rubanlabs.mobile.gongshu.rn076.debug',
     },
+    iosAdHoc: {teamId: 'X4CK8ZXA45', profile: 'Ruban Gongshu Samples Ad Hoc'},
     exactJavaMajor: 17,
   },
   latest: {
@@ -65,6 +69,7 @@ const apps = {
       regression: 'com.rubanlabs.mobile.regression',
       debug: 'com.rubanlabs.mobile.debug',
     },
+    iosAdHoc: {teamId: 'X4CK8ZXA45', profile: 'Ruban Mobile Regression Ad Hoc'},
     minimumJavaMajor: 17,
   },
 };
@@ -82,12 +87,13 @@ function usage() {
     [--lane <production|regression>] \\
     [--arch <old|new>] \\
     [--mode <release-fast|release-clean|release-repro>] \\
+    [--ios-distribution <simulator|ad-hoc>] \\
     [--device <android-serial>] [--skip-sync] [--dry-run]
 
 Examples:
   pnpm gongshu:package --app 0.66 --platform android --lane regression --mode release-fast
   pnpm gongshu:package --app 0.76 --platform android --lane production --arch old --mode release-clean
-  pnpm gongshu:package --app latest --platform ios --mode release-repro`);
+  pnpm gongshu:package --app latest --platform ios --lane regression --ios-distribution ad-hoc`);
 }
 
 function parseOptions(argv) {
@@ -97,6 +103,7 @@ function parseOptions(argv) {
     architecture: null,
     lane: 'production',
     mode: 'release-fast',
+    iosDistribution: 'simulator',
     device: null,
     sync: true,
     dryRun: false,
@@ -123,6 +130,7 @@ function parseOptions(argv) {
     else if (current === '--arch') options.architecture = value;
     else if (current === '--lane') options.lane = value;
     else if (current === '--mode') options.mode = value;
+    else if (current === '--ios-distribution') options.iosDistribution = value;
     else if (current === '--device') options.device = value;
     else fail(`unknown argument ${current}`, 2);
     index += 1;
@@ -143,6 +151,9 @@ function validateOptions(options) {
   if (!modes.includes(options.mode)) {
     fail('expected --mode <release-fast|release-clean|release-repro>', 2);
   }
+  if (!iosDistributions.includes(options.iosDistribution)) {
+    fail('expected --ios-distribution <simulator|ad-hoc>', 2);
+  }
 
   const [era, app] = resolvedApp;
   if (!options.architecture && app.architectures.length === 1) {
@@ -153,6 +164,15 @@ function validateOptions(options) {
   }
   if (options.platform === 'ios' && options.device) {
     fail('--device runtime verification currently supports Android only', 2);
+  }
+  if (options.platform === 'android' && options.iosDistribution !== 'simulator') {
+    fail('--ios-distribution is available only with --platform ios', 2);
+  }
+  if (options.iosDistribution === 'ad-hoc' && options.lane !== 'regression') {
+    fail('ad-hoc packaging currently supports the regression lane only', 2);
+  }
+  if (options.iosDistribution === 'ad-hoc' && options.mode === 'release-repro') {
+    fail('signed ad-hoc archives require release-fast or release-clean', 2);
   }
 
   return {era, app};
@@ -181,6 +201,26 @@ function command(commandName, args, options = {}) {
 function captured(commandName, args, options = {}) {
   const result = command(commandName, args, {...options, capture: true});
   return `${result.stdout || ''}${result.stderr || ''}`.trim();
+}
+
+function resolveCocoaPodsScript() {
+  const result = spawnSync(
+    'ruby',
+    [
+      '-e',
+      `require 'rubygems'; spec = Gem::Specification.find_by_name('cocoapods', '= ${cocoaPodsVersion}'); print File.join(spec.full_gem_path, 'bin', 'pod')`,
+    ],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      maxBuffer: 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    },
+  );
+  if (result.error || result.status !== 0 || !result.stdout.trim()) {
+    fail(`CocoaPods ${cocoaPodsVersion} is not installed for the active Ruby`);
+  }
+  return result.stdout.trim();
 }
 
 function ensureExternalCacheRoot(cacheRoot) {
@@ -231,6 +271,7 @@ function inputKey(appDir, options, app) {
       lane: options.lane,
       architecture: options.architecture,
       mode: options.mode,
+      iosDistribution: options.platform === 'ios' ? options.iosDistribution : null,
       node: process.version,
       os: process.platform,
       hostArchitecture: process.arch,
@@ -263,6 +304,7 @@ function nativeCacheKey(appDir, options, app) {
       platform: options.platform,
       lane: options.lane,
       architecture: options.architecture,
+      iosDistribution: options.platform === 'ios' ? options.iosDistribution : null,
       node: process.version,
       os: process.platform,
       hostArchitecture: process.arch,
@@ -560,6 +602,37 @@ function patchLegacyBoostHash(appDir) {
   );
 }
 
+function patchLegacyIosFrameworkBitcodeStrip(appDir, scheme) {
+  const frameworkScript = path.join(
+    appDir,
+    'ios',
+    'Pods',
+    'Target Support Files',
+    `Pods-${scheme}`,
+    `Pods-${scheme}-frameworks.sh`,
+  );
+  patchFile(frameworkScript, content => {
+    if (content.includes('.ruban-bitcode-stripped')) return content;
+    const anchor = `  if [[ "$(file "$binary")" == *"dynamically linked shared library"* ]]; then
+    strip_invalid_archs "$binary"
+  fi
+`;
+    if (!content.includes(anchor)) fail('unable to patch legacy iOS framework embed script');
+    return content.replace(
+      anchor,
+      `${anchor}
+  if [[ "\${PLATFORM_NAME}" == "iphoneos" ]]; then
+    if xcrun otool -l "$binary" | grep -q "segname __LLVM"; then
+      local stripped_binary="\${binary}.ruban-bitcode-stripped"
+      xcrun bitcode_strip "$binary" -r -o "$stripped_binary"
+      mv "$stripped_binary" "$binary"
+    fi
+  fi
+`,
+    );
+  });
+}
+
 function commonBuildEnvironment({appDir, app, options, cacheRoot, cacheKey, runIndex}) {
   const runSuffix = options.mode === 'release-repro' ? `run-${runIndex}` : 'shared';
   const metroRoot = path.join(
@@ -815,6 +888,96 @@ function buildAndroidOnce(context, runIndex, captureRoot) {
   };
 }
 
+function xmlEscape(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function writeIosExportOptions(filePath, app, options) {
+  const appId = app.appIds[options.lane];
+  const signing = app.iosAdHoc;
+  const contents = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>destination</key>
+  <string>export</string>
+  <key>manageAppVersionAndBuildNumber</key>
+  <false/>
+  <key>method</key>
+  <string>release-testing</string>
+  <key>provisioningProfiles</key>
+  <dict>
+    <key>${xmlEscape(appId)}</key>
+    <string>${xmlEscape(signing.profile)}</string>
+  </dict>
+  <key>signingCertificate</key>
+  <string>Apple Distribution</string>
+  <key>signingStyle</key>
+  <string>manual</string>
+  <key>stripSwiftSymbols</key>
+  <true/>
+  <key>teamID</key>
+  <string>${xmlEscape(signing.teamId)}</string>
+</dict>
+</plist>
+`;
+  fs.writeFileSync(filePath, contents);
+}
+
+function provisioningProfileName(profilePath) {
+  const decoded = spawnSync('security', ['cms', '-D', '-i', profilePath], {
+    encoding: 'utf8',
+    maxBuffer: 16 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (decoded.error || decoded.status !== 0) fail('unable to decode embedded provisioning profile');
+  const extracted = spawnSync('plutil', ['-extract', 'Name', 'raw', '-o', '-', '-'], {
+    input: decoded.stdout,
+    encoding: 'utf8',
+    maxBuffer: 1024 * 1024,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  if (extracted.error || extracted.status !== 0) fail('unable to read provisioning profile name');
+  return extracted.stdout.trim();
+}
+
+function inspectSignedIosIpa(ipaPath, app, options, inspectionRoot) {
+  fs.rmSync(inspectionRoot, {recursive: true, force: true});
+  fs.mkdirSync(inspectionRoot, {recursive: true});
+  command('ditto', ['-x', '-k', ipaPath, inspectionRoot]);
+  const payloadDir = path.join(inspectionRoot, 'Payload');
+  const appBundles = fs.existsSync(payloadDir)
+    ? fs
+        .readdirSync(payloadDir, {withFileTypes: true})
+        .filter(entry => entry.isDirectory() && entry.name.endsWith('.app'))
+        .map(entry => path.join(payloadDir, entry.name))
+    : [];
+  if (appBundles.length !== 1) fail(`expected one signed app in IPA, found ${appBundles.length}`);
+  const appBundle = appBundles[0];
+  command('codesign', ['--verify', '--deep', '--strict', appBundle]);
+  const bundleId = captured('plutil', [
+    '-extract',
+    'CFBundleIdentifier',
+    'raw',
+    path.join(appBundle, 'Info.plist'),
+  ]);
+  if (bundleId !== app.appIds[options.lane]) {
+    fail(`signed IPA bundle identifier mismatch: ${bundleId}`);
+  }
+  const embeddedProfile = path.join(appBundle, 'embedded.mobileprovision');
+  if (!fs.existsSync(embeddedProfile)) fail('signed IPA has no embedded provisioning profile');
+  const profileName = provisioningProfileName(embeddedProfile);
+  if (profileName !== app.iosAdHoc.profile) {
+    fail(`signed IPA provisioning profile mismatch: ${profileName}`);
+  }
+  return appBundle;
+}
+
 function buildIosOnce(context, runIndex, captureRoot) {
   const {era, appDir, app, options, cacheRoot, nativeKey} = context;
   const iosDir = path.join(appDir, 'ios');
@@ -830,10 +993,11 @@ function buildIosOnce(context, runIndex, captureRoot) {
   const sourceMapPath = path.join(captureRoot, `run-${runIndex}.map`);
   const env = {
     ...commonBuildEnvironment({...context, runIndex}),
-    HOME: iosHome,
+    HOME: options.iosDistribution === 'ad-hoc' ? os.homedir() : iosHome,
     CLI_PATH: releaseCli,
     CP_HOME_DIR: path.join(cacheRoot, 'cocoapods', app.directory, nativeKey),
     RCT_NEW_ARCH_ENABLED: options.architecture === 'new' ? '1' : '0',
+    RUBYOPT: appendNodeOption(process.env.RUBYOPT, '-rlogger'),
     SOURCEMAP_FILE: sourceMapPath,
   };
   if (era === '0.66') env.NO_FLIPPER = '1';
@@ -841,13 +1005,29 @@ function buildIosOnce(context, runIndex, captureRoot) {
   if (era === '0.66') prepareLegacyIos(appDir);
   if (era === '0.76') prepareReactNative076Ios(appDir);
   fs.mkdirSync(path.join(iosHome, 'Library', 'Caches', 'ReactNative'), {recursive: true});
+  if (options.iosDistribution === 'ad-hoc') {
+    ensureDirectoryLink(
+      path.join(os.homedir(), 'Library', 'MobileDevice', 'Provisioning Profiles'),
+      path.join(iosHome, 'Library', 'MobileDevice', 'Provisioning Profiles'),
+    );
+  }
   fs.mkdirSync(env.CP_HOME_DIR, {recursive: true});
   console.log(`gongshu-package: CocoaPods ${app.directory}/${options.architecture}`);
-  command('pod', ['install'], {cwd: iosDir, env});
-  if (era === '0.66') patchLegacyBoostHash(appDir);
+  command('ruby', [resolveCocoaPodsScript(), 'install'], {
+    cwd: iosDir,
+    env: {...env, COCOAPODS_NO_BUNDLER: '1'},
+  });
+  if (era === '0.66') {
+    patchLegacyBoostHash(appDir);
+    if (options.iosDistribution === 'ad-hoc') {
+      patchLegacyIosFrameworkBitcodeStrip(appDir, app.scheme);
+    }
+  }
 
   const configuration = options.lane === 'regression' ? 'Regression' : 'Release';
   const scheme = options.lane === 'regression' ? `${app.scheme}Regression` : app.scheme;
+  const isAdHoc = options.iosDistribution === 'ad-hoc';
+  const archivePath = path.join(derivedData, 'Archives', `run-${runIndex}.xcarchive`);
   const args = [
     '-workspace',
     `${app.scheme}.xcworkspace`,
@@ -856,14 +1036,16 @@ function buildIosOnce(context, runIndex, captureRoot) {
     '-configuration',
     configuration,
     '-sdk',
-    'iphonesimulator',
+    isAdHoc ? 'iphoneos' : 'iphonesimulator',
     '-destination',
-    'generic/platform=iOS Simulator',
+    isAdHoc ? 'generic/platform=iOS' : 'generic/platform=iOS Simulator',
     '-derivedDataPath',
     derivedData,
   ];
+  if (isAdHoc) args.push('-archivePath', archivePath);
   if (options.mode !== 'release-fast') args.push('clean');
-  args.push('build', 'CODE_SIGNING_ALLOWED=NO', 'COMPILER_INDEX_STORE_ENABLE=NO');
+  args.push(isAdHoc ? 'archive' : 'build', 'COMPILER_INDEX_STORE_ENABLE=NO');
+  if (!isAdHoc) args.push('CODE_SIGNING_ALLOWED=NO');
 
   console.log(
     `gongshu-package: iOS ${app.directory}/${options.architecture}/${options.mode} run ${runIndex}`,
@@ -875,13 +1057,42 @@ function buildIosOnce(context, runIndex, captureRoot) {
     fail(`xcodebuild ${args.join(' ')} exited with ${buildResult.status}`);
   }
 
-  const appBundle = path.join(
-    derivedData,
-    'Build',
-    'Products',
-    `${configuration}-iphonesimulator`,
-    `${app.scheme}.app`,
-  );
+  let capturedArtifact;
+  let appBundle;
+  if (isAdHoc) {
+    const exportOptionsPath = path.join(captureRoot, `export-options-${runIndex}.plist`);
+    const exportPath = path.join(captureRoot, `export-${runIndex}`);
+    writeIosExportOptions(exportOptionsPath, app, options);
+    fs.rmSync(exportPath, {recursive: true, force: true});
+    command('xcodebuild', [
+      '-exportArchive',
+      '-archivePath',
+      archivePath,
+      '-exportPath',
+      exportPath,
+      '-exportOptionsPlist',
+      exportOptionsPath,
+    ], {cwd: iosDir, env});
+    const ipaCandidates = findFiles(exportPath, filePath => filePath.endsWith('.ipa'));
+    if (ipaCandidates.length !== 1) fail(`expected one exported IPA, found ${ipaCandidates.length}`);
+    capturedArtifact = path.join(captureRoot, `run-${runIndex}.ipa`);
+    copyBuildOutput(ipaCandidates[0], capturedArtifact);
+    appBundle = inspectSignedIosIpa(
+      capturedArtifact,
+      app,
+      options,
+      path.join(captureRoot, `inspect-${runIndex}`),
+    );
+  } else {
+    appBundle = path.join(
+      derivedData,
+      'Build',
+      'Products',
+      `${configuration}-iphonesimulator`,
+      `${app.scheme}.app`,
+    );
+    capturedArtifact = path.join(captureRoot, `run-${runIndex}.app`);
+  }
   if (!fs.existsSync(appBundle)) fail(`iOS release app not found: ${app.scheme}.app`);
   const mainBundle = path.join(appBundle, 'main.jsbundle');
   if (!fs.existsSync(mainBundle)) fail('iOS main.jsbundle was not produced');
@@ -896,13 +1107,13 @@ function buildIosOnce(context, runIndex, captureRoot) {
     copyBuildOutput(sourceMapCandidates[0], sourceMapPath);
   }
 
-  const capturedArtifact = path.join(captureRoot, `run-${runIndex}.app`);
-  copyBuildOutput(appBundle, capturedArtifact);
+  if (!isAdHoc) copyBuildOutput(appBundle, capturedArtifact);
+  const artifactHash = isAdHoc ? sha256File(capturedArtifact) : sha256Tree(capturedArtifact);
   return {
     artifactPath: capturedArtifact,
     sourceMapPath,
-    artifactHash: sha256Tree(capturedArtifact),
-    payloadHash: sha256Tree(capturedArtifact),
+    artifactHash,
+    payloadHash: artifactHash,
     signingBlockHash: null,
     sourceMapHash: sha256File(sourceMapPath),
     xcode: captured('xcodebuild', ['-version']),
@@ -925,6 +1136,7 @@ function writeManifest(context, buildResults, finalArtifact, finalSourceMap, rep
     appId: app.appIds[options.lane],
     architecture: options.architecture,
     mode: options.mode,
+    iosDistribution: options.platform === 'ios' ? options.iosDistribution : null,
     hermes: {
       enabled: true,
       bytecodeVerified: true,
@@ -947,7 +1159,12 @@ function writeManifest(context, buildResults, finalArtifact, finalSourceMap, rep
       metro: cacheKey,
       native: nativeKey,
     },
-    signingClass: options.platform === 'android' ? 'development' : 'simulator-unsigned',
+    signingClass:
+      options.platform === 'android'
+        ? 'development'
+        : options.iosDistribution === 'ad-hoc'
+          ? 'ad-hoc'
+          : 'simulator-unsigned',
     artifact: relativePath(finalArtifact),
     sourceMap: relativePath(finalSourceMap),
     artifactSha256: first.artifactHash,
@@ -1011,6 +1228,7 @@ if (options.dryRun) {
         appId: app.appIds[options.lane],
         architecture: options.architecture,
         mode: options.mode,
+        iosDistribution: options.platform === 'ios' ? options.iosDistribution : null,
         cacheKey,
         nativeCacheKey: nativeKey,
         cacheRoot,
@@ -1059,10 +1277,12 @@ const reproducibility = {
     buildResults.length === 1 ||
     buildResults.every(result => result.sourceMapHash === buildResults[0].sourceMapHash),
 };
-const extension = options.platform === 'android' ? 'apk' : 'app';
+const extension =
+  options.platform === 'android' ? 'apk' : options.iosDistribution === 'ad-hoc' ? 'ipa' : 'app';
+const distributionSuffix = options.platform === 'ios' ? `-${options.iosDistribution}` : '';
 const finalArtifact = path.join(
   outputDir,
-  `ruban-${era}-${options.platform}-${options.lane}-${options.architecture}-${options.mode}.${extension}`,
+  `ruban-${era}-${options.platform}-${options.lane}-${options.architecture}${distributionSuffix}-${options.mode}.${extension}`,
 );
 const finalSourceMap = path.join(outputDir, 'source-map.map');
 copyBuildOutput(buildResults[0].artifactPath, finalArtifact);

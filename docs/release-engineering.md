@@ -82,7 +82,9 @@ multi-gigabyte toolchains and Maven files.
 
 iOS package commands also use an isolated `ios-home` below the same cache root. React Native
 prebuilt tarballs and CocoaPods state therefore stay on the configured development volume instead
-of silently growing `~/Library/Caches` on the internal disk.
+of silently growing `~/Library/Caches` on the internal disk. Signed device archives read the
+operator-provisioned signing identity and profiles from the macOS user signing domain while keeping
+DerivedData, archives and CocoaPods data in the Ruban cache root.
 
 RN latest ships configuration-specific prebuilt React Native Core frameworks. The release
 dispatcher selects the Release framework before packaging and restores the Debug framework before
@@ -109,6 +111,29 @@ RN 0.76 and newer use React Native's `scripts/bundle.js` entry, while RN 0.66 re
 tarballs so CocoaPods can cache archives instead of relying on Git clones. RN 0.66 release builds
 raise the app deployment target to iOS 12.4, disable the obsolete bundled Flipper lane, and accept
 the Hermes 0.9 source-map output location used by current Xcode tooling.
+
+## iOS Signed Regression Matrix
+
+The four device matrix cells export signed Ad Hoc IPAs from the regression lane:
+
+```bash
+pnpm gongshu:package --app 0.66 --platform ios --lane regression --mode release-fast --ios-distribution ad-hoc
+pnpm gongshu:package --app 0.76 --platform ios --lane regression --arch old --mode release-fast --ios-distribution ad-hoc
+pnpm gongshu:package --app 0.76 --platform ios --lane regression --arch new --mode release-fast --ios-distribution ad-hoc
+pnpm gongshu:package --app latest --platform ios --lane regression --mode release-fast --ios-distribution ad-hoc
+```
+
+Ad Hoc export supports `release-fast` and `release-clean`; signed output is intentionally excluded
+from `release-repro` because Apple signatures are not byte-reproducible. The packager verifies the
+final code signature, bundle identifier, embedded provisioning profile and Hermes bytecode before
+publishing the IPA. RN 0.66's historical Hermes framework contains obsolete embedded Bitcode, so
+the device embed phase removes it before CocoaPods signs the framework.
+
+The active Ruby must provide CocoaPods `1.15.2`. Certificate, private-key and provisioning-profile
+material belongs in the private `ruban-labs/apple-certs` Match repository; this repository stores
+only non-secret Team, profile-name and packaging policy metadata. A later Fastlane integration can
+materialize the same signing inputs before invoking this package command without changing the
+matrix contract.
 
 ## Metro Policy
 
