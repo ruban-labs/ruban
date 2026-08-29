@@ -5,9 +5,26 @@ import fs from 'node:fs';
 import process from 'node:process';
 
 const eras = {
-  latest: {scheme: 'gongshu-latest', appId: 'com.rubanlabs.mobile'},
-  '0.76': {scheme: 'gongshu-0.76', appId: 'com.rubanlabs.mobile.gongshu.rn076'},
-  '0.66': {scheme: 'gongshu-0.66', appId: 'com.rubanlabs.mobile.gongshu.rn066'},
+  latest: {
+    schemes: {production: 'ruban', regression: 'ruban-regression', debug: 'ruban-debug'},
+    appId: 'com.rubanlabs.mobile',
+  },
+  '0.76': {
+    schemes: {
+      production: 'ruban-rn076',
+      regression: 'ruban-rn076-regression',
+      debug: 'ruban-rn076-debug',
+    },
+    appId: 'com.rubanlabs.mobile.gongshu.rn076',
+  },
+  '0.66': {
+    schemes: {
+      production: 'ruban-rn066',
+      regression: 'ruban-rn066-regression',
+      debug: 'ruban-rn066-debug',
+    },
+    appId: 'com.rubanlabs.mobile.gongshu.rn066',
+  },
 };
 
 const argv = process.argv.slice(2);
@@ -29,6 +46,11 @@ const manifestPath = arg('--manifest');
 const timeoutMs = Number(arg('--timeout') || 90000);
 const config = eras[era];
 const appId = arg('--app-id') || config?.appId;
+const lane = appId?.endsWith('.regression')
+  ? 'regression'
+  : appId?.endsWith('.debug')
+    ? 'debug'
+    : 'production';
 
 if (!config || !device || (architecture !== 'old' && architecture !== 'new')) {
   fail('expected --era <0.66|0.76|latest> --device <serial> --arch <old|new>');
@@ -45,7 +67,7 @@ adb('shell', 'am', 'force-stop', appId);
 adb('logcat', '-c');
 
 const runId = `r${Date.now().toString(36)}`;
-const url = `${config.scheme}://release-health?runId=${runId}&expectedArch=${architecture}`;
+const url = `${config.schemes[lane]}://release-health?runId=${runId}&expectedArch=${architecture}`;
 const shellQuotedUrl = `'${url}'`;
 const started = adb(
   'shell',

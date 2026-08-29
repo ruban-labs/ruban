@@ -12,6 +12,7 @@
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"
+        android:theme="@style/BootTheme"
         android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
         android:launchMode="singleTask"
         android:windowSoftInputMode="adjustResize"
@@ -24,8 +25,7 @@
             <action android:name="android.intent.action.VIEW" />
             <category android:name="android.intent.category.DEFAULT" />
             <category android:name="android.intent.category.BROWSABLE" />
-            <data android:scheme="ruban" />
-            <data android:scheme="gongshu-0.66" />
+            <data android:scheme="${rubanLinkScheme}" />
         </intent-filter>
       </activity>
     </application>

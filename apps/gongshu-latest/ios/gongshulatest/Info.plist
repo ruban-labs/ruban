@@ -29,8 +29,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>ruban</string>
-				<string>gongshu-latest</string>
+				<string>$(RUBAN_URL_SCHEME)</string>
 			</array>
 		</dict>
 	</array>

@@ -5,8 +5,11 @@ import {RubanScreen} from '../../components/RubanPrimitives';
 import {Button} from '../../components/ui/Button';
 import {spacing, useRubanColors} from '../../design/tokens';
 import type {RootStackParamList} from '../../navigation/types';
+import BadgeShowcaseScreen from './BadgeShowcaseScreen';
 import ButtonShowcaseScreen from './ButtonShowcaseScreen';
 import CardShowcaseScreen from './CardShowcaseScreen';
+import SeparatorShowcaseScreen from './SeparatorShowcaseScreen';
+import SwitchShowcaseScreen from './SwitchShowcaseScreen';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ComponentDetail'>;
 
@@ -39,6 +42,18 @@ export default function ComponentDetailScreen(props: Props): React.ReactElement 
 
   if (props.route.params.component === 'card') {
     return <CardShowcaseScreen {...props} onBack={onBack} />;
+  }
+
+  if (props.route.params.component === 'badge') {
+    return <BadgeShowcaseScreen {...props} onBack={onBack} />;
+  }
+
+  if (props.route.params.component === 'separator') {
+    return <SeparatorShowcaseScreen {...props} onBack={onBack} />;
+  }
+
+  if (props.route.params.component === 'switch') {
+    return <SwitchShowcaseScreen {...props} onBack={onBack} />;
   }
 
   return <UnknownComponentScreen onBack={onBack} />;

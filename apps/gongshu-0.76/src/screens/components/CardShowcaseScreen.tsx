@@ -66,7 +66,7 @@ function DemoCard({tone, compact = false}: {tone: CardTone; compact?: boolean}):
 export default function CardShowcaseScreen({route, navigation, onBack}: Props): React.ReactElement {
   const theme = parseOption<RubanThemeMode>(route.params.theme, ['light', 'dark'], 'light');
   const tone = parseOption<CardTone>(route.params.tone, cardTones, 'default');
-  const deepLink = `ruban://components/card?theme=${theme}&tone=${tone}`;
+  const deepLink = `ruban-rn076://components/card?theme=${theme}&tone=${tone}`;
 
   return (
     <ComponentShowcaseScreen

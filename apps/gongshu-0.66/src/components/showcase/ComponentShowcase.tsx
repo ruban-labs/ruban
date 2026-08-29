@@ -387,6 +387,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   choiceLabel: {
+    paddingHorizontal: 2,
     fontSize: 8,
     lineHeight: 11,
     fontWeight: '900',

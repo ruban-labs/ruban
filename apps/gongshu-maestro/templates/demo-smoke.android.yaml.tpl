@@ -31,6 +31,40 @@ appId: {{appId}}
     visible:
       text: "Components"
     timeout: 20000
+- openLink: "{{scheme}}://components/badge?theme=light&variant=live&size=md"
+- extendedWaitUntil:
+    visible:
+      text: "Badge"
+    timeout: 20000
+- assertVisible:
+    text: "LIVE"
+- openLink: "{{scheme}}://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
+- extendedWaitUntil:
+    visible:
+      text: "Separator"
+    timeout: 20000
+- assertVisible:
+    text: "VERTICAL"
+- assertVisible:
+    text: "Live separator vertical accent bold"
+- openLink: "{{scheme}}://components/switch?theme=light&state=on&size=md"
+- extendedWaitUntil:
+    visible:
+      text: "Switch"
+    timeout: 20000
+- assertVisible:
+    text: "CONTROL"
+- assertVisible:
+    text: "Live switch state ON"
+- tapOn:
+    text: "Live switch"
+- assertVisible:
+    text: "Live switch state OFF"
+- openLink: "{{scheme}}://home"
+- extendedWaitUntil:
+    visible:
+      text: "Components"
+    timeout: 20000
 - tapOn:
     text: "Playground"
 - extendedWaitUntil:

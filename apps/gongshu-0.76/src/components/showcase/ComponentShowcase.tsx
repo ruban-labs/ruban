@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   controlLabel: {marginBottom: 8, fontSize: 8, lineHeight: 11, fontWeight: '900', letterSpacing: 1.1},
   choiceRow: {flexDirection: 'row', flexWrap: 'wrap'},
   choice: {minHeight: 34, marginRight: 7, marginBottom: 7, paddingHorizontal: 11, borderWidth: 1, alignItems: 'center', justifyContent: 'center'},
-  choiceLabel: {fontSize: 8, lineHeight: 11, fontWeight: '900', letterSpacing: 0.65},
+  choiceLabel: {paddingHorizontal: 2, fontSize: 8, lineHeight: 11, fontWeight: '900', letterSpacing: 0.65},
   pressed: {opacity: 0.62},
   specimen: {minHeight: 118, padding: 12, borderWidth: 1},
   specimenLabel: {fontSize: 8, lineHeight: 11, fontWeight: '900', letterSpacing: 0.9},

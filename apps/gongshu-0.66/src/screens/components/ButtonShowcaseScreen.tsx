@@ -90,7 +90,7 @@ export default function ButtonShowcaseScreen({
     'default',
   );
   const [pressCount, setPressCount] = React.useState(0);
-  const deepLink = `ruban://components/button?theme=${theme}&variant=${variant}&size=${size}&state=${state}`;
+  const deepLink = `ruban-rn066://components/button?theme=${theme}&variant=${variant}&size=${size}&state=${state}`;
 
   return (
     <ComponentShowcaseScreen

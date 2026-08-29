@@ -161,6 +161,23 @@ handled by consuming the new `insets.bottom`.
   screenshot review in every Gongshu era. Do not use layout properties absent
   from RN 0.66 to fake parity.
 
+### Deep Link Identity
+
+Every simultaneously installable app owns exactly one URL scheme. Environment
+and RN era are both part of that scheme because iOS custom URL schemes cannot
+dispatch between apps by path after the scheme has been registered.
+
+| Era | Production | Regression | Debug |
+| --- | --- | --- | --- |
+| latest | `ruban://` | `ruban-regression://` | `ruban-debug://` |
+| RN 0.76 | `ruban-rn076://` | `ruban-rn076-regression://` | `ruban-rn076-debug://` |
+| RN 0.66 | `ruban-rn066://` | `ruban-rn066-regression://` | `ruban-rn066-debug://` |
+
+Paths remain identical across schemes, such as `components/switch`,
+`settings?sheet=build`, and `lab/design?theme=dark`. Android manifest
+placeholders and iOS build settings select the one scheme owned by each build;
+do not restore shared aliases that make several installed apps claim one URL.
+
 ## Visual Direction
 
 Use the philosophy of shadcn/ui, not a web styling stack:
@@ -225,21 +242,31 @@ Ruban should feel like a precise modern workbench:
 
 ## Brand Identity Core
 
-Ruban's stable recognizer is the **Ruler Angle R**: a precise uppercase `R`
-with a measured bowl, diagonal leg, three calibration cuts in its full-size
-stem, and one small cobalt-blue alignment triangle. Its construction must feel
-structural rather than blocky: preserve a clearly open counter, separation
-between the triangle and leg, and generous internal negative space. The blue
-triangle sits in a slightly larger transparent socket—never on top of the
-primary fill—and contains two tiny transparent ruler ticks. Keep the socket
-visibly open on all four sides, including the triangle's upper-right bevel. It expresses the ruler, tools,
-and workbench as precision rather than literal carpentry. It must not acquire
+Ruban's immutable geometry anchor is the transparent 1254×1254
+[`brand/ruban-ruler-angle-r.png`](./brand/ruban-ruler-angle-r.png): the
+selected stacked `R` plus `RUBAN` signature. Ruban's stable recognizer within
+that reference is the **Ruler Angle R**: a precise uppercase `R` with a
+measured bowl, diagonal leg, three calibration cuts in its full-size stem, and
+one small cobalt-blue alignment triangle. Its construction must feel
+structural rather than blocky: preserve a clearly open counter, a smooth,
+continuous, vertically aligned outer bowl and inner counter return, separation
+between the two R legs, and generous internal negative space. The diagonal leg
+keeps an even, near-parallel outer and inner slant from the lower bowl to the
+baseline; it must not pinch or kink. The blue triangle
+rests in the natural triangular gap between the clean vertical and diagonal
+legs—it must never require a cut, mask, or white halo in the primary R—and
+has no added tick marks. It expresses the ruler, tools, and workbench as
+precision rather than literal carpentry. It must not acquire
 wood grain, a hammer, saw, chisel, Chinese seal, calligraphy, ribbon, React
 atom, generic AI imagery, gradients, or decorative effects.
 
-The default source of truth is the transparent
-[`brand/ruban-core.svg`](./brand/ruban-core.svg), whose main mark is Ruban acid
-yellow `#d9ff45` and whose essential alignment triangle is cobalt blue
+The PNG remains the immutable visual and sourcing reference, not a
+platform-export master. The transparent
+[`brand/ruban-core.svg`](./brand/ruban-core.svg) is the approved core vector
+master, formed from a direct trace of that reference. Preserve its path in all
+derivatives; if it is ever regenerated, it must pass an overlay comparison
+against the PNG. Do not hand-adjust the `R` away from either core asset. Its
+main mark is Ruban acid yellow `#d9ff45` and its essential alignment triangle is cobalt blue
 `#2563eb`. This deliberately aligns with the established `acid-100` product
 hue without making it a semantic product state. Present the default mark on an
 ink-black or other sufficiently dark field; it is not a light-surface text
@@ -271,11 +298,25 @@ these two elements and are not separate logos. The yellow is a stable brand
 choice, not a live/status semantic; do not change the logo geometry or treat
 the mark as a product-state indicator.
 
+Mobile distribution lanes remain recognizable when installed together by
+changing only the app-icon tile context: production uses ink with a white mark,
+regression uses acid with an ink mark, and debug uses a light cobalt tint with
+an ink mark. The cobalt triangle remains cobalt in every lane; no lane adds a
+badge or changes the Ruler Angle geometry. Native launch surfaces do not repeat
+the lane signal. They show one static 84 pt/dp acid/cobalt core mark, exactly
+centered on one ink field. The native boot-splash lifecycle holds that same
+surface until navigation is ready, then removes it without a second React logo
+or a custom animation; an eight-second fallback prevents a permanent startup
+block. `brand/mobile-assets.json` and
+`scripts/brand/generate-mobile-assets.mjs` own every generated mobile asset;
+platform outputs must not be edited manually.
+
 For identity work, read the routing
 [`skills/ruban-design/SKILL.md`](./skills/ruban-design/SKILL.md) and its
 [`ruban-brand-identity` sub-skill](./skills/ruban-brand-identity/SKILL.md).
-The selected raster explorations were only decision aids and are deliberately
-not tracked as product assets.
+The selected PNG is deliberately tracked as the immutable visual and sourcing
+reference; `ruban-core.svg` is the core vector master. Other exploratory
+rasters remain decision aids only.
 
 ## Component Showcase Contract
 
@@ -319,6 +360,15 @@ The first source-owned primitives establish these contracts:
 - **Card** — static and composable through Header, Title, Description, Action,
   Content, Footer, and Meta; semantic `default`, `muted`, `selected`, `alert`,
   `live`, and `contrast` tones.
+- **Badge** — `default`, `secondary`, `outline`, `destructive`, and `live`
+  variants with `sm` and `md` sizes; labels remain single-line and consume no
+  runtime dependency.
+- **Separator** — horizontal or vertical orientation, `default`, `strong`, and
+  `accent` tones, plus hairline, regular, and bold weight. It is decorative and
+  hidden from accessibility by default.
+- **Switch** — controlled through `checked` and `onCheckedChange`, with `sm` and
+  `md` sizes, a minimum 44-point touch target, switch semantics, and explicit
+  disabled state.
 
 ## Agent Design Contract
 

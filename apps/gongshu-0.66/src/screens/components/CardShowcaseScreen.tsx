@@ -84,7 +84,7 @@ export default function CardShowcaseScreen({
     'light',
   );
   const tone = parseOption<CardTone>(route.params.tone, cardTones, 'default');
-  const deepLink = `ruban://components/card?theme=${theme}&tone=${tone}`;
+  const deepLink = `ruban-rn066://components/card?theme=${theme}&tone=${tone}`;
 
   return (
     <ComponentShowcaseScreen

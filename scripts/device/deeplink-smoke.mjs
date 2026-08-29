@@ -14,14 +14,14 @@
 import { spawn, spawnSync } from 'node:child_process';
 
 const ERAS = {
-  latest: { scheme: 'gongshu-latest', metroPort: 8081, appId: 'com.rubanlabs.mobile.debug' },
+  latest: { scheme: 'ruban-debug', metroPort: 8081, appId: 'com.rubanlabs.mobile.debug' },
   '0.76': {
-    scheme: 'gongshu-0.76',
+    scheme: 'ruban-rn076-debug',
     metroPort: 8082,
     appId: 'com.rubanlabs.mobile.gongshu.rn076.debug',
   },
   '0.66': {
-    scheme: 'gongshu-0.66',
+    scheme: 'ruban-rn066-debug',
     metroPort: 8083,
     appId: 'com.rubanlabs.mobile.gongshu.rn066.debug',
   },

@@ -6,8 +6,10 @@ const claimedRunIds: Record<string, boolean> = {};
 const runIdPattern = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$/;
 
 function handleUrl(url: string | null | undefined): void {
-  const prefix = 'gongshu-0.76://release-health?';
-  if (!url || url.indexOf(prefix) !== 0) return;
+  const prefix = ['ruban-rn076://', 'ruban-rn076-regression://', 'ruban-rn076-debug://']
+    .map(scheme => `${scheme}release-health?`)
+    .find(candidate => url?.indexOf(candidate) === 0);
+  if (!url || !prefix) return;
 
   const params: Record<string, string> = {};
   url

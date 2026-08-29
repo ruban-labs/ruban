@@ -1,6 +1,7 @@
 #import "AppDelegate.h"
 
 #import <React/RCTBundleURLProvider.h>
+#import "RNBootSplash.h"
 
 @implementation AppDelegate
 
@@ -17,6 +18,15 @@
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
   return [self bundleURL];
+}
+
+- (void)customizeRootView:(RCTRootView *)rootView
+{
+  rootView.backgroundColor = [UIColor colorWithRed:16.0 / 255.0
+                                             green:17.0 / 255.0
+                                              blue:20.0 / 255.0
+                                             alpha:1.0];
+  [RNBootSplash initWithStoryboard:@"LaunchScreen" rootView:rootView];
 }
 
 - (NSURL *)bundleURL

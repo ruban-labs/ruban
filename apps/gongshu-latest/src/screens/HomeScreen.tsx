@@ -10,7 +10,7 @@ import type {RootStackParamList, TabParamList} from '../navigation/types';
 
 type Props = BottomTabScreenProps<TabParamList, 'Home'>;
 type ComponentName = 'Button' | 'Card' | 'Badge' | 'Separator' | 'Switch' | 'Progress';
-type ComponentTarget = 'button' | 'card' | 'progress';
+type ComponentTarget = 'button' | 'card' | 'badge' | 'separator' | 'switch' | 'progress';
 
 const componentInventory: ReadonlyArray<{
   index: string;
@@ -22,9 +22,9 @@ const componentInventory: ReadonlyArray<{
 }> = [
   {index: '01', name: 'Button', category: 'ACTION', distribution: 'source', state: 'preview', target: 'button'},
   {index: '02', name: 'Card', category: 'SURFACE', distribution: 'source', state: 'preview', target: 'card'},
-  {index: '03', name: 'Badge', category: 'STATUS', distribution: 'source', state: 'draft'},
-  {index: '04', name: 'Separator', category: 'STRUCTURE', distribution: 'source', state: 'draft'},
-  {index: '05', name: 'Switch', category: 'CONTROL', distribution: 'source', state: 'draft'},
+  {index: '03', name: 'Badge', category: 'STATUS', distribution: 'source', state: 'preview', target: 'badge'},
+  {index: '04', name: 'Separator', category: 'STRUCTURE', distribution: 'source', state: 'preview', target: 'separator'},
+  {index: '05', name: 'Switch', category: 'CONTROL', distribution: 'source', state: 'preview', target: 'switch'},
   {index: '06', name: 'Progress', category: 'FEEDBACK', distribution: 'package', state: 'ready', target: 'progress'},
 ];
 const componentCount = String(componentInventory.length).padStart(2, '0');
@@ -79,7 +79,7 @@ export default function HomeScreen({navigation}: Props): React.ReactElement {
   const rootNavigation = navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
 
   const openComponent = (target: ComponentTarget) => {
-    if (target === 'button' || target === 'card') {
+    if (target !== 'progress') {
       rootNavigation?.navigate('ComponentDetail', {component: target, theme: 'light'});
       return;
     }

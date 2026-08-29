@@ -486,7 +486,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 69E533DF34D9F1DE9B8B4E9C /* Pods-gongshu066.debug.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDebug;
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
@@ -508,6 +508,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "Ruban Gongshu Samples Development";
 				RUBAN_APP_CHANNEL = debug;
 				RUBAN_APP_DISPLAY_NAME = "Gongshu 0.66 Dev";
+				RUBAN_URL_SCHEME = "ruban-rn066-debug";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -539,6 +540,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "Ruban Gongshu Samples Ad Hoc";
 				RUBAN_APP_CHANNEL = production;
 				RUBAN_APP_DISPLAY_NAME = "Gongshu 0.66";
+				RUBAN_URL_SCHEME = "ruban-rn066";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -697,7 +699,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4589BB137A1A3728D5DF4993 /* Pods-gongshu066.regression.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconRegression;
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
@@ -718,6 +720,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "Ruban Gongshu Samples Ad Hoc";
 				RUBAN_APP_CHANNEL = regression;
 				RUBAN_APP_DISPLAY_NAME = "Gongshu 0.66 Regression";
+				RUBAN_URL_SCHEME = "ruban-rn066-regression";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};

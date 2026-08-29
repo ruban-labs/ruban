@@ -27,8 +27,12 @@ import type {RootStackParamList, TabParamList} from './types';
 const Tab = createBottomTabNavigator<TabParamList>();
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
+type AppNavigatorProps = {
+  onReady?: () => void;
+};
+
 const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: ['ruban://', 'gongshu-0.66://'],
+  prefixes: ['ruban-rn066://', 'ruban-rn066-regression://', 'ruban-rn066-debug://'],
   config: {
     initialRouteName: 'Main',
     screens: {
@@ -206,7 +210,9 @@ function ComponentDetailRoute(
   );
 }
 
-export default function AppNavigator(): React.ReactElement {
+export default function AppNavigator({
+  onReady,
+}: AppNavigatorProps): React.ReactElement {
   const colors = useRubanColors();
   const baseTheme = colors.mode === 'dark' ? DarkTheme : DefaultTheme;
   const theme = React.useMemo<Theme>(
@@ -226,7 +232,7 @@ export default function AppNavigator(): React.ReactElement {
   );
 
   return (
-    <NavigationContainer linking={linking} theme={theme}>
+    <NavigationContainer linking={linking} onReady={onReady} theme={theme}>
       <RootStack.Navigator
         initialRouteName="Main"
         screenOptions={{headerShown: false, animation: 'slide_from_right'}}>

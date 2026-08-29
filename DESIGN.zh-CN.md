@@ -130,6 +130,21 @@ Android 提供的 Window Insets 是唯一事实来源，导航模式变化后直
 - 同一选择面必须在三个 Gongshu 时代分别通过类型检查、原生编译和真机截图；旧时代不
   使用 RN 0.66 尚未支持的布局属性来伪造一致性。
 
+### Deep Link 安装身份
+
+每个可同时安装的 App 只拥有一个 URL scheme。环境和 RN 时代都进入 scheme，因为
+iOS 自定义 URL Scheme 注册后，系统不能再根据路径把链接分发给不同 App。
+
+| 时代 | Production | Regression | Debug |
+| --- | --- | --- | --- |
+| latest | `ruban://` | `ruban-regression://` | `ruban-debug://` |
+| RN 0.76 | `ruban-rn076://` | `ruban-rn076-regression://` | `ruban-rn076-debug://` |
+| RN 0.66 | `ruban-rn066://` | `ruban-rn066-regression://` | `ruban-rn066-debug://` |
+
+不同 scheme 复用相同路径，例如 `components/switch`、`settings?sheet=build`、
+`lab/design?theme=dark`。Android 用 manifest placeholder、iOS 用 build setting 为每个
+构建选中唯一 scheme；禁止恢复让多个安装包同时声明同一链接的共享别名。
+
 ## 视觉方向
 
 采用 shadcn/ui 的方法，不照搬 Web 样式栈：
@@ -178,16 +193,23 @@ Ruban 应该像一张现代而精确的工作台：
 
 ## 品牌识别核心
 
-Ruban 的稳定识别符是 **Ruler Angle R**：一个精确的大写 `R`，有经过测量的上半圆、
-斜腿、完整尺寸版本左竖上的三道校准缺口，以及内侧的一枚小 cobalt 蓝对齐三角。其构造
-必须有结构感而不显笨重：上半圆内腔、三角与斜腿之间必须保留清晰且充足的留白。蓝色
-三角放入略大一圈的透明三角槽中，绝不能叠在主体填色上；三角内部保留两道微小的透明
-尺刻度。三角槽四边（包括右上斜边）都必须可见地留空。它用
-“精确”同时表达尺、工具和工场，不把鲁班做成字面的木工图案。不得加入木纹、锤子、锯、
+Ruban 不可变的几何锚点是透明、1254×1254 的
+[`brand/ruban-ruler-angle-r.png`](./brand/ruban-ruler-angle-r.png)：已选定的“`R` +
+`RUBAN`”竖版署名。其中稳定的识别符是 **Ruler Angle R**：一个精确的大写 `R`，有经过
+测量的上半圆、斜腿、完整尺寸版本左竖上的三道校准缺口，以及内侧的一枚小 cobalt 蓝对齐三角。其构造
+必须有结构感而不显笨重：上半圆外弧与内腔回转上下竖向对齐、连续平滑，R 的两条腿之间必须保留
+清晰且充足的留白。右斜腿
+从下半圆到基线的内外边应近似平行、等宽，不能收尖或折断。蓝色
+三角放在干净竖腿与斜腿之间自然形成的三角负空间中，绝不能通过切割、蒙版或白色描边
+去破坏主体 R；不得额外添加刻度。它用“精确”同时表达尺、工具和工场，不把鲁班做成字面的
+木工图案。不得加入木纹、锤子、锯、
 凿、印章、书法、丝带、React atom、泛 AI 图形、渐变或装饰特效。
 
-默认透明母版是 [`brand/ruban-core.svg`](./brand/ruban-core.svg)：主图形固定为 Ruban
-acid 黄 `#d9ff45`，内侧对齐三角则是识别关键的 cobalt 蓝 `#2563eb`。黄色刻意与现有产品
+该 PNG 是不可变的视觉与供稿参考，但不直接用作平台导出母版。透明的
+[`brand/ruban-core.svg`](./brand/ruban-core.svg) 是已经确认的核心矢量母版，直接描摹自该参考图。
+所有派生版都必须保留它的路径；如有重新生成，必须先与 PNG 叠图比对。不得再凭手感把 `R`
+调离任一核心资产。主图形固定为 Ruban acid 黄 `#d9ff45`，内侧
+对齐三角则是识别关键的 cobalt 蓝 `#2563eb`。黄色刻意与现有产品
 的 `acid-100` 色相对齐，但不是产品语义状态。默认黄图形应放在墨黑或其他足够深的底上，
 不可当作浅色表面的文字色。明确的深色呈现版本是
 [`brand/ruban-core-dark.svg`](./brand/ruban-core-dark.svg)：黑色 `#101114` 底、纯白
@@ -211,10 +233,19 @@ acid 黄 `#d9ff45`，内侧对齐三角则是识别关键的 cobalt 蓝 `#2563eb
 符号负责识别，`RUBAN` 负责正式署名；它们的组合不是另一枚 Logo。品牌黄是稳定的识别
 选择，不是 live/status 等产品状态；不要通过改变 Logo 几何或颜色去表达 App 状态。
 
+多种移动端分发包同机安装时，只通过 App 图标底色区分：正式版使用墨黑底和白色符号，
+回归版使用 acid 黄底和墨黑符号，调试版使用浅 cobalt 蓝底和墨黑符号。所有版本都保留
+cobalt 蓝三角，不增加角标，也不改变 Ruler Angle 的几何。原生开屏不重复环境信号，统一
+使用墨黑底，以及严格居中的 84 pt/dp acid 黄 / cobalt 蓝静态核心符号。原生开屏生命周期
+持续持有同一画面，导航就绪后直接撤下；不再叠加第二个 React Logo，也不添加自定义动画，
+仅保留八秒超时兜底以避免启动永久阻塞。`brand/mobile-assets.json` 与
+`scripts/brand/generate-mobile-assets.mjs` 共同管理所有移动端生成素材，平台输出不得手改。
+
 涉及品牌资产时，先读取设计路由
 [`skills/ruban-design/SKILL.md`](./skills/ruban-design/SKILL.md) 与其
-[`ruban-brand-identity` 子 skill](./skills/ruban-brand-identity/SKILL.md)。本轮生成的
-PNG 只用于决策，不纳入仓库资产。
+[`ruban-brand-identity` 子 skill](./skills/ruban-brand-identity/SKILL.md)。上述已选 PNG
+刻意作为不可变的视觉与供稿参考纳入仓库；`ruban-core.svg` 则是核心矢量母版。其他探索 PNG
+仍只用于决策。
 
 ## 组件展示页规范
 
@@ -246,6 +277,12 @@ deep link 冷启动时，顶部返回和 Android 系统返回都落到 Component
   `sm`、`md`、`lg` 三种 size，并覆盖 pressed、loading、disabled、full-width 状态。
 - **Card**：保持静态、可组合；由 Header、Title、Description、Action、Content、Footer、
   Meta 组成，并用 `default`、`muted`、`selected`、`alert`、`live`、`contrast` 表达语义 tone。
+- **Badge**：提供 `default`、`secondary`、`outline`、`destructive`、`live` 五种 variant
+  与 `sm`、`md` 两种 size；标签保持单行，运行时依赖为零。
+- **Separator**：支持 horizontal / vertical、`default` / `strong` / `accent` tone，以及
+  hairline / regular / bold 粗细；默认只承担装饰作用，不进入无障碍树。
+- **Switch**：由 `checked` 与 `onCheckedChange` 完全受控，提供 `sm`、`md` 两种 size，
+  保证最小 44pt 触控区，并明确暴露 switch 语义和 disabled 状态。
 
 ## Agent 设计契约
 

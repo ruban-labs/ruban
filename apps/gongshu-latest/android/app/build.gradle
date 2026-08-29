@@ -90,6 +90,10 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        manifestPlaceholders = [
+            usesCleartextTraffic: "false",
+            rubanLinkScheme: "ruban",
+        ]
     }
     signingConfigs {
         debug {
@@ -103,12 +107,14 @@ android {
         debug {
             signingConfig signingConfigs.debug
             applicationIdSuffix ".debug"
+            manifestPlaceholders.rubanLinkScheme = "ruban-debug"
             resValue "string", "app_name", "Ruban Dev"
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
+            manifestPlaceholders.rubanLinkScheme = "ruban"
             resValue "string", "app_name", "Ruban"
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
@@ -116,7 +122,7 @@ android {
         regression {
             initWith release
             applicationIdSuffix ".regression"
-            manifestPlaceholders = [usesCleartextTraffic: "false"]
+            manifestPlaceholders.rubanLinkScheme = "ruban-regression"
             matchingFallbacks = ["release"]
             signingConfig signingConfigs.debug
             resValue "string", "app_name", "Ruban Regression"

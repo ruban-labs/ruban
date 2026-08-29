@@ -16,6 +16,8 @@ export type ComponentDetailRouteParams = {
   size?: string;
   state?: string;
   tone?: string;
+  orientation?: string;
+  weight?: string;
 };
 
 export type SettingsRouteParams = {

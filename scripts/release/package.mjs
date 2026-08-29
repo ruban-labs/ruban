@@ -382,6 +382,15 @@ function assertAndroidHermes(apkPath) {
   });
   if (result.error || result.status !== 0) fail('unable to read assets/index.android.bundle from APK');
   assertHermesBytes(result.stdout, 'assets/index.android.bundle');
+
+  const entries = spawnSync('unzip', ['-Z1', apkPath], {
+    encoding: 'utf8',
+    maxBuffer: 128 * 1024 * 1024,
+  });
+  if (entries.error || entries.status !== 0) fail('unable to list native libraries in APK');
+  if (!/^lib\/(?:armeabi-v7a|arm64-v8a|x86|x86_64)\/libhermes\.so$/m.test(entries.stdout)) {
+    fail('Android release APK is missing the Hermes runtime library');
+  }
 }
 
 function relativePath(filePath) {

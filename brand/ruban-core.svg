@@ -1,11 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
   <title id="title">Ruban Ruler Angle R core mark</title>
-  <defs>
-    <mask id="ruban-accent-socket" maskUnits="userSpaceOnUse" x="0" y="0" width="96" height="96">
-      <rect width="96" height="96" fill="#ffffff"/>
-      <path d="M31 51 49 69H31V51Z" fill="#000000"/>
-    </mask>
-  </defs>
-  <path fill="#d9ff45" fill-rule="evenodd" mask="url(#ruban-accent-socket)" d="M18 13h37c15 0 25 11 25 26 0 11-5 19-14 23l18 22H63L46 63H30v21H18V13Zm12 14v21h24c8 0 13-4 13-10s-5-11-13-11H30Zm-12 21h8v3h-8v-3Zm0 9h8v3h-8v-3Zm0 9h8v3h-8v-3Z"/>
-  <path fill="#2563eb" fill-rule="evenodd" d="M33 55 44 66H33V55ZM34 58h2v1h-2v-1Zm0 4h4v1h-4v-1Z"/>
+  <path fill="#d9ff45" fill-rule="evenodd" d="M12.16 12.88L56.58 12.88L62.19 14.16L67.8 17.37L71.33 21.06L74.06 26.35L75.02 30.52L75.02 35.49L74.22 39.18L72.45 43.19L68.12 48.32L63.47 51.21L56.58 53.13L84 83.12L67.8 83.12L29.64 41.1L55.3 40.78L57.38 40.14L60.27 37.74L61.55 34.21L61.07 30.36L58.98 27.47L55.62 25.87L12.16 25.87ZM12.16 27.8L26.75 41.43L26.59 83.12L12.16 83.12L12.16 74.62L18.09 74.46L18.09 72.53L12.16 72.53L12.16 62.59L18.09 62.59L18.09 60.67L12.16 60.51L12 50.57L12.16 49.76L18.73 49.76L18.73 47.68L12.16 47.68Z"/>
+  <path fill="#2563eb" fill-rule="evenodd" d="M29.48 45.43L35.73 51.85L41.02 57.94L29.48 57.94Z"/>
 </svg>

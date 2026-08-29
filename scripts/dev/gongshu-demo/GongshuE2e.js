@@ -1,5 +1,5 @@
 // Gongshu E2E - deep-link driven smoke scenario runner.
-// Adapted (minimal) from rabby-mobile's regression framework: an explicit,
+// Keep the regression harness explicit and minimal: one declared scenario,
 // valid, one-shot command arms a scenario that invokes the SAME handlers the
 // UI buttons use, then reports structured `[GONGSHU-E2E]` console lines that
 // the host runner greps from logcat.

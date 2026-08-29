@@ -120,7 +120,7 @@ function ProgressLabScreen({route}: Props): React.ReactElement {
       <View style={[styles.linkNote, {backgroundColor: colors.accentSoft}]}>
         <Text style={[styles.linkNoteLabel, {color: colors.accent}]}>REPRODUCE THIS STATE</Text>
         <Text selectable style={[styles.linkText, {color: colors.ink}]}>
-          ruban://lab/progress?bar={barProgress.toFixed(2)}&amp;circle={circleProgress.toFixed(2)}&amp;pie={pieProgress.toFixed(2)}&amp;indeterminate={indeterminateAnimating ? '1' : '0'}
+          ruban-rn076://lab/progress?bar={barProgress.toFixed(2)}&amp;circle={circleProgress.toFixed(2)}&amp;pie={pieProgress.toFixed(2)}&amp;indeterminate={indeterminateAnimating ? '1' : '0'}
         </Text>
       </View>
     </RubanScreen>

@@ -66,7 +66,7 @@ export default function ButtonShowcaseScreen({route, navigation, onBack}: Props)
   const size = parseOption<ButtonSize>(route.params.size, buttonSizes, 'md');
   const state = parseOption<ButtonState>(route.params.state, buttonStates, 'default');
   const [pressCount, setPressCount] = React.useState(0);
-  const deepLink = `ruban://components/button?theme=${theme}&variant=${variant}&size=${size}&state=${state}`;
+  const deepLink = `ruban-rn076://components/button?theme=${theme}&variant=${variant}&size=${size}&state=${state}`;
 
   return (
     <ComponentShowcaseScreen

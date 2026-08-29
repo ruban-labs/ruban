@@ -157,6 +157,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        manifestPlaceholders = [rubanLinkScheme: "ruban-rn066"]
     }
     sourceSets {
         main {
@@ -188,6 +189,7 @@ android {
         debug {
             signingConfig signingConfigs.debug
             applicationIdSuffix ".debug"
+            manifestPlaceholders.rubanLinkScheme = "ruban-rn066-debug"
             resValue "string", "app_name", "Gongshu 0.66 Dev"
             if (nativeArchitectures) {
                 ndk {
@@ -199,6 +201,7 @@ android {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
+            manifestPlaceholders.rubanLinkScheme = "ruban-rn066"
             resValue "string", "app_name", "Gongshu 0.66"
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
@@ -206,6 +209,7 @@ android {
         regression {
             initWith release
             applicationIdSuffix ".regression"
+            manifestPlaceholders.rubanLinkScheme = "ruban-rn066-regression"
             matchingFallbacks = ["release"]
             signingConfig signingConfigs.debug
             resValue "string", "app_name", "Gongshu 0.66 Regression"
@@ -253,6 +257,7 @@ dependencies {
         def hermesPath = "../../node_modules/hermes-engine/android/";
         debugImplementation files(hermesPath + "hermes-debug.aar")
         releaseImplementation files(hermesPath + "hermes-release.aar")
+        regressionImplementation files(hermesPath + "hermes-release.aar")
     } else {
         implementation jscFlavor
     }
