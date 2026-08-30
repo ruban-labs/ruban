@@ -372,34 +372,15 @@ function importMatchIdentity(
     throw new Error(`expected one Match ${certificateType} identity, found ${identities.length}`);
   }
 
-  const extractedPem = path.join(temporaryRoot, `${certificateType}-identity.pem`);
   const compatibleP12 = path.join(temporaryRoot, `${certificateType}-identity-legacy.p12`);
-  checked('openssl', [
-    'pkcs12',
-    '-legacy',
-    '-in',
+  checked('bundle', [
+    'exec',
+    'ruby',
+    'scripts/release/repack-pkcs12.rb',
     identities[0],
-    '-nodes',
-    '-passin',
-    'pass:',
-    '-out',
-    extractedPem,
-  ], {sensitive: true});
-  fs.chmodSync(extractedPem, 0o600);
-  checked('openssl', [
-    'pkcs12',
-    '-export',
-    '-legacy',
-    '-in',
-    extractedPem,
-    '-passout',
-    `pass:${identityPassword}`,
-    '-out',
     compatibleP12,
-    '-name',
     `Ruban ${certificateType} identity`,
-  ], {sensitive: true});
-  fs.chmodSync(compatibleP12, 0o600);
+  ], {cwd: repoRoot, input: identityPassword, sensitive: true});
   checked('security', [
     'import',
     compatibleP12,
