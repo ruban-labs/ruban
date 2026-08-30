@@ -18,7 +18,6 @@ on:
           - all-packages
   push:
     branches: [feat/gongshu-app-foundation]
-    paths: [.github/workflows/mobile-release.yml]
 
 permissions:
   contents: read
