@@ -1,0 +1,84 @@
+---
+import CompatibilityMatrix from '../components/CompatibilityMatrix.astro';
+import LibraryInventory from '../components/LibraryInventory.astro';
+import SiteLayout from '../layouts/SiteLayout.astro';
+---
+
+<SiteLayout
+  currentPath="/"
+  title="Ruban — Native React Tools"
+  description="Ruban builds small, sharp React Native libraries for bare apps across real native versions."
+>
+  <section class="hero frame">
+    <div class="hero-copy">
+      <p class="kicker">RUBAN / NATIVE REACT TOOLS</p>
+      <h1>Build close<br />to the metal.</h1>
+      <p class="hero-statement">Small, sharp React Native libraries. Bare by default.</p>
+      <div class="hero-actions">
+        <a
+          class="button button-primary"
+          href="https://github.com/ruban-labs/ruban"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          View source <span aria-hidden="true">↗</span>
+        </a>
+        <a
+          class="button button-secondary"
+          href="https://www.npmjs.com/org/ruban-labs"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          npm <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </div>
+    <CompatibilityMatrix />
+  </section>
+
+  <section class="principles" aria-label="Product principles">
+    <div><span class="data-label">RUNTIME</span><strong>BARE FIRST</strong></div>
+    <div><span class="data-label">NATIVE</span><strong>EARLY</strong></div>
+    <div><span class="data-label">SUPPORT</span><strong>RN 0.66+</strong></div>
+    <div><span class="data-label">PROOF</span><strong>REAL APPS</strong></div>
+  </section>
+
+  <LibraryInventory />
+
+  <section class="workshop frame">
+    <div class="workshop-mark" aria-hidden="true">R</div>
+    <div>
+      <p class="kicker">GONGSHU / THE WORKSHOP</p>
+      <h2>Three eras.<br />One standard.</h2>
+    </div>
+    <div class="workshop-facts">
+      <div><span>01</span><strong>COMPONENTS</strong></div>
+      <div><span>02</span><strong>COMPATIBILITY</strong></div>
+      <div><span>03</span><strong>RELEASE PROOF</strong></div>
+    </div>
+  </section>
+
+  <section class="support frame" id="support">
+    <div class="section-heading section-heading-dark">
+      <p class="kicker">RUBAN MOBILE</p>
+      <h2>Support</h2>
+      <span class="section-index">02</span>
+    </div>
+    <div class="support-grid">
+      <a
+        href="https://github.com/ruban-labs/ruban/issues/new"
+        target="_blank"
+        rel="noreferrer noopener"
+      >
+        <span class="data-label">TECHNICAL SUPPORT</span>
+        <strong>OPEN AN ISSUE</strong>
+        <span aria-hidden="true">↗</span>
+      </a>
+      <a href="/privacy/">
+        <span class="data-label">APP DISCLOSURE</span>
+        <strong>PRIVACY POLICY</strong>
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+</SiteLayout>

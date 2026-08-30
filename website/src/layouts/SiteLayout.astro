@@ -1,0 +1,39 @@
+---
+import faviconUrl from '../../../brand/ruban-app-icon-dark.svg?url';
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import '../assets/site.css';
+
+interface Props {
+  currentPath: '/' | '/privacy/';
+  description: string;
+  title: string;
+}
+
+const {currentPath, description, title} = Astro.props;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101114" />
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" href={faviconUrl} type="image/svg+xml" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <SiteHeader currentPath={currentPath} />
+    <main>
+      <slot />
+    </main>
+    <SiteFooter />
+  </body>
+</html>

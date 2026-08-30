@@ -7,5 +7,7 @@ coverage/
 ruban-local.tgz
 .cache/
 artifacts/
+website/dist/
+website/.astro/
 fastlane/report.xml
 _private/

@@ -1,0 +1,28 @@
+---
+const rows = [
+  {version: '0.66', architecture: 'OLD ARCH'},
+  {version: '0.76', architecture: 'OLD + NEW'},
+  {version: 'LATEST', architecture: 'NEW ARCH', accent: true},
+];
+---
+
+<div class="matrix" aria-label="React Native compatibility matrix">
+  <div class="matrix-head">
+    <span>GONGSHU / BUILD MATRIX</span>
+    <span class="status-dot">LIVE</span>
+  </div>
+  {
+    rows.map(row => (
+      <div class:list={['matrix-row', {'matrix-row-accent': row.accent}]}>
+        <strong>{row.version}</strong>
+        <span>{row.architecture}</span>
+        <span>BARE</span>
+      </div>
+    ))
+  }
+  <div class="matrix-foot">
+    <span>ANDROID</span>
+    <span>iOS</span>
+    <span>HERMES</span>
+  </div>
+</div>
