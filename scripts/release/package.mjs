@@ -274,15 +274,22 @@ function captured(commandName, args, options = {}) {
   return `${result.stdout || ''}${result.stderr || ''}`.trim();
 }
 
+function cocoaPodsEnvironment(env = process.env) {
+  return {...env, BUNDLE_GEMFILE: path.join(repoRoot, 'Gemfile')};
+}
+
 function resolveCocoaPodsScript() {
   const result = spawnSync(
-    'ruby',
+    'bundle',
     [
+      'exec',
+      'ruby',
       '-e',
       `require 'rubygems'; spec = Gem::Specification.find_by_name('cocoapods', '= ${cocoaPodsVersion}'); print File.join(spec.full_gem_path, 'bin', 'pod')`,
     ],
     {
       cwd: repoRoot,
+      env: cocoaPodsEnvironment(),
       encoding: 'utf8',
       maxBuffer: 1024 * 1024,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -1207,9 +1214,9 @@ function buildIosOnce(context, runIndex, captureRoot) {
   }
   fs.mkdirSync(env.CP_HOME_DIR, {recursive: true});
   console.log(`gongshu-package: CocoaPods ${app.directory}/${options.architecture}`);
-  command('ruby', [resolveCocoaPodsScript(), 'install'], {
+  command('bundle', ['exec', 'ruby', resolveCocoaPodsScript(), 'install'], {
     cwd: iosDir,
-    env: {...env, COCOAPODS_NO_BUNDLER: '1'},
+    env: cocoaPodsEnvironment({...env, COCOAPODS_NO_BUNDLER: '1'}),
   });
   if (era === '0.66') {
     patchLegacyBoostHash(appDir);
