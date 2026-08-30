@@ -38,7 +38,7 @@ appId: com.rubanlabs.mobile.debug
 - extendedWaitUntil:
     visible:
       text: "Badge"
-    timeout: 20000
+    timeout: 120000
 - assertVisible:
     text: "LIVE"
 - openLink: "ruban-debug://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"

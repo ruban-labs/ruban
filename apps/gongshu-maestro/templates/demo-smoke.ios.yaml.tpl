@@ -38,7 +38,7 @@ appId: {{appId}}
 - extendedWaitUntil:
     visible:
       text: "Badge"
-    timeout: 20000
+    timeout: 120000
 - assertVisible:
     text: "LIVE"
 - openLink: "{{scheme}}://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"

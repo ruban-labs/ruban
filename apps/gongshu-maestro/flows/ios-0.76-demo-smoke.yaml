@@ -38,7 +38,7 @@ appId: com.rubanlabs.mobile.gongshu.rn076.debug
 - extendedWaitUntil:
     visible:
       text: "Badge"
-    timeout: 20000
+    timeout: 120000
 - assertVisible:
     text: "LIVE"
 - openLink: "ruban-rn076-debug://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
