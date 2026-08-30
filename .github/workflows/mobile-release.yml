@@ -108,8 +108,8 @@ jobs:
         if: matrix.platform == 'ios'
         run: |
           bundle config set path .cache/toolchains/bundle
+          bundle config set force_ruby_platform true
           bundle install --jobs 4 --retry 3
-          gem install cocoapods -v 1.15.2 --no-document
 
       - uses: actions/setup-node@v4
         if: matrix.eraNode != 22
