@@ -90,8 +90,8 @@ android {
         applicationId "com.rubanlabs.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode (project.findProperty("RUBAN_VERSION_CODE") ?: "1").toInteger()
+        versionName project.findProperty("RUBAN_VERSION_NAME") ?: "1.0"
         manifestPlaceholders = [
             usesCleartextTraffic: "false",
             rubanLinkScheme: "ruban",

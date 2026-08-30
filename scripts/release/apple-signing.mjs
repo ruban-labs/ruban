@@ -103,6 +103,7 @@ function resolveKeychainHelper() {
 }
 
 function loadMatchPassword() {
+  if (process.env.RUBAN_MATCH_PASSWORD) return process.env.RUBAN_MATCH_PASSWORD;
   return run(resolveKeychainHelper(), ['get', account, matchPasswordService], {
     sensitive: true,
   }).stdout;
@@ -279,22 +280,35 @@ function parseKeychainList(output) {
 }
 
 function importWwdrCertificates(keychainPath, temporaryRoot) {
-  const loginKeychain = path.join(os.homedir(), 'Library', 'Keychains', 'login.keychain-db');
-  const pemSequence = checked('security', [
-    'find-certificate',
-    '-a',
-    '-c',
-    'Apple Worldwide Developer Relations',
-    '-p',
-    loginKeychain,
-  ]).stdout;
-  const certificates = pemSequence.match(
-    /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g,
-  ) || [];
-  if (certificates.length < 5) {
-    throw new Error('the login keychain does not contain the required Apple WWDR certificates');
+  const candidates = [
+    path.join(os.homedir(), 'Library', 'Keychains', 'login.keychain-db'),
+    '/Library/Keychains/System.keychain',
+    '/System/Library/Keychains/SystemRootCertificates.keychain',
+  ].filter(candidate => fs.existsSync(candidate));
+  const certificates = new Set();
+  for (const candidate of candidates) {
+    const result = spawnSync('security', [
+      'find-certificate',
+      '-a',
+      '-c',
+      'Apple Worldwide Developer Relations',
+      '-p',
+      candidate,
+    ], {
+      encoding: 'utf8',
+      maxBuffer: 16 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    if (result.status !== 0) continue;
+    const matches = result.stdout.match(
+      /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g,
+    ) || [];
+    matches.forEach(certificate => certificates.add(certificate));
   }
-  certificates.forEach((certificate, index) => {
+  if (certificates.size === 0) {
+    throw new Error('no Apple WWDR certificate is available on this runner');
+  }
+  [...certificates].forEach((certificate, index) => {
     const certificatePath = path.join(temporaryRoot, `wwdr-${index}.pem`);
     fs.writeFileSync(certificatePath, `${certificate}\n`, {mode: 0o600});
     checked('security', ['import', certificatePath, '-k', keychainPath], {sensitive: true});
@@ -315,14 +329,18 @@ function filesBelow(root, predicate) {
 }
 
 function decryptMatchRepository(repositoryPath, env) {
-  const gemRoot = path.join(repoRoot, '.cache', 'toolchains', 'bundle', 'ruby', '2.7.0', 'gems');
-  const fastlaneDirectories = fs.readdirSync(gemRoot)
-    .filter(name => /^fastlane-\d/.test(name))
-    .sort();
-  if (fastlaneDirectories.length !== 1) {
-    throw new Error(`expected one bundled Fastlane gem, found ${fastlaneDirectories.length}`);
+  const fastlaneRoot = checked('bundle', ['show', 'fastlane'], {
+    cwd: repoRoot,
+    env,
+    sensitive: true,
+  }).stdout
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .at(-1);
+  if (!fastlaneRoot || !fs.existsSync(fastlaneRoot)) {
+    throw new Error('the bundled Fastlane gem is unavailable');
   }
-  const fastlaneRoot = path.join(gemRoot, fastlaneDirectories[0]);
   checked('bundle', [
     'exec',
     'ruby',
@@ -395,21 +413,33 @@ function importMatchIdentity(
   ], {sensitive: true});
 }
 
-function installAppStoreProfile(repositoryPath) {
-  const profileRoot = path.join(repositoryPath, 'profiles', 'appstore');
-  const profiles = filesBelow(profileRoot, filePath => filePath.endsWith('.mobileprovision'))
-    .filter(filePath => provisioningProfileName(filePath) === 'Ruban Mobile App Store');
-  if (profiles.length !== 1) {
-    throw new Error(`expected one Ruban App Store profile, found ${profiles.length}`);
-  }
-  const decoded = checked('security', ['cms', '-D', '-i', profiles[0]], {sensitive: true}).stdout;
-  const uuid = checked('plutil', ['-extract', 'UUID', 'raw', '-o', '-', '-'], {
-    input: decoded,
-    sensitive: true,
-  }).stdout.trim();
+function installSigningProfiles(repositoryPath) {
+  const profileRoot = path.join(repositoryPath, 'profiles');
+  const expectedNames = new Set(profilePolicies.map(policy => policy.name));
+  const profiles = filesBelow(profileRoot, filePath => filePath.endsWith('.mobileprovision'));
   const profilesDirectory = path.join(os.homedir(), 'Library', 'MobileDevice', 'Provisioning Profiles');
   fs.mkdirSync(profilesDirectory, {recursive: true});
-  fs.copyFileSync(profiles[0], path.join(profilesDirectory, `${uuid}.mobileprovision`));
+  const installed = [];
+  const foundNames = new Set();
+  for (const profile of profiles) {
+    const name = provisioningProfileName(profile);
+    if (!expectedNames.has(name)) continue;
+    const decoded = checked('security', ['cms', '-D', '-i', profile], {sensitive: true}).stdout;
+    const uuid = checked('plutil', ['-extract', 'UUID', 'raw', '-o', '-', '-'], {
+      input: decoded,
+      sensitive: true,
+    }).stdout.trim();
+    const destination = path.join(profilesDirectory, `${uuid}.mobileprovision`);
+    fs.copyFileSync(profile, destination);
+    installed.push(destination);
+    foundNames.add(name);
+  }
+  const missingNames = [...expectedNames].filter(name => !foundNames.has(name));
+  if (missingNames.length > 0) {
+    installed.forEach(filePath => fs.rmSync(filePath, {force: true}));
+    throw new Error(`Match repository is missing profiles: ${missingNames.join(', ')}`);
+  }
+  return installed;
 }
 
 function resolveGithubTooling() {
@@ -449,10 +479,10 @@ function resolveGithubToken(rayGh, projectPath) {
   return token;
 }
 
-function runWithIsolatedAppStoreSigning() {
+function runWithIsolatedSigning() {
   const separator = process.argv.indexOf('--');
   if (separator === -1 || !process.argv[separator + 1]) {
-    fail('run-app-store requires -- <command> [args]');
+    fail('run-isolated requires -- <command> [args]');
   }
 
   const command = process.argv[separator + 1];
@@ -460,42 +490,52 @@ function runWithIsolatedAppStoreSigning() {
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ruban-app-store-signing-'));
   fs.chmodSync(temporaryRoot, 0o700);
   const keychainPath = path.join(temporaryRoot, 'build.keychain-db');
-  const matchRepositoryPath = path.join(temporaryRoot, 'apple-certs');
+  const providedRepositoryPath = process.env.RUBAN_APPLE_CERTS_PATH
+    ? path.resolve(process.env.RUBAN_APPLE_CERTS_PATH)
+    : null;
+  const matchRepositoryPath = providedRepositoryPath || path.join(temporaryRoot, 'apple-certs');
   const keychainPassword = crypto.randomBytes(32).toString('base64url');
   const originalKeychains = parseKeychainList(
     checked('security', ['list-keychains', '-d', 'user']).stdout,
   );
+  let installedProfiles = [];
   let exitCode = 1;
 
   try {
-    const {rayGh, projectPath} = resolveGithubTooling();
-    const githubProxyUrl = 'http://127.0.0.1:17890';
-    const githubCloneEnv = {
-      ...process.env,
-      GIT_CONFIG_COUNT: '2',
-      GIT_CONFIG_KEY_0: 'http.https://github.com.proxy',
-      GIT_CONFIG_VALUE_0: githubProxyUrl,
-      GIT_CONFIG_KEY_1: 'http.version',
-      GIT_CONFIG_VALUE_1: 'HTTP/1.1',
-      GIT_TERMINAL_PROMPT: '0',
-    };
-    checked(process.execPath, [
-      rayGh,
-      '--project',
-      projectPath,
-      '--identity',
-      'ruban',
-      '--purpose',
-      'maintenance',
-      '--profile',
-      'github-ruban-labs-maintainer',
-      '--',
-      'repo',
-      'clone',
-      'ruban-labs/apple-certs',
-      matchRepositoryPath,
-    ], {cwd: repoRoot, env: githubCloneEnv, inherit: true});
-    const githubToken = resolveGithubToken(rayGh, projectPath);
+    let githubToken = null;
+    if (providedRepositoryPath) {
+      if (!fs.statSync(providedRepositoryPath, {throwIfNoEntry: false})?.isDirectory()) {
+        throw new Error('RUBAN_APPLE_CERTS_PATH must name a checked-out Match repository');
+      }
+    } else {
+      const {rayGh, projectPath} = resolveGithubTooling();
+      const githubCloneEnv = {
+        ...process.env,
+        GIT_CONFIG_COUNT: '2',
+        GIT_CONFIG_KEY_0: 'http.https://github.com.proxy',
+        GIT_CONFIG_VALUE_0: 'http://127.0.0.1:17890',
+        GIT_CONFIG_KEY_1: 'http.version',
+        GIT_CONFIG_VALUE_1: 'HTTP/1.1',
+        GIT_TERMINAL_PROMPT: '0',
+      };
+      checked(process.execPath, [
+        rayGh,
+        '--project',
+        projectPath,
+        '--identity',
+        'ruban',
+        '--purpose',
+        'maintenance',
+        '--profile',
+        'github-ruban-labs-maintainer',
+        '--',
+        'repo',
+        'clone',
+        'ruban-labs/apple-certs',
+        matchRepositoryPath,
+      ], {cwd: repoRoot, env: githubCloneEnv, inherit: true});
+      githubToken = resolveGithubToken(rayGh, projectPath);
+    }
     checked('security', ['create-keychain', '-p', keychainPassword, keychainPath], {
       sensitive: true,
     });
@@ -508,18 +548,17 @@ function runWithIsolatedAppStoreSigning() {
 
     const env = signingEnvironment({
       MATCH_GIT_URL: 'https://github.com/ruban-labs/apple-certs.git',
-      MATCH_GIT_BASIC_AUTHORIZATION: Buffer.from(
-        `x-access-token:${githubToken}`,
-      ).toString('base64'),
+      ...(githubToken
+        ? {
+            MATCH_GIT_BASIC_AUTHORIZATION: Buffer.from(
+              `x-access-token:${githubToken}`,
+            ).toString('base64'),
+          }
+        : {}),
       MATCH_KEYCHAIN_NAME: keychainPath,
       MATCH_KEYCHAIN_PASSWORD: keychainPassword,
       MATCH_SKIP_SET_PARTITION_LIST: 'true',
       RUBAN_IOS_SIGNING_KEYCHAIN: keychainPath,
-      GIT_CONFIG_COUNT: '3',
-      GIT_CONFIG_KEY_1: 'http.https://github.com.proxy',
-      GIT_CONFIG_VALUE_1: githubProxyUrl,
-      GIT_CONFIG_KEY_2: 'http.version',
-      GIT_CONFIG_VALUE_2: 'HTTP/1.1',
     });
     decryptMatchRepository(matchRepositoryPath, env);
     importMatchIdentity(
@@ -536,7 +575,7 @@ function runWithIsolatedAppStoreSigning() {
       temporaryRoot,
       keychainPassword,
     );
-    installAppStoreProfile(matchRepositoryPath);
+    installedProfiles = installSigningProfiles(matchRepositoryPath);
     checked('security', [
       'set-key-partition-list',
       '-S',
@@ -557,6 +596,7 @@ function runWithIsolatedAppStoreSigning() {
   } catch (error) {
     console.error(`apple-signing: ${error instanceof Error ? error.message : String(error)}`);
   } finally {
+    installedProfiles.forEach(filePath => fs.rmSync(filePath, {force: true}));
     spawnSync('security', ['list-keychains', '-d', 'user', '-s', ...originalKeychains], {
       stdio: 'ignore',
     });
@@ -571,7 +611,7 @@ try {
   const command = process.argv[2];
   if (command === 'check') {
     loadMatchPassword();
-    console.log('apple-signing: Match password is available in macOS Keychain');
+    console.log('apple-signing: Match password is available');
   } else if (command === 'inspect-local') {
     const materialRoot = option('--material-root');
     if (!materialRoot) fail('inspect-local requires --material-root');
@@ -585,10 +625,10 @@ try {
     bootstrapMatch(path.resolve(materialRoot), path.resolve(ascKeyPath));
   } else if (command === 'run') {
     runWithSigning();
-  } else if (command === 'run-app-store') {
-    runWithIsolatedAppStoreSigning();
+  } else if (command === 'run-isolated' || command === 'run-app-store') {
+    runWithIsolatedSigning();
   } else {
-    fail('expected check, inspect-local, bootstrap-match, run, or run-app-store');
+    fail('expected check, inspect-local, bootstrap-match, run, run-isolated, or run-app-store');
   }
 } catch (error) {
   console.error(`apple-signing: ${error instanceof Error ? error.message : String(error)}`);

@@ -98,6 +98,13 @@ function loadKeychainPassword(service) {
   ).stdout;
 }
 
+function loadSigningPassword(key, kind) {
+  const suffix = kind === 'store' ? 'STORE_PASSWORD' : 'KEY_PASSWORD';
+  const environmentValue = process.env[`${key.prefix}_${suffix}`];
+  if (environmentValue) return environmentValue;
+  return loadKeychainPassword(keychainService(key, kind));
+}
+
 function sha256File(filePath) {
   return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
 }
@@ -196,11 +203,11 @@ function signingEnvironment(keystoreRoot) {
   const keytool = resolveKeytool();
   for (const key of keys) {
     const storeFile = path.join(keystoreRoot, key.file);
-    const storePassword = loadKeychainPassword(keychainService(key, 'store'));
+    const storePassword = loadSigningPassword(key, 'store');
     env[`${key.prefix}_STORE_FILE`] = storeFile;
     env[`${key.prefix}_STORE_PASSWORD`] = storePassword;
     env[`${key.prefix}_KEY_ALIAS`] = key.alias;
-    env[`${key.prefix}_KEY_PASSWORD`] = loadKeychainPassword(keychainService(key, 'key'));
+    env[`${key.prefix}_KEY_PASSWORD`] = loadSigningPassword(key, 'key');
     env[`${key.prefix}_CERT_SHA256`] = certificateFingerprint(
       keytool,
       storeFile,

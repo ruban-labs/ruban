@@ -20,9 +20,10 @@ Apple signing uses Team `X4CK8ZXA45`. The explicit Ruban identities own separate
 Ad Hoc, and Development profiles. Gongshu apps share the
 `com.rubanlabs.mobile.gongshu.*` Development and Ad Hoc profiles.
 
-Android production and regression builds temporarily use development signing until the Ruban
-Google Play/signing credential is provisioned. They are buildable and installable, but not yet
-store-uploadable.
+Android signing material lives in the private `ruban-labs/android-signing` repository. The formal
+website APK uses the app-signing key; Play AABs, regression APKs and Gongshu sample packages use
+the upload key. CI receives only the four keystore passwords as encrypted repository secrets and
+materializes the encrypted PKCS#12 files with a short-lived GitHub App installation token.
 
 ## Build Modes
 
@@ -129,11 +130,41 @@ final code signature, bundle identifier, embedded provisioning profile and Herme
 publishing the IPA. RN 0.66's historical Hermes framework contains obsolete embedded Bitcode, so
 the device embed phase removes it before CocoaPods signs the framework.
 
-The active Ruby must provide CocoaPods `1.15.2`. Certificate, private-key and provisioning-profile
-material belongs in the private `ruban-labs/apple-certs` Match repository; this repository stores
-only non-secret Team, profile-name and packaging policy metadata. A later Fastlane integration can
-materialize the same signing inputs before invoking this package command without changing the
-matrix contract.
+The active Ruby must provide CocoaPods `1.15.2`. Encrypted certificate, private-key and
+provisioning-profile material belongs in the private `ruban-labs/apple-certs` Match repository;
+the Ruban source repository stores only non-secret Team, profile-name and packaging policy
+metadata. The CI signing wrapper decrypts the private checkout into a temporary keychain, installs
+only the expected Ruban profiles, restores the runner keychain search list and deletes the
+materialized signing state after packaging.
+
+## GitHub Actions Release Lane
+
+`.github/workflows/mobile-release.yml` is the signed packaging and store-upload entry point. Once
+the workflow exists on `main`, run it manually and choose one target:
+
+- `android-regression-matrix` or `ios-regression-matrix` builds every valid RN/architecture cell;
+- `android-latest-website`, `android-latest-play`, or `ios-latest-app-store` builds one formal package;
+- `all-packages` builds the complete signed package matrix without uploading to a store;
+- `ios-testflight` builds the latest production App Store IPA and uploads it to TestFlight.
+
+Every run uses `github.run_number` as `RUBAN_BUILD_NUMBER`. The packager injects it as Android
+`versionCode` and iOS `CFBundleVersion`, while the app-local package version remains the shared
+Android `versionName` and iOS `CFBundleShortVersionString`. This keeps repeated store uploads unique
+without changing source versions merely to retry CI.
+
+Repository secrets:
+
+- `RUBAN_GITHUB_APP_ID` and `RUBAN_GITHUB_APP_PRIVATE_KEY` read the two private signing repositories;
+- `RUBAN_MATCH_PASSWORD` decrypts Match;
+- `RUBAN_ASC_KEY_ID`, `RUBAN_ASC_ISSUER_ID`, and `RUBAN_ASC_PRIVATE_KEY` authenticate App Store Connect;
+- `RUBAN_ANDROID_APP_SIGNING_STORE_PASSWORD` and `RUBAN_ANDROID_APP_SIGNING_KEY_PASSWORD` unlock the website key;
+- `RUBAN_ANDROID_UPLOAD_STORE_PASSWORD` and `RUBAN_ANDROID_UPLOAD_KEY_PASSWORD` unlock the upload key.
+- `RUBAN_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` is reserved for the Play upload lane once the Console app-signing bootstrap is unblocked.
+
+The workflow caches content-keyed Metro/prebundle state, Gradle state, CocoaPods downloads and
+Xcode intermediates. Signed Xcode products and archives are deleted before the cache post-step, so
+provisioning material is not persisted in Actions cache. Final package, source map and manifest are
+uploaded as 14-day workflow artifacts.
 
 ## Metro Policy
 

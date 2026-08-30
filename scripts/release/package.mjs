@@ -100,6 +100,15 @@ function readAppVersion(appDir) {
   return version;
 }
 
+function readBuildNumber() {
+  const value = process.env.RUBAN_BUILD_NUMBER;
+  if (!value) return null;
+  if (!/^[1-9][0-9]{0,9}$/.test(value) || Number(value) > 2100000000) {
+    fail('RUBAN_BUILD_NUMBER must be an integer between 1 and 2100000000');
+  }
+  return value;
+}
+
 function usage() {
   console.log(`usage:
   node scripts/release/package.mjs \\
@@ -922,7 +931,7 @@ function prebundleLegacyAndroid(context, runIndex) {
 }
 
 function buildAndroidOnce(context, runIndex, captureRoot) {
-  const {era, appDir, app, options, cacheRoot, nativeKey, java} = context;
+  const {era, appDir, app, options, cacheRoot, nativeKey, java, version, buildNumber} = context;
   const androidDir = path.join(appDir, 'android');
   const gradleHome = path.join(
     cacheRoot,
@@ -958,6 +967,8 @@ function buildAndroidOnce(context, runIndex, captureRoot) {
   const buildType = options.lane === 'regression' ? 'Regression' : 'Release';
   const buildTypeLower = buildType.toLowerCase();
   const artifactFormat = options.androidDistribution === 'play' ? 'aab' : 'apk';
+  args.push(`-PRUBAN_VERSION_NAME=${version}`);
+  if (buildNumber) args.push(`-PRUBAN_VERSION_CODE=${buildNumber}`);
   args.push(`:app:${artifactFormat === 'aab' ? 'bundle' : 'assemble'}${buildType}`);
 
   console.log(
@@ -1162,7 +1173,7 @@ function inspectSignedIosIpa(ipaPath, app, options, inspectionRoot) {
 }
 
 function buildIosOnce(context, runIndex, captureRoot) {
-  const {era, appDir, app, options, cacheRoot, nativeKey, version} = context;
+  const {era, appDir, app, options, cacheRoot, nativeKey, version, buildNumber} = context;
   const iosDir = path.join(appDir, 'ios');
   const iosHome = path.join(cacheRoot, 'ios-home');
   const derivedData = path.join(
@@ -1232,6 +1243,7 @@ function buildIosOnce(context, runIndex, captureRoot) {
     'COMPILER_INDEX_STORE_ENABLE=NO',
     `MARKETING_VERSION=${version}`,
   );
+  if (buildNumber) args.push(`CURRENT_PROJECT_VERSION=${buildNumber}`);
   if (isSigned && env.RUBAN_IOS_SIGNING_KEYCHAIN) {
     args.push(`OTHER_CODE_SIGN_FLAGS=--keychain ${env.RUBAN_IOS_SIGNING_KEYCHAIN}`);
   }
@@ -1320,7 +1332,7 @@ function buildIosOnce(context, runIndex, captureRoot) {
 }
 
 function writeManifest(context, buildResults, finalArtifact, finalSourceMap, reproducibility) {
-  const {app, options, cacheKey, nativeKey, outputDir, java, version} = context;
+  const {app, options, cacheKey, nativeKey, outputDir, java, version, buildNumber} = context;
   const gitCommit = captured('git', ['rev-parse', 'HEAD']);
   const dirty = captured('git', ['status', '--porcelain', '--untracked-files=all']).length > 0;
   const first = buildResults[0];
@@ -1330,6 +1342,7 @@ function writeManifest(context, buildResults, finalArtifact, finalSourceMap, rep
     dirty,
     app: app.directory,
     version,
+    buildNumber,
     reactNative: app.reactNative,
     platform: options.platform,
     lane: options.lane,
@@ -1400,6 +1413,7 @@ const options = parseOptions(process.argv.slice(2));
 const {era, app} = validateOptions(options);
 const appDir = path.join(repoRoot, 'apps', app.directory);
 const version = readAppVersion(appDir);
+const buildNumber = readBuildNumber();
 const cacheRoot = path.resolve(
   process.env.RUBAN_BUILD_CACHE_ROOT || path.join(repoRoot, '.cache', 'release'),
 );
@@ -1432,6 +1446,7 @@ if (options.dryRun) {
       {
         app: app.directory,
         version,
+        buildNumber,
         reactNative: app.reactNative,
         platform: options.platform,
         lane: options.lane,
@@ -1469,6 +1484,7 @@ const context = {
   outputDir,
   java,
   version,
+  buildNumber,
 };
 const runCount = options.mode === 'release-repro' ? 2 : 1;
 const buildResults = [];
