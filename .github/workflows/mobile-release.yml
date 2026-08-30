@@ -203,8 +203,8 @@ jobs:
           manifest_count=$(find "$RELEASE_ROOT" -type f -name manifest.json | wc -l | tr -d ' ')
           test "$manifest_count" = 1
           manifest=$(find "$RELEASE_ROOT" -type f -name manifest.json)
-          artifact=$(node -e 'const m=require(process.argv[1]); process.stdout.write(m.artifact)' "$manifest")
-          source_map=$(node -e 'const m=require(process.argv[1]); process.stdout.write(m.sourceMap)' "$manifest")
+          artifact=$(node -e 'const fs=require("node:fs"); const m=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(m.artifact)' "$manifest")
+          source_map=$(node -e 'const fs=require("node:fs"); const m=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(m.sourceMap)' "$manifest")
           test -f "$artifact"
           test -f "$source_map"
           echo "manifest=$manifest" >> "$GITHUB_OUTPUT"

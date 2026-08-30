@@ -376,6 +376,7 @@ function importMatchIdentity(
   const compatibleP12 = path.join(temporaryRoot, `${certificateType}-identity-legacy.p12`);
   checked('openssl', [
     'pkcs12',
+    '-legacy',
     '-in',
     identities[0],
     '-nodes',
