@@ -10,6 +10,12 @@
   "scripts": {
     "brand:mobile:generate": "node scripts/brand/generate-mobile-assets.mjs",
     "brand:mobile:check": "node scripts/brand/generate-mobile-assets.mjs --check",
+    "brand:google-play:generate": "node scripts/brand/generate-google-play-assets.mjs",
+    "brand:google-play:check": "node scripts/brand/generate-google-play-assets.mjs --check",
+    "brand:google-play:frame-screenshots": "node scripts/brand/frame-google-play-screenshots.mjs",
+    "brand:google-play:check-screenshots": "node scripts/brand/frame-google-play-screenshots.mjs --check",
+    "brand:app-store:frame-screenshots": "node scripts/brand/frame-app-store-screenshots.mjs",
+    "brand:app-store:check-screenshots": "node scripts/brand/frame-app-store-screenshots.mjs --check",
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "typecheck": "pnpm -r run typecheck",
@@ -18,6 +24,8 @@
     "release": "pnpm build && changeset publish",
     "check:syntax": "node scripts/ci/check-syntax-floor.mjs",
     "gongshu:package": "node scripts/release/package.mjs",
+    "gongshu:android-signing": "node scripts/release/android-signing.mjs",
+    "gongshu:apple-signing": "node scripts/release/apple-signing.mjs",
     "gongshu:release-health": "node scripts/device/release-health.mjs"
   },
   "devDependencies": {

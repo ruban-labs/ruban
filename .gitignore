@@ -7,3 +7,4 @@ coverage/
 ruban-local.tgz
 .cache/
 artifacts/
+fastlane/report.xml

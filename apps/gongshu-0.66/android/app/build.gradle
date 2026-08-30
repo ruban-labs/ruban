@@ -81,6 +81,8 @@ apply from: "react.gradle"` line.
 def rubanReleaseCli = System.getenv("RUBAN_RELEASE_CLI")
 def rubanPrebundledAssets = System.getenv("RUBAN_PREBUNDLED_ASSETS_DIR")
 def rubanPrebundledResources = System.getenv("RUBAN_PREBUNDLED_RES_DIR")
+apply from: rootProject.file("../../../scripts/release/android-signing.gradle")
+def rubanSigningTarget = rubanResolveAndroidSigningTarget("sample")
 
 project.ext.react = [
     enableHermes: true,
@@ -184,6 +186,11 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        if (rubanSigningTarget == "internal") {
+            rubanUpload {
+                rubanConfigureAndroidSigning(delegate, "RUBAN_ANDROID_UPLOAD")
+            }
+        }
     }
     buildTypes {
         debug {
@@ -198,9 +205,7 @@ android {
             }
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            if (rubanSigningTarget == "internal") signingConfig signingConfigs.rubanUpload
             manifestPlaceholders.rubanLinkScheme = "ruban-rn066"
             resValue "string", "app_name", "Gongshu 0.66"
             minifyEnabled enableProguardInReleaseBuilds
@@ -211,7 +216,7 @@ android {
             applicationIdSuffix ".regression"
             manifestPlaceholders.rubanLinkScheme = "ruban-rn066-regression"
             matchingFallbacks = ["release"]
-            signingConfig signingConfigs.debug
+            if (rubanSigningTarget == "internal") signingConfig signingConfigs.rubanUpload
             resValue "string", "app_name", "Gongshu 0.66 Regression"
         }
     }

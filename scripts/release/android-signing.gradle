@@ -1,0 +1,47 @@
+ext.rubanResolveAndroidSigningTarget = { String appClass ->
+    def target = System.getenv("RUBAN_ANDROID_RELEASE_SIGNING")
+    def taskNames = gradle.startParameter.taskNames.collect { it.toLowerCase() }
+    def requestsAll = taskNames.any {
+        it == "assemble" || it.endsWith(":assemble") || it == "bundle" || it.endsWith(":bundle") ||
+                it == "build" || it.endsWith(":build")
+    }
+    def requestsRelease = requestsAll || taskNames.any {
+        it.matches(".*(?:assemble|bundle|install|package).*release.*")
+    }
+    def requestsRegression = requestsAll || taskNames.any {
+        it.matches(".*(?:assemble|bundle|install|package).*regression.*")
+    }
+
+    if ((requestsRelease || requestsRegression) && !target) {
+        throw new GradleException("RUBAN_ANDROID_RELEASE_SIGNING is required for signed builds")
+    }
+    if (target && !["website", "play", "internal"].contains(target)) {
+        throw new GradleException("RUBAN_ANDROID_RELEASE_SIGNING must be website, play, or internal")
+    }
+    if (requestsRegression && target != "internal") {
+        throw new GradleException("Regression builds require RUBAN_ANDROID_RELEASE_SIGNING=internal")
+    }
+    if (requestsRelease && appClass == "formal" && !["website", "play"].contains(target)) {
+        throw new GradleException("Formal release builds require website or play signing")
+    }
+    if (requestsRelease && appClass == "sample" && target != "internal") {
+        throw new GradleException("Sample release builds require internal signing")
+    }
+    target
+}
+
+ext.rubanConfigureAndroidSigning = { signingConfig, String prefix ->
+    def required = { String suffix ->
+        def name = "${prefix}_${suffix}"
+        def value = System.getenv(name)
+        if (!value) throw new GradleException("${name} is required")
+        value
+    }
+    def storePath = required("STORE_FILE")
+    def store = project.file(storePath)
+    if (!store.isFile()) throw new GradleException("Signing keystore does not exist: ${storePath}")
+    signingConfig.storeFile = store
+    signingConfig.storePassword = required("STORE_PASSWORD")
+    signingConfig.keyAlias = required("KEY_ALIAS")
+    signingConfig.keyPassword = required("KEY_PASSWORD")
+}
