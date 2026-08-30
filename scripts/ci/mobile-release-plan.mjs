@@ -97,7 +97,7 @@ const iosAppStore = {
   arch: 'new',
   distribution: 'app-store',
   eraNode: 22,
-  xcode: 'default',
+  xcode: 'app-store',
   testflight: false,
 };
 

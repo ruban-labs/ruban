@@ -18,6 +18,14 @@ test('only explicit upload targets upload to TestFlight', () => {
   }
 });
 
+test('App Store packages use an upload-eligible Xcode toolchain', () => {
+  for (const target of ['ios-latest-app-store', 'ios-testflight', 'bootstrap-ci']) {
+    const iosCells = mobileReleasePlan(target).include.filter(cell => cell.platform === 'ios');
+    assert.ok(iosCells.length > 0);
+    assert.ok(iosCells.every(cell => cell.xcode === 'app-store'));
+  }
+});
+
 test('bootstrap verifies Android packaging and TestFlight together', () => {
   const plan = mobileReleasePlan('bootstrap-ci');
   assert.deepEqual(plan.include.map(cell => cell.platform).sort(), ['android', 'ios']);
