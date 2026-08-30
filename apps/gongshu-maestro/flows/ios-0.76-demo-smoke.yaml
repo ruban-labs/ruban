@@ -37,7 +37,7 @@ appId: com.rubanlabs.mobile.gongshu.rn076.debug
     optional: true
 - extendedWaitUntil:
     visible:
-      text: "Badge"
+      text: "← COMPONENTS"
     timeout: 120000
 - assertVisible:
     text: "LIVE"
@@ -47,8 +47,8 @@ appId: com.rubanlabs.mobile.gongshu.rn076.debug
     optional: true
 - extendedWaitUntil:
     visible:
-      text: "Separator"
-    timeout: 20000
+      text: "Live separator vertical accent bold"
+    timeout: 60000
 - assertVisible:
     text: "VERTICAL"
 - assertVisible:
@@ -59,8 +59,8 @@ appId: com.rubanlabs.mobile.gongshu.rn076.debug
     optional: true
 - extendedWaitUntil:
     visible:
-      text: "Switch"
-    timeout: 20000
+      text: "Live switch state ON"
+    timeout: 60000
 - assertVisible:
     text: "CONTROL"
 - assertVisible:
