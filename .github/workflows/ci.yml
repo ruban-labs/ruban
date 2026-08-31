@@ -4,36 +4,78 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  verify:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+      verify: ${{ steps.scope.outputs.verify }}
+      site: ${{ steps.scope.outputs.site }}
+      typecheck: ${{ steps.scope.outputs.typecheck }}
+      bundle: ${{ steps.scope.outputs.bundle }}
+      ios: ${{ steps.scope.outputs.ios }}
+      typecheck_matrix: ${{ steps.scope.outputs.typecheck_matrix }}
+      bundle_matrix: ${{ steps.scope.outputs.bundle_matrix }}
+      ios_matrix: ${{ steps.scope.outputs.ios_matrix }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: node --test scripts/ci/changed-scope.test.mjs
+      - id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/ci/changed-scope.mjs
+
+  verify:
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report selected scope
+        run: |
+          echo "full=${{ needs.changes.outputs.full }}"
+          echo "verify=${{ needs.changes.outputs.verify }}"
+          echo "site=${{ needs.changes.outputs.site }}"
+      - uses: actions/checkout@v4
+        if: needs.changes.outputs.verify == 'true' || (needs.changes.outputs.site == 'true' && github.event_name != 'push')
       - uses: pnpm/action-setup@v4
+        if: needs.changes.outputs.verify == 'true' || (needs.changes.outputs.site == 'true' && github.event_name != 'push')
       - uses: actions/setup-node@v4
+        if: needs.changes.outputs.verify == 'true' || (needs.changes.outputs.site == 'true' && github.event_name != 'push')
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm -r typecheck
-      - run: pnpm -r test
-      - run: pnpm -r build
+      - if: needs.changes.outputs.verify == 'true' || (needs.changes.outputs.site == 'true' && github.event_name != 'push')
+        run: pnpm install --frozen-lockfile
+      - if: needs.changes.outputs.verify == 'true'
+        run: pnpm -r typecheck
+      - if: needs.changes.outputs.verify == 'true'
+        run: pnpm -r test
+      - if: needs.changes.outputs.verify == 'true'
+        run: pnpm -r build
       - name: Layer 1 - syntax floor (ES2019)
+        if: needs.changes.outputs.verify == 'true'
         run: node scripts/ci/check-syntax-floor.mjs
+      - name: Website check
+        if: needs.changes.outputs.site == 'true' && github.event_name != 'push'
+        run: pnpm site:check
+      - name: No package verification required
+        if: needs.changes.outputs.verify != 'true' && (needs.changes.outputs.site != 'true' || github.event_name == 'push')
+        run: echo "The changed paths do not affect package or native build outputs."
 
   typecheck-matrix:
+    needs: changes
+    if: needs.changes.outputs.typecheck == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - fixture: rn-0.66
-            era-node: 16
-          - fixture: rn-0.76
-            era-node: 18
-          - fixture: rn-latest
-            era-node: 22
+      matrix: ${{ fromJSON(needs.changes.outputs.typecheck_matrix) }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -51,18 +93,13 @@ jobs:
         run: node scripts/ci/typecheck-matrix.mjs --fixture ${{ matrix.fixture }}
 
   bundle-smoke:
+    needs: changes
+    if: needs.changes.outputs.bundle == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - era: rn-0.66
-            era-node: 16
-          - era: rn-0.76
-            era-node: 18
-          - era: rn-latest
-            era-node: 22
+      matrix: ${{ fromJSON(needs.changes.outputs.bundle_matrix) }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -84,33 +121,13 @@ jobs:
         run: node scripts/ci/bundle-smoke.mjs bundle --era ${{ matrix.era }}
 
   ios-smoke:
+    needs: changes
+    if: needs.changes.outputs.ios == 'true'
     runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - era: latest
-            app: gongshu-latest
-            proj: gongshulatest
-            runs-on: macos-15
-            era-node: 22
-            xcode: default
-            metro-env: 
-          - era: "0.76"
-            app: gongshu-0.76
-            proj: gongshu076
-            runs-on: macos-14
-            era-node: 18
-            xcode: default
-            metro-env: 
-          - era: "0.66"
-            app: gongshu-0.66
-            proj: gongshu066
-            runs-on: macos-14
-            era-node: 18
-            xcode: oldest
-            metro-env: NODE_OPTIONS=--openssl-legacy-provider
+      matrix: ${{ fromJSON(needs.changes.outputs.ios_matrix) }}
     steps:
       - uses: actions/checkout@v4
       - name: Xcode inventory
@@ -233,3 +250,28 @@ jobs:
             /tmp/metro.log
             /Users/runner/.maestro/tests
           if-no-files-found: ignore
+
+  ci-summary:
+    if: always()
+    needs:
+      - changes
+      - verify
+      - typecheck-matrix
+      - bundle-smoke
+      - ios-smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every selected job to pass
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          VERIFY_RESULT: ${{ needs.verify.result }}
+          TYPECHECK_RESULT: ${{ needs.typecheck-matrix.result }}
+          BUNDLE_RESULT: ${{ needs.bundle-smoke.result }}
+          IOS_RESULT: ${{ needs.ios-smoke.result }}
+        run: |
+          for result in "$CHANGES_RESULT" "$VERIFY_RESULT" "$TYPECHECK_RESULT" "$BUNDLE_RESULT" "$IOS_RESULT"; do
+            if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
+              echo "A selected CI job ended with: $result"
+              exit 1
+            fi
+          done
