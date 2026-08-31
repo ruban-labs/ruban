@@ -22,7 +22,7 @@ pnpm site:preview
 The deployable directory is `website/dist`. GitHub Actions publishes that
 directory directly to GitHub Pages without a generated branch.
 
-The production canonical URL is `https://ruban-labs.work`. Configure that
+The production canonical URL is `https://mobile.ruban-labs.work`. Configure that
 custom domain in the repository's Pages settings after the workflow reaches
 `main`; the apex DNS records remain infrastructure configuration and are not
 stored in this directory.
