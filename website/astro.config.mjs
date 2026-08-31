@@ -2,6 +2,6 @@ import {defineConfig} from 'astro/config';
 
 export default defineConfig({
   output: 'static',
-  site: 'https://ruban-labs.work',
+  site: 'https://mobile.ruban-labs.work',
   trailingSlash: 'always',
 });

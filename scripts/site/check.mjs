@@ -55,8 +55,8 @@ for (const page of pages) {
 }
 
 const canonicalUrls = new Map([
-  ['index.html', 'https://ruban-labs.work/'],
-  ['privacy/index.html', 'https://ruban-labs.work/privacy/'],
+  ['index.html', 'https://mobile.ruban-labs.work/'],
+  ['privacy/index.html', 'https://mobile.ruban-labs.work/privacy/'],
 ]);
 
 for (const [relativeName, canonicalUrl] of canonicalUrls) {
