@@ -1,0 +1,8 @@
+<resources>
+    <style name="BootTheme" parent="Theme.BootSplash">
+        <item name="bootSplashBackground">@color/ruban_launch_background</item>
+        <item name="bootSplashLogo">@drawable/ruban_launch_mark</item>
+        <item name="postBootSplashTheme">@style/AppTheme</item>
+        <item name="darkContentBarsStyle">false</item>
+    </style>
+</resources>

@@ -31,6 +31,7 @@ export interface CircleSnailProps {
 
 const TWO_PI = Math.PI * 2;
 const MIN_ARC_FRACTION = 0.02;
+const STATIC_ARC_FRACTION = 0.28;
 const MAX_ARC_FRACTION = 0.75;
 
 /**
@@ -53,12 +54,15 @@ export function CircleSnail({
   children,
   testID,
 }: CircleSnailProps): React.ReactElement | null {
-  const [arcFraction, setArcFraction] = useState(MIN_ARC_FRACTION);
+  const initialArcFraction = animating
+    ? MIN_ARC_FRACTION
+    : STATIC_ARC_FRACTION;
+  const [arcFraction, setArcFraction] = useState(initialArcFraction);
   const [colorIndex, setColorIndex] = useState(0);
   const arcValue = useRef<Animated.Value | null>(null);
   const spinValue = useRef<Animated.Value | null>(null);
   if (arcValue.current === null) {
-    arcValue.current = new Animated.Value(MIN_ARC_FRACTION);
+    arcValue.current = new Animated.Value(initialArcFraction);
   }
   if (spinValue.current === null) {
     spinValue.current = new Animated.Value(0);

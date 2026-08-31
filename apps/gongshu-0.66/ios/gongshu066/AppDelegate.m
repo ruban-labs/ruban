@@ -2,7 +2,9 @@
 
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
+#import <React/RCTLinkingManager.h>
 #import <React/RCTRootView.h>
+#import "RNBootSplash.h"
 
 #ifdef FB_SONARKIT_ENABLED
 #import <FlipperKit/FlipperClient.h>
@@ -36,11 +38,11 @@ static void InitializeFlipper(UIApplication *application) {
                                                    moduleName:@"gongshu066"
                                             initialProperties:nil];
 
-  if (@available(iOS 13.0, *)) {
-      rootView.backgroundColor = [UIColor systemBackgroundColor];
-  } else {
-      rootView.backgroundColor = [UIColor whiteColor];
-  }
+  rootView.backgroundColor = [UIColor colorWithRed:16.0 / 255.0
+                                             green:17.0 / 255.0
+                                              blue:20.0 / 255.0
+                                             alpha:1.0];
+  [RNBootSplash initWithStoryboard:@"LaunchScreen" rootView:rootView];
 
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   UIViewController *rootViewController = [UIViewController new];
@@ -57,6 +59,13 @@ static void InitializeFlipper(UIApplication *application) {
 #else
   return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
 #endif
+}
+
+- (BOOL)application:(UIApplication *)application
+            openURL:(NSURL *)url
+            options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options
+{
+  return [RCTLinkingManager application:application openURL:url options:options];
 }
 
 @end

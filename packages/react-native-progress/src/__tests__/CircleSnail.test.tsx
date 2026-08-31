@@ -18,10 +18,15 @@ describe('CircleSnail', () => {
   });
 
   it('stays visible when stopped without hidesWhenStopped', () => {
-    const { getByTestId } = render(
-      <CircleSnail testID="snail" animating={false} />
+    const { getByTestId, toJSON } = render(
+      <CircleSnail testID="snail" animating={false} segmentCount={20} />
     );
     expect(getByTestId('snail')).toBeTruthy();
+    const rotationLayer = hostChild(toJSON());
+    const litSegments = hostChildren(rotationLayer).filter(
+      (segment) => segment.props.style.backgroundColor !== 'transparent'
+    );
+    expect(litSegments.length).toBeGreaterThan(1);
   });
 
   it('accepts a color list', () => {

@@ -78,9 +78,26 @@ apply from: "react.gradle"` line.
  * ]
  */
 
+def rubanReleaseCli = System.getenv("RUBAN_RELEASE_CLI")
+def rubanPrebundledAssets = System.getenv("RUBAN_PREBUNDLED_ASSETS_DIR")
+def rubanPrebundledResources = System.getenv("RUBAN_PREBUNDLED_RES_DIR")
+apply from: rootProject.file("../../../scripts/release/android-signing.gradle")
+def rubanSigningTarget = rubanResolveAndroidSigningTarget("sample")
+
 project.ext.react = [
-    enableHermes: false,  // clean and rebuild if changing
+    enableHermes: true,
+    bundleInRegression: true,
+    devDisabledInRegression: true,
 ]
+
+if (rubanReleaseCli) {
+    project.ext.react.cliPath = rubanReleaseCli
+}
+
+if (rubanPrebundledAssets) {
+    project.ext.react.bundleInRelease = false
+    project.ext.react.bundleInRegression = false
+}
 
 apply from: "../../node_modules/react-native/react.gradle"
 
@@ -137,11 +154,22 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.gongshu066"
+        applicationId "com.rubanlabs.mobile.gongshu.rn066"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode = (project.findProperty("RUBAN_VERSION_CODE") ?: "1").toInteger()
+        versionName = project.findProperty("RUBAN_VERSION_NAME") ?: "1.0"
+        manifestPlaceholders = [rubanLinkScheme: "ruban-rn066"]
+    }
+    sourceSets {
+        main {
+            if (rubanPrebundledAssets) {
+                assets.srcDir rubanPrebundledAssets
+            }
+            if (rubanPrebundledResources) {
+                res.srcDir rubanPrebundledResources
+            }
+        }
     }
     splits {
         abi {
@@ -158,10 +186,18 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        if (rubanSigningTarget == "internal") {
+            rubanUpload {
+                rubanConfigureAndroidSigning(delegate, "RUBAN_ANDROID_UPLOAD")
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            applicationIdSuffix ".debug"
+            manifestPlaceholders.rubanLinkScheme = "ruban-rn066-debug"
+            resValue "string", "app_name", "Gongshu 0.66 Dev"
             if (nativeArchitectures) {
                 ndk {
                     abiFilters nativeArchitectures.split(',')
@@ -169,11 +205,19 @@ android {
             }
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            if (rubanSigningTarget == "internal") signingConfig signingConfigs.rubanUpload
+            manifestPlaceholders.rubanLinkScheme = "ruban-rn066"
+            resValue "string", "app_name", "Gongshu 0.66"
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+        regression {
+            initWith release
+            applicationIdSuffix ".regression"
+            manifestPlaceholders.rubanLinkScheme = "ruban-rn066-regression"
+            matchingFallbacks = ["release"]
+            if (rubanSigningTarget == "internal") signingConfig signingConfigs.rubanUpload
+            resValue "string", "app_name", "Gongshu 0.66 Regression"
         }
     }
 
@@ -218,6 +262,7 @@ dependencies {
         def hermesPath = "../../node_modules/hermes-engine/android/";
         debugImplementation files(hermesPath + "hermes-debug.aar")
         releaseImplementation files(hermesPath + "hermes-release.aar")
+        regressionImplementation files(hermesPath + "hermes-release.aar")
     } else {
         implementation jscFlavor
     }

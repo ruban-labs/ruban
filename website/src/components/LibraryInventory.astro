@@ -1,0 +1,48 @@
+---
+const libraries = [
+  {
+    name: 'react-native-progress',
+    meta: 'RN 0.66+ / ZERO DEPS',
+    state: 'AVAILABLE',
+    href: 'https://github.com/ruban-labs/ruban/tree/main/packages/react-native-progress',
+  },
+  {name: 'react-native-collapsible', meta: 'WORKSHOP', state: 'PLANNED'},
+  {name: 'react-native-animatable', meta: 'WORKSHOP', state: 'PLANNED'},
+  {name: 'react-native-keyboard-aware-scroll-view', meta: 'WORKSHOP', state: 'PLANNED'},
+];
+---
+
+<section class="inventory frame" id="libraries">
+  <div class="section-heading">
+    <p class="kicker">CURRENT INVENTORY</p>
+    <h2>Libraries</h2>
+    <span class="section-index">01</span>
+  </div>
+
+  {
+    libraries.map((library, index) => {
+      const content = (
+        <>
+          <span class="library-index">{String(index + 1).padStart(2, '0')}</span>
+          <span class="library-name">{library.name}</span>
+          <span class="library-meta">{library.meta}</span>
+          <span class="library-state">{library.state}</span>
+          {library.href && <span class="library-arrow" aria-hidden="true">↗</span>}
+        </>
+      );
+
+      return library.href ? (
+        <a
+          class="library-row library-row-live"
+          href={library.href}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          {content}
+        </a>
+      ) : (
+        <div class="library-row">{content}</div>
+      );
+    })
+  }
+</section>

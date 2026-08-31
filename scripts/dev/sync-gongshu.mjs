@@ -5,8 +5,7 @@
 // is the ONLY supported way the library reaches them:
 //   1. copies the canonical demo screen into the app,
 //   2. packs packages/react-native-progress into apps/<app>/ruban-local.tgz,
-//   3. installs the app's own dependencies with the app's own package manager
-//      (tarball installs are PM-neutral: npm/yarn/pnpm all accept .tgz).
+//   3. installs the app's own dependencies with its pinned pnpm version.
 //
 // Usage:
 //   node scripts/dev/sync-gongshu.mjs --app <gongshu-0.66|gongshu-0.76|gongshu-latest>
@@ -35,17 +34,48 @@ function run(bin, args, options = {}) {
   if (result.status !== 0) fail(`${bin} ${args.join(' ')} exited with ${result.status}`);
 }
 
-function detectPackageManager(appDir) {
-  if (fs.existsSync(path.join(appDir, 'package-lock.json'))) return 'npm';
-  if (fs.existsSync(path.join(appDir, 'yarn.lock'))) return 'yarn';
-  if (fs.existsSync(path.join(appDir, 'pnpm-lock.yaml'))) return 'pnpm';
-  return 'npm';
+function newestMtime(directory) {
+  let newest = 0;
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const entryPath = path.join(directory, entry.name);
+    newest = Math.max(
+      newest,
+      entry.isDirectory() ? newestMtime(entryPath) : fs.statSync(entryPath).mtimeMs,
+    );
+  }
+  return newest;
 }
 
 function ensureLibraryBuilt() {
-  if (!fs.existsSync(path.join(packageDir, 'lib', 'commonjs'))) {
-    console.log('sync-gongshu: lib/ missing, building library first');
+  const sourceMtime = newestMtime(path.join(packageDir, 'src'));
+  const outputDirs = ['commonjs', 'module', 'typescript'].map((target) =>
+    path.join(packageDir, 'lib', target),
+  );
+  const outputIsStale = outputDirs.some(
+    (directory) => !fs.existsSync(directory) || newestMtime(directory) < sourceMtime,
+  );
+
+  if (outputIsStale) {
+    console.log('sync-gongshu: lib/ missing or stale, building library first');
     run('pnpm', ['--filter', '@ruban-labs/react-native-progress', 'build'], { cwd: repoRoot });
+  }
+}
+
+function assertInstalledSources(appDir) {
+  const installedSource = path.join(
+    appDir,
+    'node_modules',
+    '@ruban-labs',
+    'react-native-progress',
+    'src',
+  );
+  for (const entry of fs.readdirSync(path.join(packageDir, 'src'), { withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+    const expected = fs.readFileSync(path.join(packageDir, 'src', entry.name));
+    const actual = fs.readFileSync(path.join(installedSource, entry.name));
+    if (!expected.equals(actual)) {
+      fail(`${path.basename(appDir)} installed stale src/${entry.name}`);
+    }
   }
 }
 
@@ -57,6 +87,15 @@ function syncApp(app, options) {
 
   const manifestPath = path.join(appDir, 'package.json');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  if (!manifest.packageManager?.startsWith('pnpm@')) {
+    fail(`${app} must pin pnpm in packageManager`);
+  }
+  if (!fs.existsSync(path.join(appDir, 'pnpm-workspace.yaml'))) {
+    fail(`${app} must own a nested pnpm workspace boundary`);
+  }
+  if (fs.existsSync(path.join(appDir, 'package-lock.json'))) {
+    fail(`${app} still has a legacy package-lock.json`);
+  }
   if (manifest.dependencies['@ruban-labs/react-native-progress'] !== `file:./${LOCAL_TARBALL}`) {
     manifest.dependencies['@ruban-labs/react-native-progress'] = `file:./${LOCAL_TARBALL}`;
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
@@ -73,16 +112,16 @@ function syncApp(app, options) {
     return;
   }
 
-  const packageManager = detectPackageManager(appDir);
-  console.log(`sync-gongshu: ${app} installing with ${packageManager} (Node ${process.version})`);
-  if (packageManager === 'npm') {
-    // --include=dev survives NODE_ENV=production shells.
-    run('npm', ['install', '--include=dev', '--no-audit', '--no-fund'], { cwd: appDir });
-  } else if (packageManager === 'yarn') {
-    run('yarn', ['install'], { cwd: appDir });
-  } else {
-    run('pnpm', ['install', '--include-dev'], { cwd: appDir });
-  }
+  fs.rmSync(
+    path.join(appDir, 'node_modules', '@ruban-labs', 'react-native-progress'),
+    { recursive: true, force: true },
+  );
+  console.log(`sync-gongshu: ${app} installing with ${manifest.packageManager} (Node ${process.version})`);
+  run('corepack', ['pnpm', 'install', '--force'], {
+    cwd: appDir,
+    env: { ...process.env, NODE_ENV: 'development' },
+  });
+  assertInstalledSources(appDir);
   console.log(`sync-gongshu: ${app} ready`);
 }
 

@@ -5,6 +5,9 @@ master craftsman - the **R** stands for React.
 
 > **Measure with the ruler. Build with the tools.**
 
+Product direction, the Gongshu compatibility matrix, and the shared visual
+contract live in [DESIGN.md](./DESIGN.md) ([简体中文](./DESIGN.zh-CN.md)).
+
 Two surfaces, one program:
 
 - **The ruler** - [awesome-native-react](https://github.com/richardo2016/awesome-native-react):
@@ -26,11 +29,15 @@ requirement.
 | Package | Status | Description |
 | --- | --- | --- |
 | [`@ruban-labs/react-native-progress`](./packages/react-native-progress) | v6.0.0 | Progress bars, segmented rings, pies, spinners. Zero-dependency refurbishment of `react-native-progress`. |
+| `@ruban-labs/react-native-collapsible` | Planned | Focused expand/collapse primitives. |
+| `@ruban-labs/react-native-animatable` | Planned | Small declarative animation vocabulary. |
+| `@ruban-labs/react-native-keyboard-aware-scroll-view` | Planned | Reliable keyboard-aware layout and scrolling. |
 
 ## Repository layout
 
 ```
 packages/          one directory per published package
+apps/              independent Gongshu apps for each RN era
 .changeset/        changesets versioning config
 .github/workflows  CI (typecheck, test, build)
 ```

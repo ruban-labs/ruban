@@ -6,18 +6,19 @@ flow per platform per era, generated from a single template.
 ## Layout
 
 - `templates/demo-smoke.<platform>.yaml.tpl` - single source of truth, with
-  `{{appId}}` / `{{era}}` placeholders.
-- `src/gen-flows.mjs` - era table (app ids) + generator. Run `yarn gen`.
+  `{{appId}}` / `{{era}}` / `{{scheme}}` placeholders.
+- `src/gen-flows.mjs` - era table (app ids and Debug schemes) + generator. Run
+  `pnpm gen`.
 - `flows/` - generated, committed, so CI can gate on `maestro check-syntax`
   without running the generator.
 
 Era app ids must stay in sync with `apps/gongshu-*`:
 
-| era    | android           | ios                                  |
-| ------ | ----------------- | ------------------------------------ |
-| 0.66   | com.gongshu066    | org.reactjs.native.example.gongshu066 |
-| 0.76   | com.gongshu.rn076 | com.gongshu.rn076                    |
-| latest | com.gongshu.latest| com.gongshu.latest                   |
+| era | Debug app id | Debug scheme |
+| --- | --- | --- |
+| 0.66 | `com.rubanlabs.mobile.gongshu.rn066.debug` | `ruban-rn066-debug://` |
+| 0.76 | `com.rubanlabs.mobile.gongshu.rn076.debug` | `ruban-rn076-debug://` |
+| latest | `com.rubanlabs.mobile.debug` | `ruban-debug://` |
 
 ## Running
 
@@ -29,10 +30,9 @@ maestro test flows/android-latest-demo-smoke.yaml --device <adb-serial>
 maestro test flows/ios-latest-demo-smoke.yaml
 ```
 
-The flow walks Gongshu Bench deterministically: bar 20% -> 30% -> 20%,
-circle 40% -> 60%, pie 60% -> 50%, snail start/stop. Conventions follow
-RabbyHub/rabby-mobile: platform-prefixed flow names, hierarchy-driven
-selectors (ids, never coordinates), `maestro check-syntax` as the cheap gate.
-
-Pixel 10 Pro (serial 59271FDCH002CB) is reserved by another session - do not
-target it.
+The flow walks the shared Ruban app shell deterministically: Home inventory ->
+Button, Badge, Separator, and Switch showcases -> Playground -> Settings ->
+Build & Matrix. It verifies tab-free detail screens, exact Debug deep-link
+routing, and the Switch controlled-state transition. The layout uses
+platform-prefixed names, hierarchy-driven selectors instead of coordinates,
+and `maestro check-syntax` as the cheap gate.

@@ -1,0 +1,124 @@
+default_platform(:ios)
+
+RUBAN_SIGNING_PROFILES = [
+  {
+    type: 'development',
+    app_identifier: 'com.rubanlabs.mobile.debug',
+    profile_name: 'Ruban Mobile Debug Development'
+  },
+  {
+    type: 'development',
+    app_identifier: 'com.rubanlabs.mobile.gongshu.*',
+    profile_name: 'Ruban Gongshu Samples Development'
+  },
+  {
+    type: 'adhoc',
+    app_identifier: 'com.rubanlabs.mobile',
+    profile_name: 'Ruban Mobile Production Ad Hoc'
+  },
+  {
+    type: 'adhoc',
+    app_identifier: 'com.rubanlabs.mobile.regression',
+    profile_name: 'Ruban Mobile Regression Ad Hoc'
+  },
+  {
+    type: 'adhoc',
+    app_identifier: 'com.rubanlabs.mobile.gongshu.*',
+    profile_name: 'Ruban Gongshu Samples Ad Hoc'
+  },
+  {
+    type: 'appstore',
+    app_identifier: 'com.rubanlabs.mobile',
+    profile_name: 'Ruban Mobile App Store'
+  }
+].freeze
+
+RUBAN_APP_STORE_ID = 'com.rubanlabs.mobile'.freeze
+
+platform :ios do
+  private_lane :ruban_asc_api_key do
+    app_store_connect_api_key(
+      key_id: ENV.fetch('RUBAN_ASC_KEY_ID', '422928A7U6'),
+      issuer_id: ENV.fetch('RUBAN_ASC_ISSUER_ID', '25b9a32a-8681-4697-8a7e-d67d5f88f872'),
+      key_filepath: ENV.fetch('RUBAN_ASC_KEY_PATH'),
+      duration: 1200,
+      in_house: false
+    )
+  end
+
+  desc 'Create or refresh every Ruban development, Ad Hoc, and App Store signing profile'
+  lane :sync_signing do |options|
+    readonly = options.fetch(:readonly, false)
+    api_key = ruban_asc_api_key
+    profile_type = options[:type]
+    signing_profiles = if profile_type
+      RUBAN_SIGNING_PROFILES.select { |profile| profile.fetch(:type) == profile_type }
+    else
+      RUBAN_SIGNING_PROFILES
+    end
+    UI.user_error!("No signing profiles found for type '#{profile_type}'") if signing_profiles.empty?
+
+    signing_profiles.each do |signing_profile|
+      match_options = {
+        type: signing_profile.fetch(:type),
+        app_identifier: [signing_profile.fetch(:app_identifier)],
+        profile_name: signing_profile.fetch(:profile_name),
+        api_key: api_key,
+        readonly: readonly
+      }
+      if %w[development adhoc].include?(signing_profile.fetch(:type))
+        match_options[:force_for_new_devices] = !readonly
+      end
+      match(**match_options)
+    end
+  end
+
+  desc 'Verify that the manually created Ruban App Store Connect record exists'
+  lane :ensure_app_store_record do
+    ruban_asc_api_key
+
+    existing_app = Spaceship::ConnectAPI::App.find(RUBAN_APP_STORE_ID)
+    if existing_app
+      UI.success("App '#{RUBAN_APP_STORE_ID}' exists (#{existing_app.id})")
+      next
+    end
+
+    UI.user_error!(
+      "Create '#{RUBAN_APP_STORE_ID}' in App Store Connect first: " \
+      'https://appstoreconnect.apple.com/apps'
+    )
+  end
+
+  desc 'Upload an App Store-signed IPA to TestFlight'
+  lane :upload_testflight do
+    upload_to_testflight(
+      api_key: ruban_asc_api_key,
+      ipa: ENV.fetch('RUBAN_IOS_IPA_PATH'),
+      skip_waiting_for_build_processing: true,
+      distribute_external: false
+    )
+  end
+end
+
+platform :android do
+  desc 'Verify the Google Play service account'
+  lane :validate_google_play do
+    validate_play_store_json_key(
+      json_key: ENV.fetch('RUBAN_GOOGLE_PLAY_KEY_PATH')
+    )
+  end
+
+  desc 'Upload a Play-signed AAB as a draft internal release'
+  lane :upload_internal do
+    upload_to_play_store(
+      json_key: ENV.fetch('RUBAN_GOOGLE_PLAY_KEY_PATH'),
+      package_name: 'com.rubanlabs.mobile',
+      aab: ENV.fetch('RUBAN_ANDROID_AAB_PATH'),
+      track: 'internal',
+      release_status: 'draft',
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end

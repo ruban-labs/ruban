@@ -1,0 +1,11 @@
+<resources>
+    <style name="BootTheme" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ruban_launch_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ruban_launch_mark</item>
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
+        <item name="android:statusBarColor">@color/ruban_launch_background</item>
+        <item name="android:navigationBarColor">@color/ruban_launch_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

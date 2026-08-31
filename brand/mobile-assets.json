@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "channels": {
+    "production": {
+      "iosAppIcon": "AppIcon",
+      "androidSourceSet": "main",
+      "tile": "#101114",
+      "mark": "#ffffff",
+      "accent": "#4c8dff"
+    },
+    "regression": {
+      "iosAppIcon": "AppIconRegression",
+      "androidSourceSet": "regression",
+      "tile": "#d9ff45",
+      "mark": "#101114",
+      "accent": "#2563eb"
+    },
+    "debug": {
+      "iosAppIcon": "AppIconDebug",
+      "androidSourceSet": "debug",
+      "tile": "#dce8ff",
+      "mark": "#101114",
+      "accent": "#2563eb"
+    }
+  },
+  "launch": {
+    "background": "#101114",
+    "mark": "#d9ff45",
+    "accent": "#2563eb",
+    "logoSize": 84
+  },
+  "apps": [
+    {
+      "name": "gongshu-latest",
+      "root": "apps/gongshu-latest",
+      "iosAssets": "apps/gongshu-latest/ios/gongshulatest/Images.xcassets",
+      "iosLaunchStoryboard": "apps/gongshu-latest/ios/gongshulatest/LaunchScreen.storyboard"
+    },
+    {
+      "name": "gongshu-0.76",
+      "root": "apps/gongshu-0.76",
+      "iosAssets": "apps/gongshu-0.76/ios/gongshu076/Images.xcassets",
+      "iosLaunchStoryboard": "apps/gongshu-0.76/ios/gongshu076/LaunchScreen.storyboard"
+    },
+    {
+      "name": "gongshu-0.66",
+      "root": "apps/gongshu-0.66",
+      "iosAssets": "apps/gongshu-0.66/ios/gongshu066/Images.xcassets",
+      "iosLaunchStoryboard": "apps/gongshu-0.66/ios/gongshu066/LaunchScreen.storyboard",
+      "androidBootSplashTheme": "androidx-core"
+    }
+  ]
+}

@@ -12,9 +12,24 @@ const harnessRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname)
 
 // Keep in sync with apps/gongshu-* package/bundle identifiers.
 const APPS = [
-  { era: '0.66', android: 'com.gongshu066', ios: 'org.reactjs.native.example.gongshu066' },
-  { era: '0.76', android: 'com.gongshu.rn076', ios: 'com.gongshu.rn076' },
-  { era: 'latest', android: 'com.gongshu.latest', ios: 'com.gongshu.latest' },
+  {
+    era: '0.66',
+    scheme: 'ruban-rn066-debug',
+    android: 'com.rubanlabs.mobile.gongshu.rn066.debug',
+    ios: 'com.rubanlabs.mobile.gongshu.rn066.debug',
+  },
+  {
+    era: '0.76',
+    scheme: 'ruban-rn076-debug',
+    android: 'com.rubanlabs.mobile.gongshu.rn076.debug',
+    ios: 'com.rubanlabs.mobile.gongshu.rn076.debug',
+  },
+  {
+    era: 'latest',
+    scheme: 'ruban-debug',
+    android: 'com.rubanlabs.mobile.debug',
+    ios: 'com.rubanlabs.mobile.debug',
+  },
 ];
 
 const TEMPLATES = ['android', 'ios'];
@@ -24,7 +39,10 @@ fs.mkdirSync(flowsDir, { recursive: true });
 for (const platform of TEMPLATES) {
   const template = fs.readFileSync(path.join(harnessRoot, 'templates', `demo-smoke.${platform}.yaml.tpl`), 'utf8');
   for (const app of APPS) {
-    const rendered = template.replaceAll('{{appId}}', app[platform]).replaceAll('{{era}}', app.era);
+    const rendered = template
+      .replaceAll('{{appId}}', app[platform])
+      .replaceAll('{{era}}', app.era)
+      .replaceAll('{{scheme}}', app.scheme);
     const outFile = path.join(flowsDir, `${platform}-${app.era}-demo-smoke.yaml`);
     fs.writeFileSync(outFile, rendered);
     console.log(`gen-flows: wrote ${path.relative(harnessRoot, outFile)}`);

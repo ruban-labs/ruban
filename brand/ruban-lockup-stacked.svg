@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 160" role="img" aria-labelledby="title">
+  <title id="title">Ruban stacked logo lockup</title>
+  <style>
+    .ruban-mark, .ruban-wordmark { fill: #d9ff45; }
+    .ruban-accent { fill: #2563eb; }
+  </style>
+  <defs>
+    <g id="ruban-mark">
+      <path class="ruban-mark" fill-rule="evenodd" d="M18 13h36a26 20 0 0 1 0 40l27 31H70L33 41H31v43H18V13Zm0 13h36a15 7.5 0 0 1 0 15H33L18 28V26Zm0 22h8v3h-8v-3Zm0 9h8v3h-8v-3Zm0 9h8v3h-8v-3Z"/>
+      <path class="ruban-accent" fill-rule="evenodd" d="M34 46 45 59H34V46ZM35 49h2v1h-2v-1Zm0 4h4v1h-4v-1Z"/>
+    </g>
+    <g id="ruban-wordmark" class="ruban-wordmark">
+      <path d="M0 28h17c8 0 14 6 14 14 0 6-3 10-8 12l10 15H22L13 55H8v14H0V28Zm8 7v13h9c4 0 6-3 6-6s-2-7-6-7H8Z"/>
+      <path d="M42 28h8v26c0 5 3 8 8 8s8-3 8-8V28h8v26c0 10-6 16-16 16s-16-6-16-16V28Z"/>
+      <path fill-rule="evenodd" d="M85 28h18c8 0 13 4 13 11 0 4-2 7-5 9 4 2 6 6 6 10 0 7-5 11-14 11H85V28Zm8 7v10h9c4 0 6-2 6-5s-2-5-6-5h-9Zm0 17v10h10c4 0 6-2 6-5s-2-5-6-5H93Z"/>
+      <path d="M143 28h9l14 41h-9l-3-9h-14l-3 9h-9l15-41Zm4 23h5l-2-7-3 7Z"/>
+      <path d="M177 69V28h8l18 26V28h8v41h-8l-18-26v26h-8Z"/>
+    </g>
+  </defs>
+  <use href="#ruban-mark" transform="translate(74) scale(.85)"/>
+  <use href="#ruban-wordmark" transform="translate(24 70)"/>
+</svg>

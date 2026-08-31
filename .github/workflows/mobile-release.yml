@@ -1,0 +1,251 @@
+name: mobile-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Signed package matrix or store upload target
+        required: true
+        type: choice
+        default: ios-testflight
+        options:
+          - ios-testflight
+          - ios-latest-app-store
+          - android-latest-play
+          - android-latest-website
+          - ios-regression-matrix
+          - android-regression-matrix
+          - all-packages
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-release-${{ github.ref }}-${{ inputs.target || 'bootstrap' }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: plan
+        env:
+          TARGET: ${{ inputs.target || 'bootstrap-ci' }}
+        run: echo "matrix=$(node scripts/ci/mobile-release-plan.mjs --target "$TARGET")" >> "$GITHUB_OUTPUT"
+
+  package:
+    needs: plan
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    name: ${{ matrix.id }}
+    runs-on: ${{ matrix.runner }}
+    env:
+      CI: "1"
+      RUBAN_BUILD_CACHE_ROOT: ${{ github.workspace }}/.cache/release
+      RUBAN_BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ruban-labs/react-native-progress build
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .cache/release/metro
+            .cache/release/prebundle
+            .cache/release/gradle
+            .cache/release/cocoapods
+            .cache/release/xcode-derived-data
+            ~/Library/Caches/CocoaPods
+          key: mobile-release-${{ runner.os }}-${{ runner.arch }}-${{ matrix.id }}-${{ hashFiles('pnpm-lock.yaml', 'apps/*/pnpm-lock.yaml', 'apps/*/ios/Podfile.lock', 'apps/*/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            mobile-release-${{ runner.os }}-${{ runner.arch }}-${{ matrix.id }}-
+            mobile-release-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Select oldest Xcode
+        if: matrix.platform == 'ios' && matrix.xcode == 'oldest'
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_[0-9]*.app | sort -V | head -1)"
+
+      - name: Select App Store Xcode
+        if: matrix.platform == 'ios' && matrix.xcode == 'app-store'
+        run: |
+          xcode_path=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          test -d "$xcode_path"
+          sudo xcode-select -s "$xcode_path/Contents/Developer"
+
+      - name: Xcode version
+        if: matrix.platform == 'ios'
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - uses: actions/setup-java@v4
+        if: matrix.platform == 'android'
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: ruby/setup-ruby@v1
+        if: matrix.platform == 'ios'
+        with:
+          ruby-version: 2.7.4
+
+      - name: Install iOS release toolchain
+        if: matrix.platform == 'ios'
+        run: |
+          bundle config set path .cache/toolchains/bundle
+          bundle config set force_ruby_platform true
+          bundle install --jobs 4 --retry 3
+
+      - uses: actions/setup-node@v4
+        if: matrix.eraNode != 22
+        with:
+          node-version: ${{ matrix.eraNode }}
+
+      - name: Sync standalone app
+        run: node scripts/dev/sync-gongshu.mjs --app ${{ matrix.app }}
+
+      - uses: actions/create-github-app-token@v3
+        id: signing-token
+        with:
+          app-id: ${{ secrets.RUBAN_GITHUB_APP_ID }}
+          private-key: ${{ secrets.RUBAN_GITHUB_APP_PRIVATE_KEY }}
+          owner: ruban-labs
+          repositories: ${{ matrix.platform == 'ios' && 'apple-certs' || 'android-signing' }}
+          permission-contents: read
+
+      - uses: actions/checkout@v4
+        if: matrix.platform == 'android'
+        with:
+          repository: ruban-labs/android-signing
+          token: ${{ steps.signing-token.outputs.token }}
+          path: _private/android-signing
+          persist-credentials: false
+
+      - uses: actions/checkout@v4
+        if: matrix.platform == 'ios'
+        with:
+          repository: ruban-labs/apple-certs
+          token: ${{ steps.signing-token.outputs.token }}
+          path: _private/apple-certs
+          persist-credentials: false
+
+      - name: Materialize App Store Connect API key
+        if: matrix.testflight
+        env:
+          RUBAN_ASC_PRIVATE_KEY: ${{ secrets.RUBAN_ASC_PRIVATE_KEY }}
+        run: |
+          test -n "$RUBAN_ASC_PRIVATE_KEY"
+          key_path="$RUNNER_TEMP/AuthKey_Ruban.p8"
+          printf '%s' "$RUBAN_ASC_PRIVATE_KEY" > "$key_path"
+          chmod 600 "$key_path"
+          echo "RUBAN_ASC_KEY_PATH=$key_path" >> "$GITHUB_ENV"
+
+      - name: Build signed Android package
+        if: matrix.platform == 'android'
+        env:
+          RUBAN_ANDROID_APP_SIGNING_STORE_PASSWORD: ${{ secrets.RUBAN_ANDROID_APP_SIGNING_STORE_PASSWORD }}
+          RUBAN_ANDROID_APP_SIGNING_KEY_PASSWORD: ${{ secrets.RUBAN_ANDROID_APP_SIGNING_KEY_PASSWORD }}
+          RUBAN_ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.RUBAN_ANDROID_UPLOAD_STORE_PASSWORD }}
+          RUBAN_ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.RUBAN_ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: |
+          test -n "$RUBAN_ANDROID_APP_SIGNING_STORE_PASSWORD"
+          test -n "$RUBAN_ANDROID_APP_SIGNING_KEY_PASSWORD"
+          test -n "$RUBAN_ANDROID_UPLOAD_STORE_PASSWORD"
+          test -n "$RUBAN_ANDROID_UPLOAD_KEY_PASSWORD"
+          node scripts/release/android-signing.mjs run \
+            --keystore-root _private/android-signing/keystores \
+            -- pnpm gongshu:package \
+            --app ${{ matrix.era }} \
+            --platform android \
+            --lane ${{ matrix.lane }} \
+            --arch ${{ matrix.arch }} \
+            --mode release-fast \
+            --android-distribution ${{ matrix.distribution }} \
+            --skip-sync
+
+      - name: Build signed iOS package
+        if: matrix.platform == 'ios'
+        env:
+          RUBAN_MATCH_PASSWORD: ${{ secrets.RUBAN_MATCH_PASSWORD }}
+          RUBAN_APPLE_CERTS_PATH: ${{ github.workspace }}/_private/apple-certs
+        run: |
+          test -n "$RUBAN_MATCH_PASSWORD"
+          node scripts/release/apple-signing.mjs run-isolated \
+            -- pnpm gongshu:package \
+            --app ${{ matrix.era }} \
+            --platform ios \
+            --lane ${{ matrix.lane }} \
+            --arch ${{ matrix.arch }} \
+            --mode release-fast \
+            --ios-distribution ${{ matrix.distribution }} \
+            --skip-sync
+
+      - name: Resolve release outputs
+        id: release-output
+        env:
+          RELEASE_ROOT: artifacts/${{ matrix.app }}/${{ matrix.platform }}/${{ matrix.lane }}/${{ matrix.arch }}/release-fast
+        run: |
+          manifest_count=$(find "$RELEASE_ROOT" -type f -name manifest.json | wc -l | tr -d ' ')
+          test "$manifest_count" = 1
+          manifest=$(find "$RELEASE_ROOT" -type f -name manifest.json)
+          artifact=$(node -e 'const fs=require("node:fs"); const m=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(m.artifact)' "$manifest")
+          source_map=$(node -e 'const fs=require("node:fs"); const m=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(m.sourceMap)' "$manifest")
+          test -f "$artifact"
+          test -f "$source_map"
+          echo "manifest=$manifest" >> "$GITHUB_OUTPUT"
+          echo "artifact=$artifact" >> "$GITHUB_OUTPUT"
+          echo "source_map=$source_map" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to TestFlight
+        if: matrix.testflight
+        env:
+          RUBAN_ASC_KEY_ID: ${{ secrets.RUBAN_ASC_KEY_ID }}
+          RUBAN_ASC_ISSUER_ID: ${{ secrets.RUBAN_ASC_ISSUER_ID }}
+          RUBAN_IOS_IPA_PATH: ${{ steps.release-output.outputs.artifact }}
+        run: |
+          test -n "$RUBAN_ASC_KEY_ID"
+          test -n "$RUBAN_ASC_ISSUER_ID"
+          test -f "$RUBAN_ASC_KEY_PATH"
+          bundle exec fastlane ios ensure_app_store_record
+          bundle exec fastlane ios upload_testflight
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.id }}-${{ github.run_number }}
+          path: |
+            ${{ steps.release-output.outputs.artifact }}
+            ${{ steps.release-output.outputs.source_map }}
+            ${{ steps.release-output.outputs.manifest }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Remove signed products from persistent caches
+        if: always() && matrix.platform == 'ios'
+        run: |
+          find .cache/release/xcode-derived-data -type d \
+            \( -name Archives -o -name Products \) -prune -exec rm -rf {} + 2>/dev/null || true
+
+      - name: Remove materialized signing files
+        if: always()
+        run: |
+          rm -rf _private
+          rm -f "$RUNNER_TEMP/AuthKey_Ruban.p8"

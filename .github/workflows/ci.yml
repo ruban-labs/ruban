@@ -183,7 +183,7 @@ jobs:
       - name: Start Metro
         working-directory: apps/${{ matrix.app }}
         run: |
-          nohup env ${{ matrix.metro-env }} npx --no-install react-native start --port 8081 > /tmp/metro.log 2>&1 &
+          nohup env ${{ matrix.metro-env }} corepack pnpm exec react-native start --port 8081 > /tmp/metro.log 2>&1 &
           for i in $(seq 1 30); do
             curl -s http://localhost:8081/status | grep -q packager-status && break
             sleep 2
@@ -194,11 +194,33 @@ jobs:
           echo "Bundle prewarmed"
       - name: Install Maestro
         run: |
+          export MAESTRO_VERSION=2.5.1
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+          "$HOME/.maestro/bin/maestro" --version
       - name: Run flow
         working-directory: apps/gongshu-maestro
-        run: maestro test flows/ios-${{ matrix.era }}-demo-smoke.yaml
+        env:
+          MAESTRO_CLI_NO_ANALYTICS: "1"
+        run: |
+          set +e
+          maestro test flows/ios-${{ matrix.era }}-demo-smoke.yaml
+          status=$?
+          set -e
+
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+
+          if find "$HOME/.maestro/tests" -type f -name 'commands*.json' -print -quit | grep -q .; then
+            exit "$status"
+          fi
+
+          echo "::warning::Maestro XCTest driver did not reach flow execution; rebooting the simulator and retrying once."
+          xcrun simctl shutdown "${{ steps.sim.outputs.udid }}" || true
+          xcrun simctl boot "${{ steps.sim.outputs.udid }}"
+          xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
+          maestro test flows/ios-${{ matrix.era }}-demo-smoke.yaml
       - name: Metro log on failure
         if: failure()
         run: tail -80 /tmp/metro.log || true

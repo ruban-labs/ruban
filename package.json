@@ -8,16 +8,36 @@
     "node": ">=20"
   },
   "scripts": {
+    "brand:mobile:generate": "node scripts/brand/generate-mobile-assets.mjs",
+    "brand:mobile:check": "node scripts/brand/generate-mobile-assets.mjs --check",
+    "brand:google-play:generate": "node scripts/brand/generate-google-play-assets.mjs",
+    "brand:google-play:check": "node scripts/brand/generate-google-play-assets.mjs --check",
+    "brand:google-play:frame-screenshots": "node scripts/brand/frame-google-play-screenshots.mjs",
+    "brand:google-play:check-screenshots": "node scripts/brand/frame-google-play-screenshots.mjs --check",
+    "brand:app-store:frame-screenshots": "node scripts/brand/frame-app-store-screenshots.mjs",
+    "brand:app-store:check-screenshots": "node scripts/brand/frame-app-store-screenshots.mjs --check",
+    "design:theme:generate": "node scripts/design/generate-theme-colors.mjs",
+    "design:theme:check": "node scripts/design/generate-theme-colors.mjs --check",
+    "site:build": "pnpm design:theme:check && pnpm --filter @ruban-labs/website build",
+    "site:check": "pnpm design:theme:check && pnpm --filter @ruban-labs/website check && pnpm --filter @ruban-labs/website build && node scripts/site/check.mjs",
+    "site:dev": "pnpm design:theme:check && pnpm --filter @ruban-labs/website dev",
+    "site:preview": "pnpm site:build && pnpm --filter @ruban-labs/website preview",
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "typecheck": "pnpm -r run typecheck",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm build && changeset publish",
-    "check:syntax": "node scripts/ci/check-syntax-floor.mjs"
+    "check:syntax": "node scripts/ci/check-syntax-floor.mjs",
+    "check:mobile-release-plan": "node --test scripts/ci/mobile-release-plan.test.mjs",
+    "gongshu:package": "node scripts/release/package.mjs",
+    "gongshu:android-signing": "node scripts/release/android-signing.mjs",
+    "gongshu:apple-signing": "node scripts/release/apple-signing.mjs",
+    "gongshu:release-health": "node scripts/device/release-health.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.0",
-    "acorn": "^8.18.0"
+    "acorn": "^8.18.0",
+    "sharp": "0.35.4"
   }
 }
