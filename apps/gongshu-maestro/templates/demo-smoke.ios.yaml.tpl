@@ -32,9 +32,12 @@ appId: {{appId}}
       text: "Components"
     timeout: 20000
 - openLink: "{{scheme}}://components/badge?theme=light&variant=live&size=md"
+- extendedWaitUntil:
+    visible:
+      text: "Open"
+    timeout: 180000
 - tapOn:
     text: "Open"
-    optional: true
 - extendedWaitUntil:
     visible:
       text: "← COMPONENTS"
@@ -42,9 +45,6 @@ appId: {{appId}}
 - assertVisible:
     text: "LIVE"
 - openLink: "{{scheme}}://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
-- tapOn:
-    text: "Open"
-    optional: true
 - extendedWaitUntil:
     visible:
       text: "Live separator vertical accent bold"
@@ -54,9 +54,6 @@ appId: {{appId}}
 - assertVisible:
     text: "Live separator vertical accent bold"
 - openLink: "{{scheme}}://components/switch?theme=light&state=on&size=md"
-- tapOn:
-    text: "Open"
-    optional: true
 - extendedWaitUntil:
     visible:
       text: "Live switch state ON"
@@ -70,9 +67,6 @@ appId: {{appId}}
 - assertVisible:
     text: "Live switch state OFF"
 - openLink: "{{scheme}}://home"
-- tapOn:
-    text: "Open"
-    optional: true
 - extendedWaitUntil:
     visible:
       text: "Components"
