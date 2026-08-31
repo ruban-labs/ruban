@@ -31,6 +31,7 @@
     "check:packages": "node scripts/ci/check-package-contract.mjs",
     "check:syntax": "node scripts/ci/check-syntax-floor.mjs",
     "check:mobile-release-plan": "node --test scripts/ci/mobile-release-plan.test.mjs",
+    "check:android-page-size": "node scripts/ci/check-android-page-size.mjs",
     "gongshu:package": "node scripts/release/package.mjs",
     "gongshu:android-signing": "node scripts/release/android-signing.mjs",
     "gongshu:apple-signing": "node scripts/release/apple-signing.mjs",

@@ -41,7 +41,7 @@ function log(line) {
 }
 
 export function schemeForEra(era) {
-  if (era === '0.76') return 'gongshu-0.76';
+  if (era === '0.77') return 'gongshu-0.77';
   if (era === '0.66') return 'gongshu-0.66';
   return 'gongshu-latest';
 }

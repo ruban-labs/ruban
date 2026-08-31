@@ -19,10 +19,10 @@ const APPS = [
     ios: 'com.rubanlabs.mobile.gongshu.rn066.debug',
   },
   {
-    era: '0.76',
-    scheme: 'ruban-rn076-debug',
-    android: 'com.rubanlabs.mobile.gongshu.rn076.debug',
-    ios: 'com.rubanlabs.mobile.gongshu.rn076.debug',
+    era: '0.77',
+    scheme: 'ruban-rn077-debug',
+    android: 'com.rubanlabs.mobile.gongshu.rn077.debug',
+    ios: 'com.rubanlabs.mobile.gongshu.rn077.debug',
   },
   {
     era: 'latest',

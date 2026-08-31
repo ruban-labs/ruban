@@ -37,10 +37,10 @@
       "iosLaunchStoryboard": "apps/gongshu-latest/ios/gongshulatest/LaunchScreen.storyboard"
     },
     {
-      "name": "gongshu-0.76",
-      "root": "apps/gongshu-0.76",
-      "iosAssets": "apps/gongshu-0.76/ios/gongshu076/Images.xcassets",
-      "iosLaunchStoryboard": "apps/gongshu-0.76/ios/gongshu076/LaunchScreen.storyboard"
+      "name": "gongshu-0.77",
+      "root": "apps/gongshu-0.77",
+      "iosAssets": "apps/gongshu-0.77/ios/gongshu077/Images.xcassets",
+      "iosLaunchStoryboard": "apps/gongshu-0.77/ios/gongshu077/LaunchScreen.storyboard"
     },
     {
       "name": "gongshu-0.66",

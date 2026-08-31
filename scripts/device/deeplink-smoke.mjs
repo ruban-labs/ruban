@@ -6,19 +6,19 @@
 // by GongshuE2e.js.
 //
 // Usage:
-//   node scripts/device/deeplink-smoke.mjs --era <latest|0.76|0.66> --device <serial>
+//   node scripts/device/deeplink-smoke.mjs --era <latest|0.77|0.66> --device <serial>
 //
-// Prereq: the era's Metro must be running (latest 8091 / 0.76 8092 / 0.66 8093)
+// Prereq: the era's Metro must be running (latest 8091 / 0.77 8092 / 0.66 8093)
 // and the app installed. Device and host use the same dedicated port.
 
 import { spawn, spawnSync } from 'node:child_process';
 
 const ERAS = {
   latest: { scheme: 'ruban-debug', metroPort: 8091, appId: 'com.rubanlabs.mobile.debug' },
-  '0.76': {
-    scheme: 'ruban-rn076-debug',
+  '0.77': {
+    scheme: 'ruban-rn077-debug',
     metroPort: 8092,
-    appId: 'com.rubanlabs.mobile.gongshu.rn076.debug',
+    appId: 'com.rubanlabs.mobile.gongshu.rn077.debug',
   },
   '0.66': {
     scheme: 'ruban-rn066-debug',
@@ -37,7 +37,7 @@ const device = arg('--device');
 const timeoutMs = Number(arg('--timeout') || 90000);
 
 if (!ERAS[era] || !device) {
-  console.error('usage: deeplink-smoke.mjs --era <latest|0.76|0.66> --device <serial>');
+  console.error('usage: deeplink-smoke.mjs --era <latest|0.77|0.66> --device <serial>');
   process.exit(2);
 }
 const conf = ERAS[era];

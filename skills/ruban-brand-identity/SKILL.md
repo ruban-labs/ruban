@@ -128,7 +128,7 @@ a visible handoff.
 
 Each independently installed sample locks the package line compatible with its
 React Native era: `react-native-bootsplash@7.3.2` for latest,
-`react-native-bootsplash@6.3.12` for RN 0.76, and
+`react-native-bootsplash@6.3.12` for RN 0.77, and
 `react-native-bootsplash@4.7.5` for RN 0.66. Preserve each era's native setup
 contract rather than copying the newest AppDelegate or Android theme API into
 historical apps.

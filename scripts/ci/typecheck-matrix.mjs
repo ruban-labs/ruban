@@ -7,7 +7,7 @@
 // the fixture's own era deps instead of leaking into the monorepo.
 //
 // Usage:
-//   node scripts/ci/typecheck-matrix.mjs --fixture <rn-0.66|rn-0.76|rn-latest>
+//   node scripts/ci/typecheck-matrix.mjs --fixture <rn-0.66|rn-0.77|rn-latest>
 //   node scripts/ci/typecheck-matrix.mjs --all
 //
 // Run `pnpm build` first so lib/typescript exists.
@@ -19,7 +19,7 @@ import process from 'node:process';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 const fixturesRoot = path.join(repoRoot, 'fixtures', 'typecheck');
-const FIXTURES = ['rn-0.66', 'rn-0.76', 'rn-latest'];
+const FIXTURES = ['rn-0.66', 'rn-0.77', 'rn-latest'];
 const LIBRARIES = [
   {
     name: '@ruban-labs/react-native-progress',

@@ -4,7 +4,7 @@
 
 - **零运行时依赖**：只使用 React Native 自带的 `Animated`。
 - **bare RN 优先**：不要求 Expo、额外动画 runtime 或原生安装步骤。
-- **支持 RN 0.66+**：覆盖 RN 0.66、RN 0.76 与 Ruban 当前 latest 版本。
+- **支持 RN 0.66+**：覆盖 RN 0.66、RN 0.77 与 Ruban 当前 latest 版本。
 - **动态内容**：展开状态下，内容高度变化会同步更新容器。
 - **默认可访问**：完全收起后移出无障碍树；Accordion 标题暴露展开状态。
 

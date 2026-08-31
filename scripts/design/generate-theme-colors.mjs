@@ -8,7 +8,7 @@ const sourcePath = path.join(repositoryRoot, 'design/theme-colors.json');
 const checkOnly = process.argv.includes('--check');
 const appTargets = [
   'apps/gongshu-0.66/src/design/theme-colors.ts',
-  'apps/gongshu-0.76/src/design/theme-colors.ts',
+  'apps/gongshu-0.77/src/design/theme-colors.ts',
   'apps/gongshu-latest/src/design/theme-colors.ts',
 ];
 const cssTarget = 'website/src/assets/theme.generated.css';

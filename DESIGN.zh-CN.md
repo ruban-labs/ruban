@@ -37,7 +37,7 @@ Ruban 库，不是用于验证这些库的 App。
 | App | React Native 时代 | 导航 | 架构能力 |
 | --- | --- | --- | --- |
 | `gongshu-0.66` | 0.66.x | React Navigation 6 | 只支持旧架构 |
-| `gongshu-0.76` | 0.76.x | React Navigation 7 | 同时支持旧架构与 New Architecture |
+| `gongshu-0.77` | 0.77.x | React Navigation 7 | 同时支持旧架构与 New Architecture |
 | `gongshu-latest` | 当前固定的最新版本 | React Navigation 7 | 跟随上游；0.82 起只支持 New Architecture |
 
 每个 App 独立管理依赖、锁文件、原生工程、签名配置、Bundle ID 和发布产物。它们共享
@@ -55,9 +55,9 @@ Ruban 库，不是用于验证这些库的 App。
 - 每个 RN 时代只保留一份 App 业务源码。
 - 上游正式支持哪些架构，就编译哪些架构。
 - 不给 RN 0.66 伪造 New Architecture，也不在已经移除旧架构的 RN 版本里强行续命。
-- `gongshu-0.76` 的 Android 和 iOS 必须同时保持旧架构、New Architecture 可编译。
+- `gongshu-0.77` 的 Android 和 iOS 必须同时保持旧架构、New Architecture 可编译。
 - CI 和发布产物名必须带 RN 时代、架构与平台，例如
-  `gongshu-rn076-newarch-android`。
+  `gongshu-rn077-newarch-android`。
 - 两种架构需要同时装到真机时，用独立构建 variant、scheme、缓存和安装标识区分。
 - 每个有效矩阵槽位都跑同一套 deterministic deep link 场景，不能用两套测试内容掩盖差异。
 
@@ -66,7 +66,7 @@ Ruban 库，不是用于验证这些库的 App。
 | RN 时代 | 旧架构 | New Architecture |
 | --- | --- | --- |
 | RN 0.66 | 必须 | 上游不支持 |
-| RN 0.76 | 必须 | 必须 |
+| RN 0.77 | 必须 | 必须 |
 | RN latest（当前固定为 0.87） | 上游不支持 | 必须 |
 
 如果未来仍需要一个较新的双架构对照组，就新增第四个 App，固定在上游最后一个双架构
@@ -138,7 +138,7 @@ iOS 自定义 URL Scheme 注册后，系统不能再根据路径把链接分发�
 | 时代 | Production | Regression | Debug |
 | --- | --- | --- | --- |
 | latest | `ruban://` | `ruban-regression://` | `ruban-debug://` |
-| RN 0.76 | `ruban-rn076://` | `ruban-rn076-regression://` | `ruban-rn076-debug://` |
+| RN 0.77 | `ruban-rn077://` | `ruban-rn077-regression://` | `ruban-rn077-debug://` |
 | RN 0.66 | `ruban-rn066://` | `ruban-rn066-regression://` | `ruban-rn066-debug://` |
 
 不同 scheme 复用相同路径，例如 `components/switch`、`settings?sheet=build`、
@@ -269,7 +269,7 @@ deep link 冷启动时，顶部返回和 Android 系统返回都落到 Component
 
 展示页的 light/dark 切换只影响当前样本，并同步更新 deep link。页面不铺使用说明；
 标签、控件、实物状态和数据表就是文档。新的组件先在 `gongshu-latest` 完成这套页面，
-再把同一场景移植到 RN 0.76 与 0.66。
+再把同一场景移植到 RN 0.77 与 0.66。
 
 第一批 source-owned primitive 定义如下：
 
@@ -297,7 +297,7 @@ Agent 不能每写一个页面就临场发明一套视觉语言。
    error、disabled 和平台差异状态。
 7. 人类确认后的反馈，先沉淀成 token、pattern 或明确的 do/don't，再继续扩页面。
 8. 优先组合已有 primitive；新增 primitive 时说明为什么旧能力不够。
-9. latest 版本通过后再移植到 0.76 和 0.66，并检查截图差异，不接受“大概长得一样”。
+9. latest 版本通过后再移植到 0.77 和 0.66，并检查截图差异，不接受“大概长得一样”。
 
 长期设计资产至少包括：语义 token、复用 pattern、参考截图和确定的场景定义。对 Agent
 来说，这些是可以执行的约束，不是只负责营造气氛的 mood board。

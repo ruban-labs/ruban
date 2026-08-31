@@ -22,9 +22,9 @@ test("documentation-only changes keep the required gate lightweight", () => {
 });
 
 test("one standalone app selects only its iOS era", () => {
-  const result = classifyChangedPaths(["apps/gongshu-0.76/src/App.tsx"]);
+  const result = classifyChangedPaths(["apps/gongshu-0.77/src/App.tsx"]);
 
-  assert.deepEqual(result.ios, ["rn-0.76"]);
+  assert.deepEqual(result.ios, ["rn-0.77"]);
   assert.deepEqual(result.typecheck, []);
   assert.deepEqual(result.bundle, []);
 });
@@ -49,9 +49,9 @@ test("shared package changes run every compatibility layer", () => {
   assert.equal(result.full, true);
   assert.equal(result.verify, true);
   assert.equal(result.site, true);
-  assert.deepEqual(result.typecheck, ["rn-0.66", "rn-0.76", "rn-latest"]);
-  assert.deepEqual(result.bundle, ["rn-0.66", "rn-0.76", "rn-latest"]);
-  assert.deepEqual(result.ios, ["rn-0.66", "rn-0.76", "rn-latest"]);
+  assert.deepEqual(result.typecheck, ["rn-0.66", "rn-0.77", "rn-latest"]);
+  assert.deepEqual(result.bundle, ["rn-0.66", "rn-0.77", "rn-latest"]);
+  assert.deepEqual(result.ios, ["rn-0.66", "rn-0.77", "rn-latest"]);
 });
 
 test("release tooling runs core verification without native smoke", () => {

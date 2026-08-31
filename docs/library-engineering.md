@@ -20,7 +20,7 @@ Ruban packages are focused tools for bare React Native. The package, consumer fi
 ## Verification ladder
 
 1. Unit tests cover behavior, accessibility state, and exports.
-2. Consumer fixtures type-check against RN 0.66, RN 0.76, and latest.
+2. Consumer fixtures type-check against RN 0.66, RN 0.77, and latest.
 3. Metro bundles the packed tarballs in each era.
 4. Every valid native architecture cell compiles in its standalone Gongshu app.
 5. Deterministic deep links reproduce the package's primary states on real devices.

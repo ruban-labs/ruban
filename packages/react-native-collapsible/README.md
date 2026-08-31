@@ -4,7 +4,7 @@ Focused expand/collapse primitives for bare React Native.
 
 - **Zero runtime dependencies** — React Native `Animated` only.
 - **Bare React Native first** — no Expo module, animation runtime, or native installation.
-- **RN 0.66+** — tested at RN 0.66, RN 0.76, and the current Ruban latest line.
+- **RN 0.66+** — tested at RN 0.66, RN 0.77, and the current Ruban latest line.
 - **Dynamic content** — expanded height follows content layout changes.
 - **Accessible by default** — collapsed content leaves the accessibility tree and Accordion headers expose expanded state.
 

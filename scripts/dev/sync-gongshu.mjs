@@ -8,7 +8,7 @@
 //   3. installs the app's own dependencies with its pinned pnpm version.
 //
 // Usage:
-//   node scripts/dev/sync-gongshu.mjs --app <gongshu-0.66|gongshu-0.76|gongshu-latest>
+//   node scripts/dev/sync-gongshu.mjs --app <gongshu-0.66|gongshu-0.77|gongshu-latest>
 //   node scripts/dev/sync-gongshu.mjs --all [--skip-install]
 
 import { spawnSync } from 'node:child_process';
@@ -19,7 +19,7 @@ import process from 'node:process';
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 const appsRoot = path.join(repoRoot, 'apps');
 const demoSource = path.join(repoRoot, 'scripts', 'dev', 'gongshu-demo', 'GongshuBench.js');
-const APPS = ['gongshu-0.66', 'gongshu-0.76', 'gongshu-latest'];
+const APPS = ['gongshu-0.66', 'gongshu-0.77', 'gongshu-latest'];
 const LIBRARIES = [
   {
     name: '@ruban-labs/react-native-progress',

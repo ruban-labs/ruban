@@ -10,7 +10,7 @@
 //
 // Eras (RN version pins are bumped deliberately during maintenance):
 //   rn-0.66    support floor (React 17, CLI 6)
-//   rn-0.76    new architecture default boundary (React 18, CLI 15)
+//   rn-0.77    new architecture default boundary (React 18, CLI 15)
 //   rn-latest  current stable (React 19, CLI 20)
 //
 // CI runs `pack` on the build Node, then `app` and `bundle` on the era's
@@ -43,10 +43,10 @@ const ERAS = {
     entry: 'App.js',
     eraNode: '16',
   },
-  'rn-0.76': {
-    appName: 'RubanSmoke076',
+  'rn-0.77': {
+    appName: 'RubanSmoke077',
     cli: '@react-native-community/cli@15.1.3',
-    initArgs: ['--version', '0.76.9', '--pm', 'npm', '--skip-install', '--skip-git-init'],
+    initArgs: ['--version', '0.77.3', '--pm', 'npm', '--skip-install', '--skip-git-init'],
     entry: 'App.tsx',
     eraNode: '18',
   },

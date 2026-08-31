@@ -42,7 +42,7 @@ Keep three independent bare React Native apps under `apps/`:
 | App | React Native era | Navigation | Architecture capability |
 | --- | --- | --- | --- |
 | `gongshu-0.66` | 0.66.x | React Navigation 6 | Legacy Architecture only |
-| `gongshu-0.76` | 0.76.x | React Navigation 7 | Legacy and New Architecture |
+| `gongshu-0.77` | 0.77.x | React Navigation 7 | Legacy and New Architecture |
 | `gongshu-latest` | current pinned release | React Navigation 7 | Follow upstream; 0.82+ is New Architecture only |
 
 Each app owns its dependencies, package manager lockfile, native projects,
@@ -64,10 +64,10 @@ Architecture is a **build axis**, not a source fork.
 - Compile every architecture officially supported by that era.
 - Do not emulate New Architecture on 0.66 or revive Legacy Architecture on a
   React Native release that removed it.
-- `gongshu-0.76` must remain buildable in both Legacy and New Architecture on
+- `gongshu-0.77` must remain buildable in both Legacy and New Architecture on
   Android and iOS.
 - Name CI and release artifacts with the era, architecture, and platform, for
-  example `gongshu-rn076-newarch-android`.
+  example `gongshu-rn077-newarch-android`.
 - Use separate build variants, schemes, caches, and install identifiers when
   two architecture builds need to coexist on a device.
 - Run the same deterministic deep-link scenarios against every valid matrix
@@ -79,7 +79,7 @@ The minimum compile matrix is:
 | Era | Legacy Architecture | New Architecture |
 | --- | --- | --- |
 | RN 0.66 | Required | Unsupported |
-| RN 0.76 | Required | Required |
+| RN 0.77 | Required | Required |
 | RN latest (currently 0.87) | Unsupported upstream | Required |
 
 If Ruban needs a recent dual-architecture comparison after the latest line has
@@ -170,7 +170,7 @@ dispatch between apps by path after the scheme has been registered.
 | Era | Production | Regression | Debug |
 | --- | --- | --- | --- |
 | latest | `ruban://` | `ruban-regression://` | `ruban-debug://` |
-| RN 0.76 | `ruban-rn076://` | `ruban-rn076-regression://` | `ruban-rn076-debug://` |
+| RN 0.77 | `ruban-rn077://` | `ruban-rn077-regression://` | `ruban-rn077-debug://` |
 | RN 0.66 | `ruban-rn066://` | `ruban-rn066-regression://` | `ruban-rn066-debug://` |
 
 Paths remain identical across schemes, such as `components/switch`,
@@ -350,7 +350,7 @@ Every showcase screen follows this hierarchy:
 The light/dark selector is local to the showcase and updates the displayed deep
 link. Labels, controls, specimens, and data rows are the documentation; do not
 add instructional paragraphs to the screen. Build the complete screen in
-`gongshu-latest` first, then port the same scenario to RN 0.76 and RN 0.66.
+`gongshu-latest` first, then port the same scenario to RN 0.77 and RN 0.66.
 
 The first source-owned primitives establish these contracts:
 
@@ -386,7 +386,7 @@ Agents must not improvise a new visual language screen by screen.
    do/don't examples before expanding the surface.
 8. Prefer composing existing primitives; document why a new primitive is
    necessary.
-9. Port the approved screen to 0.76 and 0.66, then review screenshot diffs
+9. Port the approved screen to 0.77 and 0.66, then review screenshot diffs
    rather than accepting approximate visual similarity.
 
 The long-term design kit should contain semantic tokens, reusable patterns,
