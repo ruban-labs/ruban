@@ -4,10 +4,10 @@
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "android": "react-native run-android",
+    "android": "react-native run-android --port 8092",
     "ios": "react-native run-ios",
     "lint": "eslint .",
-    "start": "react-native start",
+    "start": "react-native start --port 8092",
     "test": "jest",
     "typecheck": "tsc --noEmit"
   },

@@ -8,21 +8,21 @@
 // Usage:
 //   node scripts/device/deeplink-smoke.mjs --era <latest|0.76|0.66> --device <serial>
 //
-// Prereq: the era's Metro must be running (latest 8081 / 0.76 8082 / 0.66 8083)
-// and the app installed. The runner sets `adb reverse tcp:8081 tcp:<port>`.
+// Prereq: the era's Metro must be running (latest 8091 / 0.76 8092 / 0.66 8093)
+// and the app installed. Device and host use the same dedicated port.
 
 import { spawn, spawnSync } from 'node:child_process';
 
 const ERAS = {
-  latest: { scheme: 'ruban-debug', metroPort: 8081, appId: 'com.rubanlabs.mobile.debug' },
+  latest: { scheme: 'ruban-debug', metroPort: 8091, appId: 'com.rubanlabs.mobile.debug' },
   '0.76': {
     scheme: 'ruban-rn076-debug',
-    metroPort: 8082,
+    metroPort: 8092,
     appId: 'com.rubanlabs.mobile.gongshu.rn076.debug',
   },
   '0.66': {
     scheme: 'ruban-rn066-debug',
-    metroPort: 8083,
+    metroPort: 8093,
     appId: 'com.rubanlabs.mobile.gongshu.rn066.debug',
   },
 };
@@ -50,7 +50,7 @@ function adb(...args) {
 adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP');
 adb('shell', 'wm', 'dismiss-keyguard');
 adb('shell', 'cmd', 'statusbar', 'collapse');
-adb('reverse', 'tcp:8081', `tcp:${conf.metroPort}`);
+adb('reverse', `tcp:${conf.metroPort}`, `tcp:${conf.metroPort}`);
 adb('logcat', '-c');
 
 const runId = 'r' + Date.now().toString(36);

@@ -4,9 +4,9 @@
   "private": true,
   "packageManager": "pnpm@8.15.9",
   "scripts": {
-    "android": "react-native run-android",
+    "android": "react-native run-android --port 8093",
     "ios": "react-native run-ios",
-    "start": "react-native start",
+    "start": "react-native start --port 8093",
     "test": "jest",
     "lint": "eslint . --ignore-pattern GongshuBench.js",
     "typecheck": "tsc --noEmit"

@@ -34,6 +34,7 @@
     "gongshu:package": "node scripts/release/package.mjs",
     "gongshu:android-signing": "node scripts/release/android-signing.mjs",
     "gongshu:apple-signing": "node scripts/release/apple-signing.mjs",
+    "gongshu:device:prepare": "node scripts/device/prepare-dev-device.mjs",
     "gongshu:release-health": "node scripts/device/release-health.mjs"
   },
   "devDependencies": {
