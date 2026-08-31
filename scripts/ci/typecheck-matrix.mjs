@@ -18,10 +18,20 @@ import path from 'node:path';
 import process from 'node:process';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
-const packageDir = path.join(repoRoot, 'packages', 'react-native-progress');
 const fixturesRoot = path.join(repoRoot, 'fixtures', 'typecheck');
 const FIXTURES = ['rn-0.66', 'rn-0.76', 'rn-latest'];
-const LOCAL_TARBALL = 'ruban-local.tgz';
+const LIBRARIES = [
+  {
+    name: '@ruban-labs/react-native-progress',
+    directory: path.join(repoRoot, 'packages', 'react-native-progress'),
+    tarball: 'ruban-local.tgz',
+  },
+  {
+    name: '@ruban-labs/react-native-collapsible',
+    directory: path.join(repoRoot, 'packages', 'react-native-collapsible'),
+    tarball: 'ruban-collapsible-local.tgz',
+  },
+];
 
 function fail(message) {
   console.error(`typecheck-matrix: ${message}`);
@@ -37,18 +47,24 @@ function run(bin, args, options = {}) {
 function runFixture(fixture) {
   const dir = path.join(fixturesRoot, fixture);
   if (!fs.existsSync(path.join(dir, 'package.json'))) fail(`fixture ${fixture} not found`);
-  if (!fs.existsSync(path.join(packageDir, 'lib', 'typescript'))) {
-    fail('lib/typescript not found - run `pnpm build` first');
+  for (const library of LIBRARIES) {
+    if (!fs.existsSync(path.join(library.directory, 'lib', 'typescript'))) {
+      fail(`${library.name} lib/typescript not found - run \`pnpm build\` first`);
+    }
   }
 
-  console.log(`typecheck-matrix: ${fixture} packing library`);
-  run('npm', ['pack', packageDir, '--pack-destination', dir]);
-  const packed = fs
-    .readdirSync(dir)
-    .find((name) => name.endsWith('.tgz') && name !== LOCAL_TARBALL);
-  if (!packed) fail(`no tarball produced in ${dir}`);
-  fs.rmSync(path.join(dir, LOCAL_TARBALL), { force: true });
-  fs.renameSync(path.join(dir, packed), path.join(dir, LOCAL_TARBALL));
+  for (const library of LIBRARIES) {
+    console.log(`typecheck-matrix: ${fixture} packing ${library.name}`);
+    const temporaryDirectory = fs.mkdtempSync(path.join(dir, '.ruban-pack-'));
+    try {
+      run('npm', ['pack', library.directory, '--pack-destination', temporaryDirectory]);
+      const packed = fs.readdirSync(temporaryDirectory).find(name => name.endsWith('.tgz'));
+      if (!packed) fail(`no tarball produced for ${library.name}`);
+      fs.copyFileSync(path.join(temporaryDirectory, packed), path.join(dir, library.tarball));
+    } finally {
+      fs.rmSync(temporaryDirectory, {recursive: true, force: true});
+    }
+  }
 
   fs.rmSync(path.join(dir, 'node_modules'), { recursive: true, force: true });
   console.log(`typecheck-matrix: ${fixture} installing era deps (Node ${process.version})`);

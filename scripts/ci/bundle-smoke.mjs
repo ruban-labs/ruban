@@ -2,7 +2,7 @@
 // Bundle smoke test (CI matrix layer 4).
 //
 // Proves that a real bare RN app from each supported era can install the
-// published tarball and bundle it with Metro. Metro resolves the package
+// published tarballs and bundle them with Metro. Metro resolves each package
 // through the `react-native` field (src/index), exactly like consumer apps.
 //
 // Usage:
@@ -22,7 +22,18 @@ import path from 'node:path';
 import process from 'node:process';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
-const packageDir = path.join(repoRoot, 'packages', 'react-native-progress');
+const LIBRARIES = [
+  {
+    name: '@ruban-labs/react-native-progress',
+    directory: path.join(repoRoot, 'packages', 'react-native-progress'),
+    tarball: 'ruban-progress-local.tgz',
+  },
+  {
+    name: '@ruban-labs/react-native-collapsible',
+    directory: path.join(repoRoot, 'packages', 'react-native-collapsible'),
+    tarball: 'ruban-collapsible-local.tgz',
+  },
+];
 
 const ERAS = {
   'rn-0.66': {
@@ -84,35 +95,44 @@ function appDirFor(era) {
   return path.join(workdirFor(era), 'app');
 }
 
-function findTarball(era) {
-  const workdir = workdirFor(era);
-  const tarballs = fs.existsSync(workdir)
-    ? fs.readdirSync(workdir).filter((name) => name.endsWith('.tgz'))
-    : [];
-  if (tarballs.length !== 1) {
-    fail(`expected exactly one tarball in ${workdir}, found ${tarballs.length} - run the pack phase first`);
-  }
-  return path.join(workdir, tarballs[0]);
+function tarballFor(era, library) {
+  const tarball = path.join(workdirFor(era), library.tarball);
+  if (!fs.existsSync(tarball)) fail(`${library.tarball} missing - run the pack phase first`);
+  return tarball;
 }
 
 function phasePack(era) {
   const workdir = workdirFor(era);
   fs.rmSync(workdir, { recursive: true, force: true });
   fs.mkdirSync(workdir, { recursive: true });
-  run('npm', ['pack', packageDir, '--pack-destination', workdir]);
-  console.log(`bundle-smoke: packed ${path.basename(findTarball(era))}`);
+  for (const library of LIBRARIES) {
+    const temporaryDirectory = fs.mkdtempSync(path.join(workdir, '.ruban-pack-'));
+    try {
+      run('npm', ['pack', library.directory, '--pack-destination', temporaryDirectory]);
+      const packed = fs.readdirSync(temporaryDirectory).find(name => name.endsWith('.tgz'));
+      if (!packed) fail(`no tarball produced for ${library.name}`);
+      fs.copyFileSync(path.join(temporaryDirectory, packed), tarballForPath(era, library));
+      console.log(`bundle-smoke: packed ${library.name} as ${library.tarball}`);
+    } finally {
+      fs.rmSync(temporaryDirectory, {recursive: true, force: true});
+    }
+  }
+}
+
+function tarballForPath(era, library) {
+  return path.join(workdirFor(era), library.tarball);
 }
 
 function phaseApp(era) {
   const config = ERAS[era];
   const workdir = workdirFor(era);
   const appDir = appDirFor(era);
-  const tarball = findTarball(era);
+  const tarballs = LIBRARIES.map(library => tarballFor(era, library));
 
   fs.rmSync(appDir, { recursive: true, force: true });
   run('npx', ['--yes', config.cli, 'init', config.appName, ...config.initArgs, '--directory', appDir]);
   run('npm', ['install', '--include=dev', '--no-audit', '--no-fund'], { cwd: appDir });
-  run('npm', ['install', '--include=dev', '--no-audit', '--no-fund', tarball], { cwd: appDir });
+  run('npm', ['install', '--include=dev', '--no-audit', '--no-fund', ...tarballs], { cwd: appDir });
 
   const entryPath = path.join(appDir, config.entry);
   if (!fs.existsSync(entryPath)) fail(`entry ${entryPath} not found in generated app`);
@@ -120,7 +140,8 @@ function phaseApp(era) {
   if (!original.includes(SMOKE_MARKER)) {
     const patch = [
       "import { Bar as RubanBar } from '@ruban-labs/react-native-progress';",
-      `console.log('${SMOKE_MARKER}', RubanBar ? 'ok' : 'missing');`,
+      "import RubanCollapsible, { Accordion as RubanAccordion } from '@ruban-labs/react-native-collapsible';",
+      `console.log('${SMOKE_MARKER}', RubanBar && RubanCollapsible && RubanAccordion ? 'ok' : 'missing');`,
       '',
       original,
     ].join('\n');
@@ -129,11 +150,14 @@ function phaseApp(era) {
 
   const appPkg = JSON.parse(fs.readFileSync(path.join(appDir, 'package.json'), 'utf8'));
   const installedRn = JSON.parse(fs.readFileSync(path.join(appDir, 'node_modules', 'react-native', 'package.json'), 'utf8'));
-  const installedRuban = JSON.parse(
+  const installedProgress = JSON.parse(
     fs.readFileSync(path.join(appDir, 'node_modules', '@ruban-labs', 'react-native-progress', 'package.json'), 'utf8'),
   );
+  const installedCollapsible = JSON.parse(
+    fs.readFileSync(path.join(appDir, 'node_modules', '@ruban-labs', 'react-native-collapsible', 'package.json'), 'utf8'),
+  );
   console.log(
-    `bundle-smoke: ${era} app ready (react-native ${installedRn.version}, react ${appPkg.dependencies.react}, @ruban-labs/react-native-progress ${installedRuban.version})`,
+    `bundle-smoke: ${era} app ready (react-native ${installedRn.version}, react ${appPkg.dependencies.react}, progress ${installedProgress.version}, collapsible ${installedCollapsible.version})`,
   );
 }
 

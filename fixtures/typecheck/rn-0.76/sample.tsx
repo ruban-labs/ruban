@@ -1,4 +1,6 @@
 import * as React from 'react';
+import Collapsible, {Accordion} from '@ruban-labs/react-native-collapsible';
+import AccordionDeep from '@ruban-labs/react-native-collapsible/Accordion';
 import {
   Bar,
   Circle,
@@ -8,8 +10,27 @@ import {
 } from '@ruban-labs/react-native-progress';
 
 export function Sample(): React.ReactElement {
+  const sections = ['FIRST', 'SECOND'] as const;
+
   return (
     <>
+      <Collapsible collapsed={false} duration={0} align="bottom">
+        <Bar progress={0.2} />
+      </Collapsible>
+      <Accordion
+        sections={sections}
+        activeSections={[0]}
+        onChange={() => undefined}
+        renderHeader={section => <Bar>{section}</Bar>}
+        renderContent={() => <Circle progress={0.4} />}
+      />
+      <AccordionDeep
+        sections={[]}
+        activeSections={[]}
+        onChange={() => undefined}
+        renderHeader={() => null}
+        renderContent={() => null}
+      />
       <Bar progress={0.5} width={200} color="#ff0000" animationType="timing" />
       <Bar indeterminate useNativeDriver />
       <Circle

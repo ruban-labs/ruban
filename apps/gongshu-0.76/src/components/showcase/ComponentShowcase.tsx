@@ -69,7 +69,13 @@ function ComponentShowcaseContent({
       </View>
 
       <View style={styles.titleRow}>
-        <Text style={[styles.title, {color: colors.ink}]}>{name}</Text>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.78}
+          style={[styles.title, name.length > 10 ? styles.titleCompact : undefined, {color: colors.ink}]}>
+          {name}
+        </Text>
         <View style={[styles.indexBlock, {backgroundColor: colors.accent}]}>
           <Text style={[styles.index, {color: colors.inverse}]}>{index}</Text>
         </View>
@@ -246,7 +252,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  title: {flexShrink: 1, fontSize: 48, lineHeight: 52, fontWeight: '800', letterSpacing: -2.4},
+  title: {flex: 1, marginRight: 12, fontSize: 48, lineHeight: 52, fontWeight: '800', letterSpacing: -2.4},
+  titleCompact: {fontSize: 40, lineHeight: 44, letterSpacing: -1.8},
   indexBlock: {width: 54, height: 54, alignItems: 'center', justifyContent: 'center'},
   index: {fontSize: 17, lineHeight: 21, fontWeight: '900'},
   metaStrip: {marginTop: spacing.lg, borderWidth: 1, flexDirection: 'row'},

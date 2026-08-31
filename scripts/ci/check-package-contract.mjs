@@ -1,0 +1,76 @@
+#!/usr/bin/env node
+
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const packagesRoot = path.join(repoRoot, 'packages');
+
+function fail(message) {
+  console.error(`package-contract: ${message}`);
+  process.exitCode = 1;
+}
+
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+function hasFileEntry(manifest, entry) {
+  return Array.isArray(manifest.files) && manifest.files.includes(entry);
+}
+
+const packageDirectories = fs
+  .readdirSync(packagesRoot, {withFileTypes: true})
+  .filter(entry => entry.isDirectory())
+  .map(entry => path.join(packagesRoot, entry.name))
+  .filter(packageDirectory => fs.existsSync(path.join(packageDirectory, 'package.json')))
+  .sort();
+
+if (packageDirectories.length === 0) {
+  fail('no packages found');
+}
+
+for (const packageDirectory of packageDirectories) {
+  const manifest = readJson(path.join(packageDirectory, 'package.json'));
+  const label = manifest.name ?? path.basename(packageDirectory);
+  const expectedNamePrefix = '@ruban-labs/react-native-';
+
+  if (!label.startsWith(expectedNamePrefix)) fail(`${label}: package name must use ${expectedNamePrefix}`);
+  if (manifest['react-native'] !== 'src/index') fail(`${label}: react-native must resolve to src/index`);
+  if (manifest.main !== 'lib/commonjs/index.js') fail(`${label}: main must resolve to CommonJS output`);
+  if (manifest.module !== 'lib/module/index.js') fail(`${label}: module must resolve to ESM output`);
+  if (manifest.types !== 'lib/typescript/index.d.ts') fail(`${label}: types must resolve to generated declarations`);
+  if (manifest.publishConfig?.access !== 'public') fail(`${label}: publishConfig.access must be public`);
+  if (manifest.peerDependencies?.react !== '>=17.0.0') fail(`${label}: React peer floor must be >=17.0.0`);
+  if (manifest.peerDependencies?.['react-native'] !== '>=0.66.0') fail(`${label}: React Native peer floor must be >=0.66.0`);
+  if (manifest.ruban?.reactNativeFloor !== '0.66.0') fail(`${label}: ruban.reactNativeFloor must be 0.66.0`);
+  if (manifest.ruban?.nativeCode !== false) fail(`${label}: nativeCode must be false for the current library line`);
+  if (manifest.ruban?.runtimePolicy === 'zero-dependency' && Object.keys(manifest.dependencies ?? {}).length > 0) {
+    fail(`${label}: zero-dependency packages cannot declare runtime dependencies`);
+  }
+
+  for (const entry of ['src', 'lib', 'NOTICE']) {
+    if (!hasFileEntry(manifest, entry)) fail(`${label}: files must include ${entry}`);
+  }
+
+  for (const script of ['build', 'test', 'typecheck']) {
+    if (typeof manifest.scripts?.[script] !== 'string') fail(`${label}: missing ${script} script`);
+  }
+
+  const rootExport = manifest.exports?.['.'];
+  if (rootExport?.types !== './lib/typescript/index.d.ts') fail(`${label}: exports.types is not the declaration entry`);
+  if (rootExport?.['react-native'] !== './src/index.ts' && rootExport?.['react-native'] !== './src/index.tsx') {
+    fail(`${label}: exports.react-native must point at the source entry`);
+  }
+  if (rootExport?.default !== './lib/commonjs/index.js') fail(`${label}: exports.default is not the safe CommonJS entry`);
+  if (manifest.exports?.['./package.json'] !== './package.json') fail(`${label}: package.json export is missing`);
+
+  for (const file of ['README.md', 'README.zh-CN.md', 'NOTICE']) {
+    if (!fs.existsSync(path.join(packageDirectory, file))) fail(`${label}: missing ${file}`);
+  }
+
+  if (!process.exitCode) console.log(`package-contract: ${label} OK`);
+}
+
+if (process.exitCode) process.exit(process.exitCode);

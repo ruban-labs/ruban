@@ -28,6 +28,7 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm build && changeset publish",
+    "check:packages": "node scripts/ci/check-package-contract.mjs",
     "check:syntax": "node scripts/ci/check-syntax-floor.mjs",
     "check:mobile-release-plan": "node --test scripts/ci/mobile-release-plan.test.mjs",
     "gongshu:package": "node scripts/release/package.mjs",

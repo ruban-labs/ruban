@@ -8,6 +8,7 @@ import type {RootStackParamList} from '../../navigation/types';
 import BadgeShowcaseScreen from './BadgeShowcaseScreen';
 import ButtonShowcaseScreen from './ButtonShowcaseScreen';
 import CardShowcaseScreen from './CardShowcaseScreen';
+import CollapsibleShowcaseScreen from './CollapsibleShowcaseScreen';
 import SeparatorShowcaseScreen from './SeparatorShowcaseScreen';
 import SwitchShowcaseScreen from './SwitchShowcaseScreen';
 
@@ -54,6 +55,10 @@ export default function ComponentDetailScreen(props: Props): React.ReactElement 
 
   if (props.route.params.component === 'switch') {
     return <SwitchShowcaseScreen {...props} onBack={onBack} />;
+  }
+
+  if (props.route.params.component === 'collapsible') {
+    return <CollapsibleShowcaseScreen {...props} onBack={onBack} />;
   }
 
   return <UnknownComponentScreen onBack={onBack} />;

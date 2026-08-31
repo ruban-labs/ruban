@@ -1,0 +1,7 @@
+This package is a ground-up TypeScript refurbishment inspired by the public API and behavior of react-native-collapsible.
+
+react-native-collapsible
+Copyright (c) Joel Arvidsson
+Licensed under the MIT License.
+
+Ruban Labs maintains this implementation independently for current bare React Native compatibility.

@@ -336,7 +336,7 @@ function collectFiles(targetPath, output) {
 function inputKey(appDir, options, app) {
   const files = [];
   collectFiles(appDir, files);
-  collectFiles(path.join(repoRoot, 'packages', 'react-native-progress'), files);
+  collectFiles(path.join(repoRoot, 'packages'), files);
   collectFiles(path.join(repoRoot, 'scripts', 'release'), files);
   collectFiles(releaseHealth, files);
 
