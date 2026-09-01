@@ -48,7 +48,7 @@ export default function BadgeShowcaseScreen({route, navigation, onBack}: Props):
       name="Badge"
       category="STATUS"
       distribution="SOURCE"
-      status="PREVIEW"
+      status="READY"
       theme={theme}
       onThemeChange={nextTheme => navigation.setParams({theme: nextTheme})}
       onBack={onBack}>

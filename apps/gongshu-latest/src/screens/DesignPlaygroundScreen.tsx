@@ -165,9 +165,9 @@ export default function DesignPlaygroundScreen({
             <View style={styles.liveDot} />
           </View>
           {[
-            ['01', 'PROGRESS', 'READY'],
-            ['02', 'COLLAPSIBLE', 'NEXT'],
-            ['03', 'ANIMATABLE', 'NEXT'],
+            ['01', 'BUTTON', 'READY'],
+            ['02', 'PROGRESS', 'READY'],
+            ['03', 'COLLAPSIBLE', 'READY'],
           ].map(row => (
             <View key={row[0]} style={styles.denseRow}>
               <Text style={styles.denseIndex}>{row[0]}</Text>

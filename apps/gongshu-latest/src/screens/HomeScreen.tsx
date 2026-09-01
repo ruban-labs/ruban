@@ -4,7 +4,6 @@ import * as React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import Collapsible from '@ruban-labs/react-native-collapsible';
 import {Bar} from '@ruban-labs/react-native-progress';
-import {buildInfo} from '../buildInfo';
 import {RubanScreen} from '../components/RubanPrimitives';
 import {spacing, useRubanColors, type RubanColors} from '../design/tokens';
 import type {RootStackParamList, TabParamList} from '../navigation/types';
@@ -31,17 +30,17 @@ type ComponentItem = {
   name: ComponentName;
   category: string;
   distribution: 'source' | 'package';
-  state: 'draft' | 'preview' | 'ready';
+  state: 'ready';
   target: ComponentTarget;
 };
 type GroupKey = 'source' | 'packages';
 
 const componentInventory: readonly ComponentItem[] = [
-  {index: '01', name: 'Button', category: 'ACTION', distribution: 'source', state: 'preview', target: 'button'},
-  {index: '02', name: 'Card', category: 'SURFACE', distribution: 'source', state: 'preview', target: 'card'},
-  {index: '03', name: 'Badge', category: 'STATUS', distribution: 'source', state: 'preview', target: 'badge'},
-  {index: '04', name: 'Separator', category: 'STRUCTURE', distribution: 'source', state: 'preview', target: 'separator'},
-  {index: '05', name: 'Switch', category: 'CONTROL', distribution: 'source', state: 'preview', target: 'switch'},
+  {index: '01', name: 'Button', category: 'ACTION', distribution: 'source', state: 'ready', target: 'button'},
+  {index: '02', name: 'Card', category: 'SURFACE', distribution: 'source', state: 'ready', target: 'card'},
+  {index: '03', name: 'Badge', category: 'STATUS', distribution: 'source', state: 'ready', target: 'badge'},
+  {index: '04', name: 'Separator', category: 'STRUCTURE', distribution: 'source', state: 'ready', target: 'separator'},
+  {index: '05', name: 'Switch', category: 'CONTROL', distribution: 'source', state: 'ready', target: 'switch'},
   {index: '06', name: 'Progress', category: 'FEEDBACK', distribution: 'package', state: 'ready', target: 'progress'},
   {index: '07', name: 'Collapsible', category: 'STRUCTURE', distribution: 'package', state: 'ready', target: 'collapsible'},
 ];
@@ -51,7 +50,7 @@ const groups: ReadonlyArray<{
   label: string;
   items: readonly ComponentItem[];
 }> = [
-  {key: 'source', label: 'SOURCE COMPONENTS', items: componentInventory.filter(item => item.distribution === 'source')},
+  {key: 'source', label: 'CORE COMPONENTS', items: componentInventory.filter(item => item.distribution === 'source')},
   {key: 'packages', label: 'RUBAN PACKAGES', items: componentInventory.filter(item => item.distribution === 'package')},
 ];
 
@@ -215,12 +214,12 @@ export default function HomeScreen({navigation}: Props): React.ReactElement {
   return (
     <RubanScreen testID="screen-home">
       <View style={styles.header}>
-        <Text style={[styles.wordmark, {color: colors.ink}]}>RUBAN / COMPONENTS</Text>
-        <Text style={[styles.buildTag, {color: colors.faint}]}>RN {buildInfo.reactNative}</Text>
+        <Text style={[styles.wordmark, {color: colors.ink}]}>RUBAN / UI WORKBENCH</Text>
+        <Text style={[styles.buildTag, {color: colors.faint}]}>MOBILE</Text>
       </View>
 
       <View style={styles.titleRow}>
-        <Text style={[styles.title, {color: colors.ink}]}>Components</Text>
+        <Text style={[styles.title, {color: colors.ink}]}>Library</Text>
         <View style={[styles.countBlock, {backgroundColor: colors.accent}]}>
           <Text style={[styles.count, {color: colors.inverse}]}>{componentCount}</Text>
         </View>
@@ -228,18 +227,16 @@ export default function HomeScreen({navigation}: Props): React.ReactElement {
 
       <View style={[styles.buildStrip, {borderColor: colors.border}]}>
         <View style={styles.buildCell}>
-          <Text style={[styles.buildLabel, {color: colors.faint}]}>EDITION</Text>
-          <Text style={[styles.buildValue, {color: colors.ink}]}>{buildInfo.edition.toUpperCase()}</Text>
+          <Text style={[styles.buildLabel, {color: colors.faint}]}>CORE</Text>
+          <Text style={[styles.buildValue, {color: colors.ink}]}>05</Text>
         </View>
         <View style={[styles.buildCell, styles.buildCellBorder, {borderColor: colors.border}]}>
-          <Text style={[styles.buildLabel, {color: colors.faint}]}>ARCH</Text>
-          <Text style={[styles.buildValue, {color: colors.ink}]}>
-            {buildInfo.architecture === 'newArch' ? 'NEW' : 'OLD'}
-          </Text>
+          <Text style={[styles.buildLabel, {color: colors.faint}]}>PACKAGES</Text>
+          <Text style={[styles.buildValue, {color: colors.ink}]}>02</Text>
         </View>
         <View style={[styles.buildCell, styles.buildCellBorder, {borderColor: colors.border}]}>
-          <Text style={[styles.buildLabel, {color: colors.faint}]}>CHANNEL</Text>
-          <Text style={[styles.buildValue, {color: colors.ink}]}>{buildInfo.channel.toUpperCase()}</Text>
+          <Text style={[styles.buildLabel, {color: colors.faint}]}>THEMES</Text>
+          <Text style={[styles.buildValue, {color: colors.ink}]}>02</Text>
         </View>
       </View>
 
@@ -264,7 +261,7 @@ export default function HomeScreen({navigation}: Props): React.ReactElement {
         activeOpacity={0.78}
         onPress={() => navigation.navigate('Playground', {tool: 'design'})}
         style={[styles.playgroundLink, {backgroundColor: colors.ink}]}>
-        <Text style={[styles.playgroundLabel, {color: colors.inverse}]}>OPEN PLAYGROUND</Text>
+        <Text style={[styles.playgroundLabel, {color: colors.inverse}]}>EXPLORE DESIGN SYSTEM</Text>
         <Text style={[styles.playgroundArrow, {color: colors.accent}]}>→</Text>
       </TouchableOpacity>
     </RubanScreen>

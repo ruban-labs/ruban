@@ -104,10 +104,10 @@ function BuildInfoBottomSheet({
     <BottomSheetModal
       testID="settings-sheet-build"
       visible={visible}
-      title="Build & Matrix"
+      title="Runtime & Compatibility"
       onDismiss={onDismiss}>
       <ScrollView bounces={false} contentContainerStyle={styles.sheetContent}>
-        <SettingsGroup label="CURRENT BUILD" inSheet>
+        <SettingsGroup label="CURRENT APP" inSheet>
           <SettingsRow label="React Native" value={buildInfo.reactNative} />
           <SettingsRow label="React" value={buildInfo.react} />
           <SettingsRow label="Architecture" value={architectureLabel} />
@@ -117,7 +117,7 @@ function BuildInfoBottomSheet({
             value={`${buildInfo.platform.toUpperCase()} ${buildInfo.platformVersion}`}
           />
         </SettingsGroup>
-        <SettingsGroup label="SUPPORT MATRIX" inSheet>
+        <SettingsGroup label="COMPATIBILITY" inSheet>
           <SettingsRow label="RN 0.66" value="OLD" />
           <SettingsRow label="RN 0.77" value="OLD + NEW" />
           <SettingsRow label="RN LATEST" value="NEW" />
@@ -138,7 +138,7 @@ export default function SettingsScreen({route, navigation}: Props): React.ReactE
       <View style={styles.header}>
         <Text style={[styles.headerLabel, {color: colors.ink}]}>RUBAN / SETTINGS</Text>
         <Text style={[styles.headerMeta, {color: colors.faint}]}>
-          {buildInfo.edition.toUpperCase()}
+          WORKBENCH
         </Text>
       </View>
       <Text style={[styles.title, {color: colors.ink}]}>Settings</Text>
@@ -152,27 +152,35 @@ export default function SettingsScreen({route, navigation}: Props): React.ReactE
         />
       </SettingsGroup>
 
-      <SettingsGroup label="BUILD">
+      <SettingsGroup label="TECHNICAL">
         <SettingsRow
           testID="settings-build"
-          label="Build & matrix"
+          label="Runtime & compatibility"
           value={`RN ${buildInfo.reactNative}`}
           onPress={() => navigation.setParams({sheet: 'build'})}
         />
       </SettingsGroup>
 
       <SettingsGroup label="ABOUT">
+        <SettingsRow label="Purpose" value="UI REFERENCE" />
+        <SettingsRow label="Audience" value="RN TEAMS" />
         <SettingsRow
           label="Ruban Labs"
+          value="WEBSITE"
+          action="external"
+          onPress={() => Linking.openURL('https://mobile.ruban-labs.work/')}
+        />
+        <SettingsRow
+          label="Documentation"
           value="GITHUB"
           action="external"
           onPress={() => Linking.openURL('https://github.com/ruban-labs/ruban')}
         />
         <SettingsRow
-          label="Ecosystem ruler"
-          value="AWESOME"
+          label="Privacy"
+          value="POLICY"
           action="external"
-          onPress={() => Linking.openURL('https://github.com/richardo2016/awesome-native-react')}
+          onPress={() => Linking.openURL('https://mobile.ruban-labs.work/privacy/')}
         />
         <SettingsRow label="Version" value="0.0.1" />
         <SettingsRow label="License" value="MIT" />
