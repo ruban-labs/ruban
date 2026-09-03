@@ -74,7 +74,7 @@ export default function CardShowcaseScreen({route, navigation, onBack}: Props): 
       name="Card"
       category="SURFACE"
       distribution="SOURCE"
-      status="PREVIEW"
+      status="READY"
       theme={theme}
       onThemeChange={nextTheme => navigation.setParams({theme: nextTheme})}
       onBack={onBack}>

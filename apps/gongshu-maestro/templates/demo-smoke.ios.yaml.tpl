@@ -2,14 +2,14 @@ appId: {{appId}}
 ---
 # Gongshu app-shell smoke (ios, era {{era}}). Maestro 2.x syntax.
 # Text-based selectors on purpose: RN exposes testID to the automation
-# hierarchy inconsistently across eras/architectures (Paper vs Fabric),
-# while visible product labels are stable everywhere.
+# hierarchy inconsistently across eras/architectures (Paper vs Fabric).
+# User-facing copy and explicit accessibility labels form the stable contract.
 - launchApp:
     clearState: true
 - setOrientation: portrait
 - extendedWaitUntil:
     visible:
-      text: "Components"
+      text: "{{homeTitle}}"
     timeout: 120000
 - assertVisible:
     text: "01.*Button.*"
@@ -19,17 +19,17 @@ appId: {{appId}}
     text: "01.*Button.*"
 - extendedWaitUntil:
     visible:
-      text: "← COMPONENTS"
+      text: "Back to components"
     timeout: 20000
 - assertNotVisible:
     text: "Playground"
 - assertNotVisible:
     text: "Settings"
 - tapOn:
-    text: "← COMPONENTS"
+    text: "Back to components"
 - extendedWaitUntil:
     visible:
-      text: "Components"
+      text: "{{homeTitle}}"
     timeout: 20000
 - openLink: "{{scheme}}://components/badge?theme=light&variant=live&size=md"
 - extendedWaitUntil:
@@ -40,7 +40,7 @@ appId: {{appId}}
     text: "Open"
 - extendedWaitUntil:
     visible:
-      text: "← COMPONENTS"
+      text: "Back to components"
     timeout: 120000
 - assertVisible:
     text: "LIVE"
@@ -69,7 +69,7 @@ appId: {{appId}}
 - openLink: "{{scheme}}://home"
 - extendedWaitUntil:
     visible:
-      text: "Components"
+      text: "{{homeTitle}}"
     timeout: 20000
 - tapOn:
     text: "Playground"
@@ -91,14 +91,14 @@ appId: {{appId}}
     text: "Appearance.*"
 - scrollUntilVisible:
     element:
-      text: "Build & matrix.*"
+      text: "{{settingsBuildEntry}}.*"
     direction: DOWN
     timeout: 20000
 - tapOn:
-    text: "Build & matrix.*"
+    text: "{{settingsBuildEntry}}.*"
 - extendedWaitUntil:
     visible:
-      text: "Build & Matrix"
+      text: "{{settingsBuildTitle}}"
     timeout: 20000
 - assertVisible:
     text: "HERMES"

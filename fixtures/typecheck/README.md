@@ -18,7 +18,7 @@ monorepo instead of the era deps, silently invalidating the matrix.
 Eras:
 
 - `rn-0.66` - support floor: React 17, `@types/react-native` (RN did not bundle types yet)
-- `rn-0.76` - new architecture default boundary: RN-bundled types, React 18
+- `rn-0.77` - new architecture default boundary: RN-bundled types, React 18
 - `rn-latest` - current stable RN / React 19 (version pin bumped during maintenance)
 
 Never add these directories to the pnpm workspace. Installs use plain npm with

@@ -44,6 +44,12 @@ subprojects { subproject ->
         }
     }
 
+    if (subproject.name == "react-native-screens") {
+        subproject.plugins.withId("com.android.library") {
+            subproject.android.buildFeatures.buildConfig = true
+        }
+    }
+
     afterEvaluate {
         tasks.matching { task ->
             task.name.startsWith("compile") && task.name.endsWith("Kotlin")

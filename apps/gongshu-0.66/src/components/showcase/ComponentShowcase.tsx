@@ -38,11 +38,21 @@ function ComponentShowcaseContent({
   children,
 }: ComponentShowcaseScreenProps): React.ReactElement {
   const colors = useRubanColors();
+  const screenId = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 
   return (
-    <RubanScreen testID={`screen-component-${name.toLowerCase()}`}>
+    <RubanScreen
+      testID={`screen-component-${screenId}`}
+      scrollProps={{keyboardShouldPersistTaps: 'handled'}}>
       <View style={styles.topBar}>
-        <Pressable accessibilityRole="button" onPress={onBack} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Back to components"
+          onPress={onBack}
+          hitSlop={8}>
           <Text style={[styles.backLabel, {color: colors.ink}]}>
             ← COMPONENTS
           </Text>
@@ -76,7 +86,17 @@ function ComponentShowcaseContent({
       </View>
 
       <View style={styles.titleRow}>
-        <Text style={[styles.title, {color: colors.ink}]}>{name}</Text>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.78}
+          style={[
+            styles.title,
+            name.length > 10 ? styles.titleCompact : undefined,
+            {color: colors.ink},
+          ]}>
+          {name}
+        </Text>
         <View style={[styles.indexBlock, {backgroundColor: colors.accent}]}>
           <Text style={[styles.index, {color: colors.inverse}]}>{index}</Text>
         </View>
@@ -318,12 +338,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   title: {
-    flexShrink: 1,
+    flex: 1,
+    marginRight: 12,
     fontSize: 48,
     lineHeight: 52,
     fontWeight: '800',
     letterSpacing: -2.4,
   },
+  titleCompact: {fontSize: 40, lineHeight: 44, letterSpacing: -1.8},
   indexBlock: {
     width: 54,
     height: 54,

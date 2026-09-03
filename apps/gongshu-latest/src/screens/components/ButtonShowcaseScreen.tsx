@@ -74,7 +74,7 @@ export default function ButtonShowcaseScreen({route, navigation, onBack}: Props)
       name="Button"
       category="ACTION"
       distribution="SOURCE"
-      status="PREVIEW"
+      status="READY"
       theme={theme}
       onThemeChange={nextTheme => navigation.setParams({theme: nextTheme})}
       onBack={onBack}>

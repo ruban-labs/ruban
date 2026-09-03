@@ -92,7 +92,7 @@ export default function SeparatorShowcaseScreen({route, navigation, onBack}: Pro
       name="Separator"
       category="STRUCTURE"
       distribution="SOURCE"
-      status="PREVIEW"
+      status="READY"
       theme={theme}
       onThemeChange={nextTheme => navigation.setParams({theme: nextTheme})}
       onBack={onBack}>

@@ -9,6 +9,7 @@ public class MainActivity extends ReactActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     RNBootSplash.init(this);
+    RubanSystemBarsModule.enableEdgeToEdge(getWindow());
     super.onCreate(null);
   }
 

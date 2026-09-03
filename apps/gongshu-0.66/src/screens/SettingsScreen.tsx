@@ -140,7 +140,7 @@ function BuildInfoBottomSheet({
         </SettingsGroup>
         <SettingsGroup label="SUPPORT MATRIX" inSheet>
           <SettingsRow label="RN 0.66" value="OLD" />
-          <SettingsRow label="RN 0.76" value="OLD + NEW" />
+          <SettingsRow label="RN 0.77" value="OLD + NEW" />
           <SettingsRow label="RN LATEST" value="NEW" />
         </SettingsGroup>
       </ScrollView>

@@ -18,6 +18,8 @@
     "brand:app-store:check-screenshots": "node scripts/brand/frame-app-store-screenshots.mjs --check",
     "design:theme:generate": "node scripts/design/generate-theme-colors.mjs",
     "design:theme:check": "node scripts/design/generate-theme-colors.mjs --check",
+    "registry:sync": "node scripts/design/sync-source-registry.mjs",
+    "registry:check": "node scripts/design/sync-source-registry.mjs --check",
     "site:build": "pnpm design:theme:check && pnpm --filter @ruban-labs/website build",
     "site:check": "pnpm design:theme:check && pnpm --filter @ruban-labs/website check && pnpm --filter @ruban-labs/website build && node scripts/site/check.mjs",
     "site:dev": "pnpm design:theme:check && pnpm --filter @ruban-labs/website dev",
@@ -28,16 +30,20 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm build && changeset publish",
+    "check:packages": "node scripts/ci/check-package-contract.mjs",
     "check:syntax": "node scripts/ci/check-syntax-floor.mjs",
     "check:mobile-release-plan": "node --test scripts/ci/mobile-release-plan.test.mjs",
+    "check:android-page-size": "node scripts/ci/check-android-page-size.mjs",
     "gongshu:package": "node scripts/release/package.mjs",
     "gongshu:android-signing": "node scripts/release/android-signing.mjs",
     "gongshu:apple-signing": "node scripts/release/apple-signing.mjs",
+    "gongshu:device:prepare": "node scripts/device/prepare-dev-device.mjs",
     "gongshu:release-health": "node scripts/device/release-health.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.0",
     "acorn": "^8.18.0",
+    "prettier": "2.8.8",
     "sharp": "0.35.4"
   }
 }

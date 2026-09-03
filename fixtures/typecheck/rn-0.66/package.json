@@ -6,6 +6,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ruban-labs/react-native-collapsible": "file:./ruban-collapsible-local.tgz",
     "@ruban-labs/react-native-progress": "file:./ruban-local.tgz",
     "react": "17.0.2",
     "react-native": "0.66.4"

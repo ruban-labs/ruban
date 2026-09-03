@@ -11,13 +11,13 @@ const eras = {
     schemes: {production: 'ruban', regression: 'ruban-regression', debug: 'ruban-debug'},
     appId: 'com.rubanlabs.mobile',
   },
-  '0.76': {
+  '0.77': {
     schemes: {
-      production: 'ruban-rn076',
-      regression: 'ruban-rn076-regression',
-      debug: 'ruban-rn076-debug',
+      production: 'ruban-rn077',
+      regression: 'ruban-rn077-regression',
+      debug: 'ruban-rn077-debug',
     },
-    appId: 'com.rubanlabs.mobile.gongshu.rn076',
+    appId: 'com.rubanlabs.mobile.gongshu.rn077',
   },
   '0.66': {
     schemes: {
@@ -77,7 +77,7 @@ if (
   (architecture !== 'old' && architecture !== 'new')
 ) {
   fail(
-    'expected --platform <android|ios> --era <0.66|0.76|latest> ' +
+    'expected --platform <android|ios> --era <0.66|0.77|latest> ' +
       '--device <serial|udid> --arch <old|new>',
   );
 }

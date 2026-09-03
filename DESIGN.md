@@ -42,7 +42,7 @@ Keep three independent bare React Native apps under `apps/`:
 | App | React Native era | Navigation | Architecture capability |
 | --- | --- | --- | --- |
 | `gongshu-0.66` | 0.66.x | React Navigation 6 | Legacy Architecture only |
-| `gongshu-0.76` | 0.76.x | React Navigation 7 | Legacy and New Architecture |
+| `gongshu-0.77` | 0.77.x | React Navigation 7 | Legacy and New Architecture |
 | `gongshu-latest` | current pinned release | React Navigation 7 | Follow upstream; 0.82+ is New Architecture only |
 
 Each app owns its dependencies, package manager lockfile, native projects,
@@ -64,10 +64,10 @@ Architecture is a **build axis**, not a source fork.
 - Compile every architecture officially supported by that era.
 - Do not emulate New Architecture on 0.66 or revive Legacy Architecture on a
   React Native release that removed it.
-- `gongshu-0.76` must remain buildable in both Legacy and New Architecture on
+- `gongshu-0.77` must remain buildable in both Legacy and New Architecture on
   Android and iOS.
 - Name CI and release artifacts with the era, architecture, and platform, for
-  example `gongshu-rn076-newarch-android`.
+  example `gongshu-rn077-newarch-android`.
 - Use separate build variants, schemes, caches, and install identifiers when
   two architecture builds need to coexist on a device.
 - Run the same deterministic deep-link scenarios against every valid matrix
@@ -79,7 +79,7 @@ The minimum compile matrix is:
 | Era | Legacy Architecture | New Architecture |
 | --- | --- | --- |
 | RN 0.66 | Required | Unsupported |
-| RN 0.76 | Required | Required |
+| RN 0.77 | Required | Required |
 | RN latest (currently 0.87) | Unsupported upstream | Required |
 
 If Ruban needs a recent dual-architecture comparison after the latest line has
@@ -137,6 +137,21 @@ handled by consuming the new `insets.bottom`.
 - Keyboard avoidance is a keyboard-aware layout concern, not part of system
   navigation inset compensation.
 
+### System Bar Color Ownership
+
+- The app root always paints `surface-page` behind transparent system bars.
+- The focused route owns status and navigation icon appearance. A route-local
+  theme, such as Playground dark mode, overrides the global appearance only
+  while that route is focused.
+- Android 15 and later use the platform's enforced edge-to-edge model. Earlier
+  versions opt in through the native integration supported by that RN era.
+- Gesture navigation remains transparent. Three-button navigation may use the
+  system contrast background, while app layout still consumes its bottom inset
+  exactly once.
+- Modal and sheet windows opt into system-bar translucency where that RN era
+  supports it. RN 0.66 keeps status translucency and delegates the remaining
+  window policy to its small native compatibility module.
+
 ### Settings Choice Surfaces
 
 - Multi-choice settings use a source-owned Bottom Sheet primitive. They do not
@@ -170,7 +185,7 @@ dispatch between apps by path after the scheme has been registered.
 | Era | Production | Regression | Debug |
 | --- | --- | --- | --- |
 | latest | `ruban://` | `ruban-regression://` | `ruban-debug://` |
-| RN 0.76 | `ruban-rn076://` | `ruban-rn076-regression://` | `ruban-rn076-debug://` |
+| RN 0.77 | `ruban-rn077://` | `ruban-rn077-regression://` | `ruban-rn077-debug://` |
 | RN 0.66 | `ruban-rn066://` | `ruban-rn066-regression://` | `ruban-rn066-debug://` |
 
 Paths remain identical across schemes, such as `components/switch`,
@@ -350,7 +365,14 @@ Every showcase screen follows this hierarchy:
 The light/dark selector is local to the showcase and updates the displayed deep
 link. Labels, controls, specimens, and data rows are the documentation; do not
 add instructional paragraphs to the screen. Build the complete screen in
-`gongshu-latest` first, then port the same scenario to RN 0.76 and RN 0.66.
+`gongshu-latest` first, then port the same scenario to RN 0.77 and RN 0.66.
+
+Source-owned components have one canonical registry under `registry/native`.
+The registry sync writes committed copies into each standalone Gongshu source
+tree and formats each copy with that app's own Prettier contract. It does not
+create a shared runtime, workspace dependency, or symlink. `pnpm registry:check`
+fails when an app copy drifts from the canonical source, while era-specific
+navigation, native dependencies, and product framing remain local to each app.
 
 The first source-owned primitives establish these contracts:
 
@@ -369,6 +391,15 @@ The first source-owned primitives establish these contracts:
 - **Switch** — controlled through `checked` and `onCheckedChange`, with `sm` and
   `md` sizes, a minimum 44-point touch target, switch semantics, and explicit
   disabled state.
+- **Form Kit** — `Field` owns required, description, error, disabled, and invalid
+  semantics; `Input` and `Textarea` inherit that state; `Checkbox`, `RadioGroup`,
+  and `Select` remain controlled. `Select` uses a source-owned React Native
+  bottom sheet and introduces no external runtime dependency.
+
+`ruban://components/form` opens the composed Form Workbench. It is a compact
+recipe rather than another primitive: all six Form Kit components participate
+in one validation and submit flow, and the submit action exposes a deterministic
+`form-workbench-saved` state for device smoke verification.
 
 ## Agent Design Contract
 
@@ -386,7 +417,7 @@ Agents must not improvise a new visual language screen by screen.
    do/don't examples before expanding the surface.
 8. Prefer composing existing primitives; document why a new primitive is
    necessary.
-9. Port the approved screen to 0.76 and 0.66, then review screenshot diffs
+9. Port the approved screen to 0.77 and 0.66, then review screenshot diffs
    rather than accepting approximate visual similarity.
 
 The long-term design kit should contain semantic tokens, reusable patterns,

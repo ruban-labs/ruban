@@ -43,7 +43,7 @@ export default function SwitchShowcaseScreen({route, navigation, onBack}: Props)
       name="Switch"
       category="CONTROL"
       distribution="SOURCE"
-      status="PREVIEW"
+      status="READY"
       theme={theme}
       onThemeChange={nextTheme => navigation.setParams({theme: nextTheme})}
       onBack={onBack}>

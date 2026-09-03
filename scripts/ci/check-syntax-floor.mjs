@@ -11,7 +11,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
-const libDir = path.join(repoRoot, 'packages', 'react-native-progress', 'lib');
+const packagesRoot = path.join(repoRoot, 'packages');
 
 function collectJs(dir) {
   const out = [];
@@ -23,12 +23,17 @@ function collectJs(dir) {
   return out;
 }
 
-if (!fs.existsSync(libDir)) {
-  console.error('lib/ not found - run `pnpm build` first.');
+const libDirectories = fs
+  .readdirSync(packagesRoot, {withFileTypes: true})
+  .filter(entry => entry.isDirectory())
+  .map(entry => path.join(packagesRoot, entry.name, 'lib'))
+  .filter(directory => fs.existsSync(directory));
+if (libDirectories.length === 0) {
+  console.error('No package lib/ directories found - run `pnpm build` first.');
   process.exit(1);
 }
 
-const files = collectJs(libDir);
+const files = libDirectories.flatMap(collectJs);
 let failures = 0;
 for (const file of files) {
   const source = fs.readFileSync(file, 'utf8');

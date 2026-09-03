@@ -64,7 +64,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @ruban-labs/react-native-progress build
+      - run: pnpm -r build
 
       - uses: actions/cache@v4
         with:
@@ -227,6 +227,10 @@ jobs:
           test -f "$RUBAN_ASC_KEY_PATH"
           bundle exec fastlane ios ensure_app_store_record
           bundle exec fastlane ios upload_testflight
+
+      - name: Verify Android 16 KB page-size support
+        if: matrix.platform == 'android' && (matrix.era == '0.77' || matrix.era == 'latest')
+        run: pnpm check:android-page-size "${{ steps.release-output.outputs.artifact }}"
 
       - uses: actions/upload-artifact@v4
         with:

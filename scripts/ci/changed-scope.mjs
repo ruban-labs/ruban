@@ -1,17 +1,17 @@
 import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 
-const ERAS = ["rn-0.66", "rn-0.76", "rn-latest"];
+const ERAS = ["rn-0.66", "rn-0.77", "rn-latest"];
 
 const TYPECHECK_MATRIX = [
   { fixture: "rn-0.66", "era-node": 16 },
-  { fixture: "rn-0.76", "era-node": 18 },
+  { fixture: "rn-0.77", "era-node": 18 },
   { fixture: "rn-latest", "era-node": 22 },
 ];
 
 const BUNDLE_MATRIX = [
   { era: "rn-0.66", "era-node": 16 },
-  { era: "rn-0.76", "era-node": 18 },
+  { era: "rn-0.77", "era-node": 18 },
   { era: "rn-latest", "era-node": 22 },
 ];
 
@@ -26,9 +26,9 @@ const IOS_MATRIX = [
     "metro-env": "",
   },
   {
-    era: "0.76",
-    app: "gongshu-0.76",
-    proj: "gongshu076",
+    era: "0.77",
+    app: "gongshu-0.77",
+    proj: "gongshu077",
     "runs-on": "macos-14",
     "era-node": 18,
     xcode: "default",
@@ -72,7 +72,7 @@ function isSitePath(path) {
 }
 
 function appEra(path) {
-  const match = path.match(/^apps\/gongshu-(0\.66|0\.76|latest)\/(.+)$/);
+  const match = path.match(/^apps\/gongshu-(0\.66|0\.77|latest)\/(.+)$/);
   if (!match || match[2].startsWith("android/")) {
     return null;
   }
@@ -81,7 +81,7 @@ function appEra(path) {
 }
 
 function fixtureEra(path) {
-  const match = path.match(/^fixtures\/typecheck\/(rn-(?:0\.66|0\.76|latest))\//);
+  const match = path.match(/^fixtures\/typecheck\/(rn-(?:0\.66|0\.77|latest))\//);
   return match?.[1] ?? null;
 }
 
@@ -121,6 +121,12 @@ export function classifyChangedPaths(inputPaths, { forceFull = false } = {}) {
     }
 
     if (path.startsWith("apps/gongshu-maestro/") || path === "scripts/dev/sync-gongshu.mjs") {
+      addAll(ios);
+      continue;
+    }
+
+    if (path.startsWith("registry/") || path === "scripts/design/sync-source-registry.mjs") {
+      verify = true;
       addAll(ios);
       continue;
     }

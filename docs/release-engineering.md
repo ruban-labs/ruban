@@ -9,7 +9,7 @@ Every app has three co-installable identities on Android and iOS:
 | App | Production | Regression | Debug |
 | --- | --- | --- | --- |
 | Ruban latest | `com.rubanlabs.mobile` | `com.rubanlabs.mobile.regression` | `com.rubanlabs.mobile.debug` |
-| Gongshu 0.76 | `com.rubanlabs.mobile.gongshu.rn076` | `com.rubanlabs.mobile.gongshu.rn076.regression` | `com.rubanlabs.mobile.gongshu.rn076.debug` |
+| Gongshu 0.77 | `com.rubanlabs.mobile.gongshu.rn077` | `com.rubanlabs.mobile.gongshu.rn077.regression` | `com.rubanlabs.mobile.gongshu.rn077.debug` |
 | Gongshu 0.66 | `com.rubanlabs.mobile.gongshu.rn066` | `com.rubanlabs.mobile.gongshu.rn066.regression` | `com.rubanlabs.mobile.gongshu.rn066.debug` |
 
 - `debug` is Metro-backed UI iteration and never a performance baseline.
@@ -35,14 +35,14 @@ Package one valid matrix cell from the repository root:
 
 ```bash
 pnpm gongshu:package \
-  --app 0.76 \
+  --app 0.77 \
   --platform android \
   --lane regression \
   --arch new \
   --mode release-fast
 ```
 
-`0.66` infers `old`; `latest` infers `new`. The `0.76` app requires an explicit
+`0.66` infers `old`; `latest` infers `new`. The `0.77` app requires an explicit
 `--arch old|new` selector. Invalid architecture cells fail before Gradle or Xcode runs.
 
 Android can install and verify the produced release package on a real device in one command:
@@ -98,8 +98,8 @@ The local iOS release lane builds universal `arm64`/`x86_64` Simulator apps with
 
 ```bash
 pnpm gongshu:package --app 0.66 --platform ios --mode release-fast
-pnpm gongshu:package --app 0.76 --platform ios --arch old --mode release-fast
-pnpm gongshu:package --app 0.76 --platform ios --arch new --mode release-fast
+pnpm gongshu:package --app 0.77 --platform ios --arch old --mode release-fast
+pnpm gongshu:package --app 0.77 --platform ios --arch new --mode release-fast
 pnpm gongshu:package --app latest --platform ios --mode release-fast
 ```
 
@@ -107,8 +107,8 @@ All four cells are validated on Xcode 26.3 with Hermes bytecode and composed sou
 manifests use the `simulator-unsigned` signing class; an ad-hoc Simulator signature does not contain
 a Team ID, provisioning profile or device-install entitlement.
 
-RN 0.76 and newer use React Native's `scripts/bundle.js` entry, while RN 0.66 retains the legacy
-`cli.js` entry. RN 0.76's fixed-tag third-party source Pods are fetched as official GitHub codeload
+RN 0.77 and newer use React Native's `scripts/bundle.js` entry, while RN 0.66 retains the legacy
+`cli.js` entry. RN 0.77's fixed-tag third-party source Pods are fetched as official GitHub codeload
 tarballs so CocoaPods can cache archives instead of relying on Git clones. RN 0.66 release builds
 raise the app deployment target to iOS 12.4, disable the obsolete bundled Flipper lane, and accept
 the Hermes 0.9 source-map output location used by current Xcode tooling.
@@ -119,8 +119,8 @@ The four device matrix cells export signed Ad Hoc IPAs from the regression lane:
 
 ```bash
 pnpm gongshu:package --app 0.66 --platform ios --lane regression --mode release-fast --ios-distribution ad-hoc
-pnpm gongshu:package --app 0.76 --platform ios --lane regression --arch old --mode release-fast --ios-distribution ad-hoc
-pnpm gongshu:package --app 0.76 --platform ios --lane regression --arch new --mode release-fast --ios-distribution ad-hoc
+pnpm gongshu:package --app 0.77 --platform ios --lane regression --arch old --mode release-fast --ios-distribution ad-hoc
+pnpm gongshu:package --app 0.77 --platform ios --lane regression --arch new --mode release-fast --ios-distribution ad-hoc
 pnpm gongshu:package --app latest --platform ios --lane regression --mode release-fast --ios-distribution ad-hoc
 ```
 
@@ -143,6 +143,7 @@ materialized signing state after packaging.
 the workflow exists on `main`, run it manually and choose one target:
 
 - `android-regression-matrix` or `ios-regression-matrix` builds every valid RN/architecture cell;
+- Android RN 0.77 and latest artifacts must pass the 16 KB ZIP/ELF page-alignment audit;
 - `android-latest-website`, `android-latest-play`, or `ios-latest-app-store` builds one formal package;
 - `all-packages` builds the complete signed package matrix without uploading to a store;
 - `ios-testflight` builds the latest production App Store IPA and uploads it to TestFlight.

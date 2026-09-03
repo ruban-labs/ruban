@@ -24,12 +24,23 @@
   "module": "lib/module/index.js",
   "types": "lib/typescript/index.d.ts",
   "react-native": "src/index",
+  "exports": {
+    ".": {
+      "types": "./lib/typescript/index.d.ts",
+      "react-native": "./src/index.tsx",
+      "default": "./lib/commonjs/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "src",
     "lib",
     "NOTICE",
     "!**/__tests__"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": false,
   "scripts": {
     "build": "bob build",
@@ -39,6 +50,11 @@
   "peerDependencies": {
     "react": ">=17.0.0",
     "react-native": ">=0.66.0"
+  },
+  "ruban": {
+    "reactNativeFloor": "0.66.0",
+    "runtimePolicy": "zero-dependency",
+    "nativeCode": false
   },
   "devDependencies": {
     "@react-native/babel-preset": "0.87.0",

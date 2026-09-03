@@ -1,14 +1,11 @@
 import * as React from 'react';
-import {useFocusEffect} from '@react-navigation/native';
 import {
   Platform,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Switch,
   Text,
   TouchableOpacity,
-  useColorScheme,
   View,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -22,6 +19,7 @@ import {
   type RubanSemanticColors,
   type RubanThemeColorVariants,
 } from '../design/theme-colors';
+import {useFocusedRubanSystemBars} from '../system/RubanSystemBars';
 
 type Props = {
   darkMode: boolean;
@@ -72,7 +70,6 @@ export default function DesignPlaygroundScreen({
   onDarkModeChange,
   onOpenProgress,
 }: Props): React.ReactElement {
-  const systemColorScheme = useColorScheme();
   const mode = darkMode ? 'dark' : 'light';
   const theme: RubanThemeColorVariants = rubanThemeColors[mode];
   const semanticTheme: RubanSemanticColors = rubanSemanticColors[mode];
@@ -81,18 +78,7 @@ export default function DesignPlaygroundScreen({
     [semanticTheme, theme],
   );
 
-  useFocusEffect(
-    React.useCallback(() => {
-      StatusBar.setBarStyle(darkMode ? 'light-content' : 'dark-content', true);
-
-      return () => {
-        StatusBar.setBarStyle(
-          systemColorScheme === 'dark' ? 'light-content' : 'dark-content',
-          true,
-        );
-      };
-    }, [darkMode, systemColorScheme]),
-  );
+  useFocusedRubanSystemBars(mode, semanticTheme['surface-page']);
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>

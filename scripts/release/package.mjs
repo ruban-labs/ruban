@@ -48,16 +48,16 @@ const apps = {
     legacyOpenSsl: true,
     exactJavaMajor: 17,
   },
-  '0.76': {
-    aliases: ['0.76', 'gongshu-0.76'],
-    directory: 'gongshu-0.76',
-    reactNative: '0.76.9',
+  '0.77': {
+    aliases: ['0.77', 'gongshu-0.77'],
+    directory: 'gongshu-0.77',
+    reactNative: '0.77.3',
     architectures: ['old', 'new'],
-    scheme: 'gongshu076',
+    scheme: 'gongshu077',
     appIds: {
-      production: 'com.rubanlabs.mobile.gongshu.rn076',
-      regression: 'com.rubanlabs.mobile.gongshu.rn076.regression',
-      debug: 'com.rubanlabs.mobile.gongshu.rn076.debug',
+      production: 'com.rubanlabs.mobile.gongshu.rn077',
+      regression: 'com.rubanlabs.mobile.gongshu.rn077.regression',
+      debug: 'com.rubanlabs.mobile.gongshu.rn077.debug',
     },
     iosAdHoc: {
       production: {teamId: 'X4CK8ZXA45', profile: 'Ruban Gongshu Samples Ad Hoc'},
@@ -112,7 +112,7 @@ function readBuildNumber() {
 function usage() {
   console.log(`usage:
   node scripts/release/package.mjs \\
-    --app <0.66|0.76|latest> \\
+    --app <0.66|0.77|latest> \\
     --platform <android|ios> \\
     [--lane <production|regression>] \\
     [--arch <old|new>] \\
@@ -123,7 +123,7 @@ function usage() {
 
 Examples:
   pnpm gongshu:package --app 0.66 --platform android --lane regression --mode release-fast
-  pnpm gongshu:package --app 0.76 --platform android --lane production --arch old --mode release-clean
+  pnpm gongshu:package --app 0.77 --platform android --lane production --arch old --mode release-clean
   pnpm gongshu:package --app latest --platform android --lane production --android-distribution play
   pnpm gongshu:package --app latest --platform ios --lane regression --ios-distribution ad-hoc
   pnpm gongshu:package --app latest --platform ios --lane production --ios-distribution ad-hoc
@@ -181,7 +181,7 @@ function resolveApp(value) {
 
 function validateOptions(options) {
   const resolvedApp = resolveApp(options.app);
-  if (!resolvedApp) fail('expected --app <0.66|0.76|latest>', 2);
+  if (!resolvedApp) fail('expected --app <0.66|0.77|latest>', 2);
   if (!platforms.includes(options.platform)) fail('expected --platform <android|ios>', 2);
   if (!lanes.includes(options.lane)) fail('expected --lane <production|regression>', 2);
   if (!modes.includes(options.mode)) {
@@ -336,7 +336,7 @@ function collectFiles(targetPath, output) {
 function inputKey(appDir, options, app) {
   const files = [];
   collectFiles(appDir, files);
-  collectFiles(path.join(repoRoot, 'packages', 'react-native-progress'), files);
+  collectFiles(path.join(repoRoot, 'packages'), files);
   collectFiles(path.join(repoRoot, 'scripts', 'release'), files);
   collectFiles(releaseHealth, files);
 
@@ -638,7 +638,7 @@ function prepareLegacyIos(appDir) {
   );
 }
 
-function prepareReactNative076Ios(appDir) {
+function prepareReactNative077Ios(appDir) {
   const podspecRoot = path.join(
     appDir,
     'node_modules',
@@ -654,7 +654,7 @@ function prepareReactNative076Ios(appDir) {
     [
       'RCT-Folly.podspec',
       /\{ :git => folly_git_url,\s*:tag => "v#\{folly_release_version\}" \}/,
-      'https://codeload.github.com/facebook/folly/tar.gz/refs/tags/v2024.10.14.00',
+      'https://codeload.github.com/facebook/folly/tar.gz/refs/tags/v2024.11.18.00',
     ],
     [
       'boost.podspec',
@@ -1204,7 +1204,7 @@ function buildIosOnce(context, runIndex, captureRoot) {
   if (era === '0.66') env.NO_FLIPPER = '1';
 
   if (era === '0.66') prepareLegacyIos(appDir);
-  if (era === '0.76') prepareReactNative076Ios(appDir);
+  if (era === '0.77') prepareReactNative077Ios(appDir);
   fs.mkdirSync(path.join(iosHome, 'Library', 'Caches', 'ReactNative'), {recursive: true});
   if (options.iosDistribution !== 'simulator') {
     ensureDirectoryLink(

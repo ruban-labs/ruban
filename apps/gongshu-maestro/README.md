@@ -17,7 +17,7 @@ Era app ids must stay in sync with `apps/gongshu-*`:
 | era | Debug app id | Debug scheme |
 | --- | --- | --- |
 | 0.66 | `com.rubanlabs.mobile.gongshu.rn066.debug` | `ruban-rn066-debug://` |
-| 0.76 | `com.rubanlabs.mobile.gongshu.rn076.debug` | `ruban-rn076-debug://` |
+| 0.77 | `com.rubanlabs.mobile.gongshu.rn077.debug` | `ruban-rn077-debug://` |
 | latest | `com.rubanlabs.mobile.debug` | `ruban-debug://` |
 
 ## Running
