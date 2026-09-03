@@ -43,7 +43,8 @@ The graph has no cycles. Its meaningful coupling points are:
 - OverlayHost and OverlayCoordinator form one compatibility boundary around React Native Modal.
 - Dialog and BottomSheetModal share that overlay boundary but have independent public behavior.
 - Input, Checkbox, RadioGroup, and Select consume Field state; Textarea is an Input specialization.
-- BottomSheetModal is the only current component with an additional native peer dependency.
+- BottomSheetModal and the icon set keep native peers explicit instead of bundling duplicate native
+  modules into consumers.
 
 ## Target packages
 
@@ -56,6 +57,7 @@ All scoped names retain `react-native-` so their platform contract remains expli
 | `@ruban-labs/react-native-ui-dialog` | dialog root, trigger, close, content and animation | theme + overlay peers | none |
 | `@ruban-labs/react-native-ui-sheet` | bottom sheet and selection sheet | theme + overlay peers | `react-native-safe-area-context` |
 | `@ruban-labs/react-native-ui-form` | Field, Input, Textarea, Checkbox, RadioGroup and Select | theme peer | none |
+| `@ruban-labs/react-native-ui-icons` | theme-aware SVG icon set | none | `react-native-svg` |
 | `@ruban-labs/react-native-ui-button` | Button | theme peer | none |
 | `@ruban-labs/react-native-ui-card` | Card composition | theme peer | none |
 | `@ruban-labs/react-native-ui-badge` | Badge | theme peer | none |
@@ -82,6 +84,7 @@ First publish the boundaries that prove the architecture:
 3. `react-native-ui-dialog`
 4. `react-native-ui-sheet`
 5. `react-native-ui-form`
+6. `react-native-ui-icons`
 
 Publish the five leaf visual primitives after their public props and accessibility contracts stop
 changing in the Gongshu workbench. A future `@ruban-labs/react-native-ui` package may re-export

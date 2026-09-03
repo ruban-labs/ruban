@@ -36,6 +36,7 @@ const ERAS = {
     initArgs: ["--version", "0.66.4", "--npm", "--skip-install"],
     entry: "App.js",
     eraNode: "16",
+    svgVersion: "12.1.1",
   },
   "rn-0.77": {
     appName: "RubanSmoke077",
@@ -50,6 +51,7 @@ const ERAS = {
     ],
     entry: "App.tsx",
     eraNode: "18",
+    svgVersion: "15.12.1",
   },
   "rn-latest": {
     appName: "RubanSmokeLatest",
@@ -64,6 +66,7 @@ const ERAS = {
     ],
     entry: "App.tsx",
     eraNode: "22",
+    svgVersion: "15.12.1",
   },
 };
 
@@ -146,6 +149,47 @@ function tarballForPath(era, library) {
   return path.join(workdirFor(era), library.tarball);
 }
 
+function writeSvgMetroConfig(appDir, era) {
+  const legacy = era === "rn-0.66";
+  const source = legacy
+    ? `const {getDefaultConfig} = require('metro-config');
+
+module.exports = (async () => {
+  const {resolver: {assetExts, sourceExts}} = await getDefaultConfig();
+  return {
+    transformer: {
+      babelTransformerPath: require.resolve('react-native-svg-transformer/react-native'),
+    },
+    resolver: {
+      assetExts: assetExts.filter(extension => extension !== 'svg'),
+      sourceExts: [...sourceExts, 'svg'],
+    },
+  };
+})();
+`
+    : `const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
+
+const defaultConfig = getDefaultConfig(__dirname);
+const {assetExts, sourceExts} = defaultConfig.resolver;
+
+module.exports = mergeConfig(defaultConfig, {
+  transformer: {
+    babelTransformerPath: require.resolve('react-native-svg-transformer/react-native'),
+  },
+  resolver: {
+    assetExts: assetExts.filter(extension => extension !== 'svg'),
+    sourceExts: [...sourceExts, 'svg'],
+  },
+});
+`;
+
+  fs.writeFileSync(path.join(appDir, "metro.config.js"), source);
+  fs.writeFileSync(
+    path.join(appDir, ".svgrrc"),
+    JSON.stringify({native: true, expandProps: "end"}, null, 2) + "\n"
+  );
+}
+
 function phaseApp(era) {
   const config = ERAS[era];
   const workdir = workdirFor(era);
@@ -167,9 +211,33 @@ function phaseApp(era) {
   });
   run(
     "npm",
+    [
+      "install",
+      "--save-exact",
+      "--no-audit",
+      "--no-fund",
+      `react-native-svg@${config.svgVersion}`,
+    ],
+    {cwd: appDir}
+  );
+  run(
+    "npm",
+    [
+      "install",
+      "--save-dev",
+      "--save-exact",
+      "--no-audit",
+      "--no-fund",
+      "react-native-svg-transformer@1.5.0",
+    ],
+    {cwd: appDir}
+  );
+  run(
+    "npm",
     ["install", "--include=dev", "--no-audit", "--no-fund", ...tarballs],
     { cwd: appDir }
   );
+  writeSvgMetroConfig(appDir, era);
 
   const entryPath = path.join(appDir, config.entry);
   if (!fs.existsSync(entryPath))
@@ -184,10 +252,11 @@ function phaseApp(era) {
       "import { Dialog as RubanDialog } from '@ruban-labs/react-native-ui-dialog';",
       "import { BottomSheetModal as RubanSheet } from '@ruban-labs/react-native-ui-sheet';",
       "import { Input as RubanInput } from '@ruban-labs/react-native-ui-form/input';",
+      "import { RefreshIcon as RubanRefreshIcon } from '@ruban-labs/react-native-ui-icons';",
       "import { isWalletCoreAvailable as RubanWalletAvailable } from '@ruban-labs/react-native-wallet-core';",
       "import { createEvmClient as createRubanEvmClient } from '@ruban-labs/react-native-evm-client';",
       "import { createProviderContentScript as createRubanProviderScript } from '@ruban-labs/react-native-dapp-bridge';",
-      `console.log('${SMOKE_MARKER}', RubanBar && RubanCollapsible && RubanAccordion && RubanColors && RubanOverlayProvider && RubanDialog && RubanSheet && RubanInput && RubanWalletAvailable && createRubanEvmClient && createRubanProviderScript ? 'ok' : 'missing');`,
+      `console.log('${SMOKE_MARKER}', RubanBar && RubanCollapsible && RubanAccordion && RubanColors && RubanOverlayProvider && RubanDialog && RubanSheet && RubanInput && RubanRefreshIcon && RubanWalletAvailable && createRubanEvmClient && createRubanProviderScript ? 'ok' : 'missing');`,
       "",
       original,
     ].join("\n");

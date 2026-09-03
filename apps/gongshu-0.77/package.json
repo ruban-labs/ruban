@@ -23,11 +23,13 @@
     "react-native-edge-to-edge": "1.4.3",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "4.9.2",
+    "react-native-svg": "15.12.1",
     "@ruban-labs/react-native-ui-theme": "file:ruban-ui-theme-local.tgz",
     "@ruban-labs/react-native-ui-overlay": "file:ruban-ui-overlay-local.tgz",
     "@ruban-labs/react-native-ui-dialog": "file:ruban-ui-dialog-local.tgz",
     "@ruban-labs/react-native-ui-sheet": "file:ruban-ui-sheet-local.tgz",
     "@ruban-labs/react-native-ui-form": "file:ruban-ui-form-local.tgz",
+    "@ruban-labs/react-native-ui-icons": "file:ruban-ui-icons-local.tgz",
     "@ruban-labs/react-native-wallet-core": "file:ruban-wallet-core-local.tgz",
     "@ruban-labs/react-native-evm-client": "file:ruban-evm-client-local.tgz",
     "@ruban-labs/react-native-dapp-bridge": "file:ruban-dapp-bridge-local.tgz"
@@ -49,6 +51,7 @@
     "eslint": "^8.57.1",
     "jest": "^29.7.0",
     "prettier": "2.8.8",
+    "react-native-svg-transformer": "1.5.0",
     "react-test-renderer": "18.3.1",
     "typescript": "5.0.4"
   },

@@ -26,6 +26,7 @@ import { Textarea } from "@ruban-labs/react-native-ui-form/textarea";
 import { OverlayProvider } from "@ruban-labs/react-native-ui-overlay";
 import { BottomSheetModal } from "@ruban-labs/react-native-ui-sheet";
 import { RubanThemeProvider } from "@ruban-labs/react-native-ui-theme";
+import { RefreshIcon } from "@ruban-labs/react-native-ui-icons";
 import { isWalletCoreAvailable } from "@ruban-labs/react-native-wallet-core";
 
 const bridgeSession = new DappBridgeHostSession("fixture-session");
@@ -51,6 +52,7 @@ export function Sample(): React.ReactElement {
     <>
       <RubanThemeProvider mode="light">
         <OverlayProvider>
+          <RefreshIcon size={20} color="#ff5a36" />
           <Dialog.Root>
             <Dialog.Content>
               <FieldLabel>Dialog</FieldLabel>

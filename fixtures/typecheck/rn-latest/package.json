@@ -12,13 +12,15 @@
     "@ruban-labs/react-native-progress": "file:./ruban-progress-local.tgz",
     "@ruban-labs/react-native-ui-dialog": "file:./ruban-ui-dialog-local.tgz",
     "@ruban-labs/react-native-ui-form": "file:./ruban-ui-form-local.tgz",
+    "@ruban-labs/react-native-ui-icons": "file:./ruban-ui-icons-local.tgz",
     "@ruban-labs/react-native-ui-overlay": "file:./ruban-ui-overlay-local.tgz",
     "@ruban-labs/react-native-ui-sheet": "file:./ruban-ui-sheet-local.tgz",
     "@ruban-labs/react-native-ui-theme": "file:./ruban-ui-theme-local.tgz",
     "@ruban-labs/react-native-wallet-core": "file:./ruban-wallet-core-local.tgz",
     "react": "19.2.8",
     "react-native": "^0.87.0",
-    "react-native-safe-area-context": "5.5.2"
+    "react-native-safe-area-context": "5.5.2",
+    "react-native-svg": "15.12.1"
   },
   "devDependencies": {
     "@types/react": "^19.1.0",
