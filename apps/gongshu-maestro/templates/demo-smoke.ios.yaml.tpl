@@ -91,14 +91,14 @@ appId: {{appId}}
     text: "Appearance.*"
 - scrollUntilVisible:
     element:
-      text: "Build & matrix.*"
+      text: "{{settingsBuildEntry}}.*"
     direction: DOWN
     timeout: 20000
 - tapOn:
-    text: "Build & matrix.*"
+    text: "{{settingsBuildEntry}}.*"
 - extendedWaitUntil:
     visible:
-      text: "Build & Matrix"
+      text: "{{settingsBuildTitle}}"
     timeout: 20000
 - assertVisible:
     text: "HERMES"

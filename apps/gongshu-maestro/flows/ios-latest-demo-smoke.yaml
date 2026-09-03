@@ -91,14 +91,14 @@ appId: com.rubanlabs.mobile.debug
     text: "Appearance.*"
 - scrollUntilVisible:
     element:
-      text: "Build & matrix.*"
+      text: "Runtime & compatibility.*"
     direction: DOWN
     timeout: 20000
 - tapOn:
-    text: "Build & matrix.*"
+    text: "Runtime & compatibility.*"
 - extendedWaitUntil:
     visible:
-      text: "Build & Matrix"
+      text: "Runtime & Compatibility"
     timeout: 20000
 - assertVisible:
     text: "HERMES"

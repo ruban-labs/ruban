@@ -16,6 +16,8 @@ const APPS = [
     era: '0.66',
     scheme: 'ruban-rn066-debug',
     homeTitle: 'Components',
+    settingsBuildEntry: 'Build & matrix',
+    settingsBuildTitle: 'Build & Matrix',
     android: 'com.rubanlabs.mobile.gongshu.rn066.debug',
     ios: 'com.rubanlabs.mobile.gongshu.rn066.debug',
   },
@@ -23,6 +25,8 @@ const APPS = [
     era: '0.77',
     scheme: 'ruban-rn077-debug',
     homeTitle: 'Components',
+    settingsBuildEntry: 'Build & matrix',
+    settingsBuildTitle: 'Build & Matrix',
     android: 'com.rubanlabs.mobile.gongshu.rn077.debug',
     ios: 'com.rubanlabs.mobile.gongshu.rn077.debug',
   },
@@ -30,6 +34,8 @@ const APPS = [
     era: 'latest',
     scheme: 'ruban-debug',
     homeTitle: 'Library',
+    settingsBuildEntry: 'Runtime & compatibility',
+    settingsBuildTitle: 'Runtime & Compatibility',
     android: 'com.rubanlabs.mobile.debug',
     ios: 'com.rubanlabs.mobile.debug',
   },
@@ -46,6 +52,8 @@ for (const platform of TEMPLATES) {
       .replaceAll('{{appId}}', app[platform])
       .replaceAll('{{era}}', app.era)
       .replaceAll('{{homeTitle}}', app.homeTitle)
+      .replaceAll('{{settingsBuildEntry}}', app.settingsBuildEntry)
+      .replaceAll('{{settingsBuildTitle}}', app.settingsBuildTitle)
       .replaceAll('{{scheme}}', app.scheme);
     const outFile = path.join(flowsDir, `${platform}-${app.era}-demo-smoke.yaml`);
     fs.writeFileSync(outFile, rendered);

@@ -85,11 +85,11 @@ appId: com.rubanlabs.mobile.gongshu.rn077.debug
     text: "Appearance"
 - scrollUntilVisible:
     element:
-      text: "Build & matrix"
+      text: "Build & matrix.*"
     direction: DOWN
     timeout: 20000
 - tapOn:
-    text: "Build & matrix"
+    text: "Build & matrix.*"
 - extendedWaitUntil:
     visible:
       text: "Build & Matrix"
