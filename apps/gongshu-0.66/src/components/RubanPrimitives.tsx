@@ -1,8 +1,6 @@
 import * as React from 'react';
-import {useFocusEffect} from '@react-navigation/native';
 import {
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,6 +10,7 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {radius, spacing, useRubanColors} from '../design/tokens';
+import {useFocusedRubanSystemBars} from '../system/RubanSystemBars';
 
 type ScreenProps = {
   children: React.ReactNode;
@@ -28,14 +27,7 @@ export function RubanScreen({
 }: ScreenProps): React.ReactElement {
   const colors = useRubanColors();
 
-  useFocusEffect(
-    React.useCallback(() => {
-      StatusBar.setBarStyle(
-        colors.mode === 'dark' ? 'light-content' : 'dark-content',
-        true,
-      );
-    }, [colors.mode]),
-  );
+  useFocusedRubanSystemBars(colors.mode, colors.canvas);
 
   return (
     <SafeAreaView

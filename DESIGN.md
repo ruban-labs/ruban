@@ -137,6 +137,21 @@ handled by consuming the new `insets.bottom`.
 - Keyboard avoidance is a keyboard-aware layout concern, not part of system
   navigation inset compensation.
 
+### System Bar Color Ownership
+
+- The app root always paints `surface-page` behind transparent system bars.
+- The focused route owns status and navigation icon appearance. A route-local
+  theme, such as Playground dark mode, overrides the global appearance only
+  while that route is focused.
+- Android 15 and later use the platform's enforced edge-to-edge model. Earlier
+  versions opt in through the native integration supported by that RN era.
+- Gesture navigation remains transparent. Three-button navigation may use the
+  system contrast background, while app layout still consumes its bottom inset
+  exactly once.
+- Modal and sheet windows opt into system-bar translucency where that RN era
+  supports it. RN 0.66 keeps status translucency and delegates the remaining
+  window policy to its small native compatibility module.
+
 ### Settings Choice Surfaces
 
 - Multi-choice settings use a source-owned Bottom Sheet primitive. They do not

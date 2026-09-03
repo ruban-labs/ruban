@@ -1,12 +1,5 @@
 import * as React from 'react';
-import {
-  Animated,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import {Animated, Modal, Pressable, StyleSheet, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {spacing, useRubanColors} from '../../design/tokens';
 
@@ -70,6 +63,7 @@ export function BottomSheetModal({
       transparent
       hardwareAccelerated
       statusBarTranslucent
+      navigationBarTranslucent
       animationType="none"
       onRequestClose={onDismiss}>
       <View style={styles.overlay}>
@@ -93,10 +87,15 @@ export function BottomSheetModal({
               transform: [{translateY}],
             },
           ]}>
-          <View style={[styles.handle, {backgroundColor: colors.borderStrong}]} />
+          <View
+            style={[styles.handle, {backgroundColor: colors.borderStrong}]}
+          />
           <View style={[styles.header, {borderBottomColor: colors.border}]}>
             <Text style={[styles.title, {color: colors.ink}]}>{title}</Text>
-            <Pressable accessibilityRole="button" onPress={onDismiss} hitSlop={8}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={onDismiss}
+              hitSlop={8}>
               <Text style={[styles.close, {color: colors.faint}]}>CLOSE</Text>
             </Pressable>
           </View>
@@ -135,7 +134,11 @@ export function SelectionBottomSheet<Value extends string>({
   const colors = useRubanColors();
 
   return (
-    <BottomSheetModal visible={visible} title={title} onDismiss={onDismiss} testID={testID}>
+    <BottomSheetModal
+      visible={visible}
+      title={title}
+      onDismiss={onDismiss}
+      testID={testID}>
       <View style={styles.options}>
         {options.map(option => {
           const selected = option.value === value;
@@ -153,14 +156,24 @@ export function SelectionBottomSheet<Value extends string>({
               style={({pressed}) => [
                 styles.option,
                 {borderBottomColor: colors.border},
-                selected ? {backgroundColor: colors.navigationActive} : undefined,
+                selected
+                  ? {backgroundColor: colors.navigationActive}
+                  : undefined,
                 pressed ? styles.pressed : undefined,
               ]}>
               <View>
-                <Text style={[styles.optionLabel, {color: colors.ink}]}>{option.label}</Text>
-                <Text style={[styles.optionMeta, {color: colors.faint}]}>{option.meta}</Text>
+                <Text style={[styles.optionLabel, {color: colors.ink}]}>
+                  {option.label}
+                </Text>
+                <Text style={[styles.optionMeta, {color: colors.faint}]}>
+                  {option.meta}
+                </Text>
               </View>
-              <Text style={[styles.optionState, {color: selected ? colors.accent : colors.faint}]}>
+              <Text
+                style={[
+                  styles.optionState,
+                  {color: selected ? colors.accent : colors.faint},
+                ]}>
                 {selected ? 'SELECTED' : '—'}
               </Text>
             </Pressable>
@@ -191,7 +204,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  title: {fontSize: 21, lineHeight: 27, fontWeight: '800', letterSpacing: -0.45},
+  title: {
+    fontSize: 21,
+    lineHeight: 27,
+    fontWeight: '800',
+    letterSpacing: -0.45,
+  },
   close: {fontSize: 8, lineHeight: 11, fontWeight: '900', letterSpacing: 1.1},
   safeArea: {flexShrink: 1},
   options: {paddingBottom: spacing.sm},
@@ -204,7 +222,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   optionLabel: {fontSize: 16, lineHeight: 21, fontWeight: '800'},
-  optionMeta: {marginTop: 4, fontSize: 8, lineHeight: 11, fontWeight: '800', letterSpacing: 0.8},
-  optionState: {fontSize: 8, lineHeight: 11, fontWeight: '900', letterSpacing: 0.8},
+  optionMeta: {
+    marginTop: 4,
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  optionState: {
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
   pressed: {opacity: 0.62},
 });

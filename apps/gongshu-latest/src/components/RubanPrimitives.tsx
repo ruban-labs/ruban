@@ -1,8 +1,6 @@
 import * as React from 'react';
-import {useFocusEffect} from '@react-navigation/native';
 import {
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -10,8 +8,9 @@ import {
   type ScrollViewProps,
   type ViewStyle,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {radius, spacing, useRubanColors} from '../design/tokens';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { radius, spacing, useRubanColors } from '../design/tokens';
+import { useFocusedRubanSystemBars } from '../system/RubanSystemBars';
 
 type ScreenProps = {
   children: React.ReactNode;
@@ -20,23 +19,28 @@ type ScreenProps = {
   scrollProps?: ScrollViewProps;
 };
 
-export function RubanScreen({children, testID, contentStyle, scrollProps}: ScreenProps): React.ReactElement {
+export function RubanScreen({
+  children,
+  testID,
+  contentStyle,
+  scrollProps,
+}: ScreenProps): React.ReactElement {
   const colors = useRubanColors();
 
-  useFocusEffect(
-    React.useCallback(() => {
-      StatusBar.setBarStyle(colors.mode === 'dark' ? 'light-content' : 'dark-content', true);
-    }, [colors.mode])
-  );
+  useFocusedRubanSystemBars(colors.mode, colors.canvas);
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safeArea, {backgroundColor: colors.canvas}]}>
+    <SafeAreaView
+      edges={['top']}
+      style={[styles.safeArea, { backgroundColor: colors.canvas }]}
+    >
       <ScrollView
         {...scrollProps}
         testID={testID}
-        style={[styles.scroll, {backgroundColor: colors.canvas}]}
+        style={[styles.scroll, { backgroundColor: colors.canvas }]}
         contentContainerStyle={[styles.content, contentStyle]}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         {children}
       </ScrollView>
     </SafeAreaView>
@@ -45,17 +49,26 @@ export function RubanScreen({children, testID, contentStyle, scrollProps}: Scree
 
 export function Ruler(): React.ReactElement {
   const colors = useRubanColors();
-  const ticks = Array.from({length: 17}, (_, index) => index);
+  const ticks = Array.from({ length: 17 }, (_, index) => index);
 
   return (
-    <View accessibilityElementsHidden style={[styles.ruler, {borderColor: colors.border}]}>
+    <View
+      accessibilityElementsHidden
+      style={[styles.ruler, { borderColor: colors.border }]}
+    >
       {ticks.map(index => (
         <View
           key={`tick-${index}`}
           style={[
             styles.tick,
-            {backgroundColor: index % 4 === 0 ? colors.accent : colors.border},
-            index % 4 === 0 ? styles.tickLong : index % 2 === 0 ? styles.tickMedium : styles.tickShort,
+            {
+              backgroundColor: index % 4 === 0 ? colors.accent : colors.border,
+            },
+            index % 4 === 0
+              ? styles.tickLong
+              : index % 2 === 0
+              ? styles.tickMedium
+              : styles.tickShort,
           ]}
         />
       ))}
@@ -68,15 +81,29 @@ type PillProps = {
   tone?: 'accent' | 'success' | 'neutral';
 };
 
-export function Pill({children, tone = 'neutral'}: PillProps): React.ReactElement {
+export function Pill({
+  children,
+  tone = 'neutral',
+}: PillProps): React.ReactElement {
   const colors = useRubanColors();
   const backgroundColor =
-    tone === 'accent' ? colors.accentSoft : tone === 'success' ? colors.successSoft : colors.surface;
-  const textColor = tone === 'accent' ? colors.accent : tone === 'success' ? colors.success : colors.muted;
+    tone === 'accent'
+      ? colors.accentSoft
+      : tone === 'success'
+      ? colors.successSoft
+      : colors.surface;
+  const textColor =
+    tone === 'accent'
+      ? colors.accent
+      : tone === 'success'
+      ? colors.success
+      : colors.muted;
 
   return (
-    <View style={[styles.pill, {backgroundColor, borderColor: colors.border}]}>
-      <Text style={[styles.pillText, {color: textColor}]}>{children}</Text>
+    <View
+      style={[styles.pill, { backgroundColor, borderColor: colors.border }]}
+    >
+      <Text style={[styles.pillText, { color: textColor }]}>{children}</Text>
     </View>
   );
 }
@@ -88,18 +115,35 @@ type SectionHeadingProps = {
   onAction?: () => void;
 };
 
-export function SectionHeading({eyebrow, title, action, onAction}: SectionHeadingProps): React.ReactElement {
+export function SectionHeading({
+  eyebrow,
+  title,
+  action,
+  onAction,
+}: SectionHeadingProps): React.ReactElement {
   const colors = useRubanColors();
 
   return (
     <View style={styles.sectionHeading}>
       <View style={styles.sectionHeadingCopy}>
-        {eyebrow ? <Text style={[styles.eyebrow, {color: colors.accent}]}>{eyebrow}</Text> : null}
-        <Text style={[styles.sectionTitle, {color: colors.ink}]}>{title}</Text>
+        {eyebrow ? (
+          <Text style={[styles.eyebrow, { color: colors.accent }]}>
+            {eyebrow}
+          </Text>
+        ) : null}
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+          {title}
+        </Text>
       </View>
       {action && onAction ? (
-        <TouchableOpacity accessibilityRole="button" onPress={onAction} activeOpacity={0.7}>
-          <Text style={[styles.actionText, {color: colors.accent}]}>{action}</Text>
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={onAction}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.actionText, { color: colors.accent }]}>
+            {action}
+          </Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -112,7 +156,11 @@ type PrimaryButtonProps = {
   testID?: string;
 };
 
-export function PrimaryButton({label, onPress, testID}: PrimaryButtonProps): React.ReactElement {
+export function PrimaryButton({
+  label,
+  onPress,
+  testID,
+}: PrimaryButtonProps): React.ReactElement {
   const colors = useRubanColors();
 
   return (
@@ -121,9 +169,14 @@ export function PrimaryButton({label, onPress, testID}: PrimaryButtonProps): Rea
       testID={testID}
       onPress={onPress}
       activeOpacity={0.82}
-      style={[styles.primaryButton, {backgroundColor: colors.ink}]}>
-      <Text style={[styles.primaryButtonText, {color: colors.inverse}]}>{label}</Text>
-      <Text style={[styles.primaryButtonArrow, {color: colors.accent}]}>→</Text>
+      style={[styles.primaryButton, { backgroundColor: colors.ink }]}
+    >
+      <Text style={[styles.primaryButtonText, { color: colors.inverse }]}>
+        {label}
+      </Text>
+      <Text style={[styles.primaryButtonArrow, { color: colors.accent }]}>
+        →
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -158,9 +211,13 @@ export const primitiveStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-  safeArea: {flex: 1},
-  scroll: {flex: 1},
-  content: {paddingHorizontal: 22, paddingTop: spacing.md, paddingBottom: spacing.xxl},
+  safeArea: { flex: 1 },
+  scroll: { flex: 1 },
+  content: {
+    paddingHorizontal: 22,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
+  },
   ruler: {
     height: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -168,10 +225,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  tick: {width: StyleSheet.hairlineWidth},
-  tickLong: {height: 10},
-  tickMedium: {height: 7},
-  tickShort: {height: 4},
+  tick: { width: StyleSheet.hairlineWidth },
+  tickLong: { height: 10 },
+  tickMedium: { height: 7 },
+  tickShort: { height: 4 },
   pill: {
     minHeight: 26,
     paddingHorizontal: 10,
@@ -180,7 +237,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pillText: {fontSize: 10, lineHeight: 13, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase'},
+  pillText: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
   sectionHeading: {
     marginTop: spacing.xl,
     marginBottom: spacing.md,
@@ -188,10 +251,22 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  sectionHeadingCopy: {flex: 1, paddingRight: spacing.md},
-  eyebrow: {fontSize: 10, lineHeight: 13, fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase'},
-  sectionTitle: {marginTop: 4, fontSize: 24, lineHeight: 29, fontWeight: '700', letterSpacing: -0.6},
-  actionText: {fontSize: 13, lineHeight: 18, fontWeight: '700'},
+  sectionHeadingCopy: { flex: 1, paddingRight: spacing.md },
+  eyebrow: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  sectionTitle: {
+    marginTop: 4,
+    fontSize: 24,
+    lineHeight: 29,
+    fontWeight: '700',
+    letterSpacing: -0.6,
+  },
+  actionText: { fontSize: 13, lineHeight: 18, fontWeight: '700' },
   primaryButton: {
     minHeight: 52,
     borderRadius: radius.md,
@@ -200,6 +275,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  primaryButtonText: {fontSize: 14, fontWeight: '800', letterSpacing: 0.2},
-  primaryButtonArrow: {fontSize: 21, fontWeight: '500'},
+  primaryButtonText: { fontSize: 14, fontWeight: '800', letterSpacing: 0.2 },
+  primaryButtonArrow: { fontSize: 21, fontWeight: '500' },
 });

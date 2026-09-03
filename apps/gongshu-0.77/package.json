@@ -20,6 +20,7 @@
     "react": "18.3.1",
     "react-native": "0.77.3",
     "react-native-bootsplash": "6.3.12",
+    "react-native-edge-to-edge": "1.4.3",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "4.9.2"
   },

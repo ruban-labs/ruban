@@ -2,7 +2,7 @@ import * as React from 'react';
 import {StyleSheet, useColorScheme, View} from 'react-native';
 import {enableScreens} from 'react-native-screens';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {RubanThemeProvider} from './src/design/tokens';
+import {RubanThemeProvider, useRubanColors} from './src/design/tokens';
 import AppNavigator from './src/navigation/AppNavigator';
 import {useReleaseRuntimeHealth} from './src/releaseRuntime';
 import {
@@ -10,8 +10,20 @@ import {
   useAppPreferences,
 } from './src/settings/AppPreferences';
 import {useBootSplashExit} from './src/startup/useBootSplashExit';
+import {RubanSystemBars} from './src/system/RubanSystemBars';
 
 enableScreens(true);
+
+function AppSurface({onReady}: {onReady: () => void}): React.ReactElement {
+  const colors = useRubanColors();
+
+  return (
+    <View style={[styles.root, {backgroundColor: colors.canvas}]}>
+      <RubanSystemBars mode={colors.mode} backgroundColor={colors.canvas} />
+      <AppNavigator onReady={onReady} />
+    </View>
+  );
+}
 
 function ThemedApp(): React.ReactElement {
   const systemMode = useColorScheme();
@@ -26,9 +38,7 @@ function ThemedApp(): React.ReactElement {
 
   return (
     <RubanThemeProvider mode={mode}>
-      <View style={styles.root}>
-        <AppNavigator onReady={hideBootSplash} />
-      </View>
+      <AppSurface onReady={hideBootSplash} />
     </RubanThemeProvider>
   );
 }

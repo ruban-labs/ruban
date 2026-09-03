@@ -112,6 +112,18 @@ Android 提供的 Window Insets 是唯一事实来源，导航模式变化后直
   同时补距离。
 - 键盘遮挡属于 keyboard-aware 布局，不与系统导航安全区共用一套补偿值。
 
+### 系统栏颜色归属
+
+- App 根节点始终在透明系统栏后绘制 `surface-page`。
+- 当前获得焦点的路由负责状态栏和导航栏图标明暗。Playground 暗色模式等页面局部主题
+  只在该路由获得焦点时覆盖全局 Appearance。
+- Android 15 及以上遵循平台强制 edge-to-edge；更早的系统通过对应 RN 时代可支持的
+  原生接入方式主动开启。
+- 手势导航区域保持透明；三按钮导航可以使用系统对比背景，但 App 布局仍只消费一次
+  bottom inset。
+- Modal 与 Sheet 在对应 RN 时代支持时开启系统栏透明。RN 0.66 保持状态栏透明，其余
+  窗口兼容策略由小型原生模块负责。
+
 ### Settings 选择面与 Bottom Sheet
 
 - Settings 中的多选偏好统一使用项目自有的 Bottom Sheet primitive，不把选择器交给
