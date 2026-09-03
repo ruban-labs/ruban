@@ -150,7 +150,7 @@ function NativeOverlayHost({
       animationType="none"
       onShow={() => coordinator.hostDidShow()}
       onDismiss={() => coordinator.hostDidDismiss()}
-      onRequestClose={() => topEntry?.value.onRequestClose()}>
+      onRequestClose={() => topEntry && topEntry.value.onRequestClose()}>
       <View style={styles.host} testID="ruban-overlay-host">
         {snapshot.active.map(entry => {
           const layerVisible = visibleIdSet.has(entry.id);

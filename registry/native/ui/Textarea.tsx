@@ -6,7 +6,9 @@ export type TextareaProps = InputProps & {
   minRows?: number;
 };
 
-export const Textarea = React.forwardRef<InputHandle, TextareaProps>(
+export const Textarea: React.ForwardRefExoticComponent<
+  TextareaProps & React.RefAttributes<InputHandle>
+> = React.forwardRef<InputHandle, TextareaProps>(
   function RubanTextarea(
     { minRows = 4, numberOfLines, style, ...inputProps },
     ref,

@@ -8,9 +8,16 @@ export type InputProps = TextInputProps & {
   invalid?: boolean;
 };
 
-export type InputHandle = React.ElementRef<typeof TextInput>;
+export type InputHandle = {
+  blur: () => void;
+  clear: () => void;
+  focus: () => void;
+  isFocused: () => boolean;
+};
 
-export const Input = React.forwardRef<InputHandle, InputProps>(
+export const Input: React.ForwardRefExoticComponent<
+  InputProps & React.RefAttributes<InputHandle>
+> = React.forwardRef<InputHandle, InputProps>(
   function RubanInput(
     {
       disabled,
@@ -27,6 +34,7 @@ export const Input = React.forwardRef<InputHandle, InputProps>(
     ref,
   ): React.ReactElement {
     const colors = useRubanColors();
+    const nativeRef = React.useRef<React.ElementRef<typeof TextInput>>(null);
     const field = useFieldState({ disabled, invalid });
     const [focused, setFocused] = React.useState(false);
     const enabled = editable && !field.disabled;
@@ -36,10 +44,29 @@ export const Input = React.forwardRef<InputHandle, InputProps>(
       ? colors.focusRing
       : colors.borderStrong;
 
+    React.useImperativeHandle(ref, () => ({
+      blur: () => {
+        const input = nativeRef.current;
+        if (input) input.blur();
+      },
+      clear: () => {
+        const input = nativeRef.current;
+        if (input) input.clear();
+      },
+      focus: () => {
+        const input = nativeRef.current;
+        if (input) input.focus();
+      },
+      isFocused: () => {
+        const input = nativeRef.current;
+        return input ? input.isFocused() : false;
+      },
+    }));
+
     return (
       <TextInput
         {...textInputProps}
-        ref={ref}
+        ref={nativeRef}
         editable={enabled}
         accessibilityState={{ ...accessibilityState, disabled: !enabled }}
         onFocus={event => {

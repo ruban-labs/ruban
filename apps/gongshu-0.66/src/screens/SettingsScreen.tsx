@@ -14,7 +14,7 @@ import {
   BottomSheetModal,
   SelectionBottomSheet,
   type SelectionOption,
-} from '../components/ui/BottomSheetModal';
+} from '@ruban-labs/react-native-ui-sheet';
 import {spacing, useRubanColors} from '../design/tokens';
 import type {TabParamList} from '../navigation/types';
 import {

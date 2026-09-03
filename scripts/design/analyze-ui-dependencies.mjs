@@ -8,7 +8,12 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const registryRoot = path.join(repoRoot, "registry", "native", "ui");
 const appRoot = path.join(repoRoot, "apps", "gongshu-latest", "src", "components", "ui");
-const designRoot = path.join(repoRoot, "apps", "gongshu-latest", "src", "design");
+const designRoot = path.join(
+  repoRoot,
+  "packages",
+  "react-native-ui-theme",
+  "src"
+);
 const sourceExtensions = [".ts", ".tsx"];
 
 function listSourceFiles(directory) {
@@ -31,11 +36,13 @@ function collectSources() {
   );
 
   return [
-    ...listSourceFiles(designRoot).map((filePath) => ({
+    ...listSourceFiles(designRoot)
+      .filter((filePath) => moduleName(filePath) !== "index")
+      .map((filePath) => ({
       id: `design/${moduleName(filePath)}`,
       filePath,
       origin: "design",
-    })),
+      })),
     ...registryFiles.map((filePath) => ({
       id: `ui/${moduleName(filePath)}`,
       filePath,

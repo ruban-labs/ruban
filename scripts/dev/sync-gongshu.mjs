@@ -15,24 +15,14 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import {resolveRubanPackages} from '../package-catalog.mjs';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 const appsRoot = path.join(repoRoot, 'apps');
 const demoSource = path.join(repoRoot, 'scripts', 'dev', 'gongshu-demo', 'GongshuBench.js');
 const sourceRegistryScript = path.join(repoRoot, 'scripts', 'design', 'sync-source-registry.mjs');
 const APPS = ['gongshu-0.66', 'gongshu-0.77', 'gongshu-latest'];
-const LIBRARIES = [
-  {
-    name: '@ruban-labs/react-native-progress',
-    directory: path.join(repoRoot, 'packages', 'react-native-progress'),
-    tarball: 'ruban-local.tgz',
-  },
-  {
-    name: '@ruban-labs/react-native-collapsible',
-    directory: path.join(repoRoot, 'packages', 'react-native-collapsible'),
-    tarball: 'ruban-collapsible-local.tgz',
-  },
-];
+const LIBRARIES = resolveRubanPackages(repoRoot);
 
 function fail(message) {
   console.error(`sync-gongshu: ${message}`);
@@ -89,7 +79,7 @@ function assertInstalledSources(appDir) {
 function packLibrary(library, appDir) {
   const temporaryDirectory = fs.mkdtempSync(path.join(appDir, '.ruban-pack-'));
   try {
-    run('npm', ['pack', library.directory, '--pack-destination', temporaryDirectory]);
+    run('npm', ['pack', '--silent', library.directory, '--pack-destination', temporaryDirectory]);
     const packed = fs.readdirSync(temporaryDirectory).find(name => name.endsWith('.tgz'));
     if (!packed) fail(`no tarball produced for ${library.name}`);
     fs.copyFileSync(path.join(temporaryDirectory, packed), path.join(appDir, library.tarball));

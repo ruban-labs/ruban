@@ -66,6 +66,40 @@ for (const packageDirectory of packageDirectories) {
   if (rootExport?.default !== './lib/commonjs/index.js') fail(`${label}: exports.default is not the safe CommonJS entry`);
   if (manifest.exports?.['./package.json'] !== './package.json') fail(`${label}: package.json export is missing`);
 
+  for (const [subpath, subpathExport] of Object.entries(manifest.exports ?? {})) {
+    if (subpath === '.' || subpath === './package.json') continue;
+
+    if (!subpath.startsWith('./') || typeof subpathExport !== 'object' || subpathExport === null) {
+      fail(`${label}: invalid subpath export ${subpath}`);
+      continue;
+    }
+
+    const compatibilityEntry = subpath.slice(2);
+    const compatibilityFiles = [`${compatibilityEntry}.js`, `${compatibilityEntry}.d.ts`];
+
+    if (typeof subpathExport.types !== 'string' || !subpathExport.types.startsWith('./lib/typescript/')) {
+      fail(`${label}: ${subpath} types must resolve to generated declarations`);
+    }
+    if (
+      typeof subpathExport['react-native'] !== 'string' ||
+      !subpathExport['react-native'].startsWith('./src/')
+    ) {
+      fail(`${label}: ${subpath} react-native must resolve to source`);
+    }
+    if (typeof subpathExport.default !== 'string' || !subpathExport.default.startsWith('./lib/commonjs/')) {
+      fail(`${label}: ${subpath} default must resolve to CommonJS output`);
+    }
+
+    for (const compatibilityFile of compatibilityFiles) {
+      if (!hasFileEntry(manifest, compatibilityFile)) {
+        fail(`${label}: files must include legacy subpath entry ${compatibilityFile}`);
+      }
+      if (!fs.existsSync(path.join(packageDirectory, compatibilityFile))) {
+        fail(`${label}: missing legacy subpath entry ${compatibilityFile}`);
+      }
+    }
+  }
+
   for (const file of ['README.md', 'README.zh-CN.md', 'NOTICE']) {
     if (!fs.existsSync(path.join(packageDirectory, file))) fail(`${label}: missing ${file}`);
   }

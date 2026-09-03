@@ -8,12 +8,42 @@ import {
   Pie,
   DEFAULT_COLOR,
 } from '@ruban-labs/react-native-progress';
+import {Dialog} from '@ruban-labs/react-native-ui-dialog';
+import {Checkbox} from '@ruban-labs/react-native-ui-form/checkbox';
+import {Field, FieldLabel} from '@ruban-labs/react-native-ui-form/field';
+import {Input} from '@ruban-labs/react-native-ui-form/input';
+import {RadioGroup, RadioGroupItem} from '@ruban-labs/react-native-ui-form/radio-group';
+import {Select} from '@ruban-labs/react-native-ui-form/select';
+import {Textarea} from '@ruban-labs/react-native-ui-form/textarea';
+import {OverlayProvider} from '@ruban-labs/react-native-ui-overlay';
+import {BottomSheetModal} from '@ruban-labs/react-native-ui-sheet';
+import {RubanThemeProvider} from '@ruban-labs/react-native-ui-theme';
 
 export function Sample(): React.ReactElement {
   const sections = ['FIRST', 'SECOND'] as const;
 
   return (
     <>
+      <RubanThemeProvider mode="light">
+        <OverlayProvider>
+          <Dialog.Root>
+            <Dialog.Content><FieldLabel>Dialog</FieldLabel></Dialog.Content>
+          </Dialog.Root>
+          <BottomSheetModal visible={false} title="Sheet" onDismiss={() => undefined}>
+            <FieldLabel>Sheet</FieldLabel>
+          </BottomSheetModal>
+          <Field>
+            <FieldLabel required>Name</FieldLabel>
+            <Input placeholder="Name" />
+            <Textarea minRows={3} />
+            <Checkbox checked={false} label="Remember" />
+            <RadioGroup value="one">
+              <RadioGroupItem label="One" value="one" />
+            </RadioGroup>
+            <Select options={[{label: 'One', value: 'one'}]} value="one" />
+          </Field>
+        </OverlayProvider>
+      </RubanThemeProvider>
       <Collapsible collapsed={false} duration={0} align="bottom">
         <Bar progress={0.2} />
       </Collapsible>

@@ -19,17 +19,22 @@ Two surfaces, one program:
 ## Charter
 
 **Bare React Native first. No platform dependency.** Every library here must
-work in a bare RN project out of the box: `react` and `react-native` as the
-only peers, zero runtime dependencies, no Expo Modules, no Nitro runtime, no
-config plugins required. Expo compatibility is a welcome by-product, never a
-requirement.
+work in a bare RN project out of the box, keep runtime dependencies at zero,
+and avoid Expo Modules, Nitro runtime, or required config plugins. Additional
+native peers are rare, explicit, and package-specific. Expo compatibility is a
+welcome by-product, never a requirement.
 
 ## Packages
 
 | Package | Status | Description |
 | --- | --- | --- |
 | [`@ruban-labs/react-native-progress`](./packages/react-native-progress) | v6.0.0 | Progress bars, segmented rings, pies, spinners. Zero-dependency refurbishment of `react-native-progress`. |
-| `@ruban-labs/react-native-collapsible` | Planned | Focused expand/collapse primitives. |
+| [`@ruban-labs/react-native-collapsible`](./packages/react-native-collapsible) | v2.0.0 | Focused expand/collapse and accordion primitives. |
+| [`@ruban-labs/react-native-ui-theme`](./packages/react-native-ui-theme) | 0.1.0, incubating | Semantic colors, spacing, radii, provider, and hooks. |
+| [`@ruban-labs/react-native-ui-overlay`](./packages/react-native-ui-overlay) | 0.1.0, incubating | A single native Modal host with queue, stack, and replace policies. |
+| [`@ruban-labs/react-native-ui-dialog`](./packages/react-native-ui-dialog) | 0.1.0, incubating | Composable dialogs built on the Theme and Overlay peers. |
+| [`@ruban-labs/react-native-ui-sheet`](./packages/react-native-ui-sheet) | 0.1.0, incubating | Bottom sheets and selection sheets with an explicit Safe Area peer. |
+| [`@ruban-labs/react-native-ui-form`](./packages/react-native-ui-form) | 0.1.0, incubating | Field, Input, Textarea, Checkbox, RadioGroup, and Select controls. |
 | `@ruban-labs/react-native-animatable` | Planned | Small declarative animation vocabulary. |
 | `@ruban-labs/react-native-keyboard-aware-scroll-view` | Planned | Reliable keyboard-aware layout and scrolling. |
 

@@ -10,9 +10,9 @@ import {
   ShowcaseSpecimen,
 } from '../../components/showcase/ComponentShowcase';
 import {Button} from '../../components/ui/Button';
-import {Dialog} from '../../components/ui/Dialog';
-import {useOverlayBlocker} from '../../components/ui/OverlayHost';
-import {rubanColors, spacing} from '../../design/tokens';
+import {Dialog} from '@ruban-labs/react-native-ui-dialog';
+import {useOverlayBlocker} from '@ruban-labs/react-native-ui-overlay';
+import {rubanColors, spacing} from '@ruban-labs/react-native-ui-theme';
 import type {RootStackParamList} from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ComponentDetail'> & {

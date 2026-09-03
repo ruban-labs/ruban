@@ -20,20 +20,10 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import {resolveRubanPackages} from '../package-catalog.mjs';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
-const LIBRARIES = [
-  {
-    name: '@ruban-labs/react-native-progress',
-    directory: path.join(repoRoot, 'packages', 'react-native-progress'),
-    tarball: 'ruban-progress-local.tgz',
-  },
-  {
-    name: '@ruban-labs/react-native-collapsible',
-    directory: path.join(repoRoot, 'packages', 'react-native-collapsible'),
-    tarball: 'ruban-collapsible-local.tgz',
-  },
-];
+const LIBRARIES = resolveRubanPackages(repoRoot);
 
 const ERAS = {
   'rn-0.66': {
@@ -108,7 +98,7 @@ function phasePack(era) {
   for (const library of LIBRARIES) {
     const temporaryDirectory = fs.mkdtempSync(path.join(workdir, '.ruban-pack-'));
     try {
-      run('npm', ['pack', library.directory, '--pack-destination', temporaryDirectory]);
+      run('npm', ['pack', '--silent', library.directory, '--pack-destination', temporaryDirectory]);
       const packed = fs.readdirSync(temporaryDirectory).find(name => name.endsWith('.tgz'));
       if (!packed) fail(`no tarball produced for ${library.name}`);
       fs.copyFileSync(path.join(temporaryDirectory, packed), tarballForPath(era, library));
@@ -141,7 +131,12 @@ function phaseApp(era) {
     const patch = [
       "import { Bar as RubanBar } from '@ruban-labs/react-native-progress';",
       "import RubanCollapsible, { Accordion as RubanAccordion } from '@ruban-labs/react-native-collapsible';",
-      `console.log('${SMOKE_MARKER}', RubanBar && RubanCollapsible && RubanAccordion ? 'ok' : 'missing');`,
+      "import { rubanColors as RubanColors } from '@ruban-labs/react-native-ui-theme';",
+      "import { OverlayProvider as RubanOverlayProvider } from '@ruban-labs/react-native-ui-overlay';",
+      "import { Dialog as RubanDialog } from '@ruban-labs/react-native-ui-dialog';",
+      "import { BottomSheetModal as RubanSheet } from '@ruban-labs/react-native-ui-sheet';",
+      "import { Input as RubanInput } from '@ruban-labs/react-native-ui-form/input';",
+      `console.log('${SMOKE_MARKER}', RubanBar && RubanCollapsible && RubanAccordion && RubanColors && RubanOverlayProvider && RubanDialog && RubanSheet && RubanInput ? 'ok' : 'missing');`,
       '',
       original,
     ].join('\n');
@@ -150,14 +145,14 @@ function phaseApp(era) {
 
   const appPkg = JSON.parse(fs.readFileSync(path.join(appDir, 'package.json'), 'utf8'));
   const installedRn = JSON.parse(fs.readFileSync(path.join(appDir, 'node_modules', 'react-native', 'package.json'), 'utf8'));
-  const installedProgress = JSON.parse(
-    fs.readFileSync(path.join(appDir, 'node_modules', '@ruban-labs', 'react-native-progress', 'package.json'), 'utf8'),
-  );
-  const installedCollapsible = JSON.parse(
-    fs.readFileSync(path.join(appDir, 'node_modules', '@ruban-labs', 'react-native-collapsible', 'package.json'), 'utf8'),
-  );
+  const installedPackages = LIBRARIES.map(library => {
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(appDir, 'node_modules', ...library.name.split('/'), 'package.json'), 'utf8'),
+    );
+    return `${library.name.replace('@ruban-labs/react-native-', '')} ${manifest.version}`;
+  });
   console.log(
-    `bundle-smoke: ${era} app ready (react-native ${installedRn.version}, react ${appPkg.dependencies.react}, progress ${installedProgress.version}, collapsible ${installedCollapsible.version})`,
+    `bundle-smoke: ${era} app ready (react-native ${installedRn.version}, react ${appPkg.dependencies.react}, ${installedPackages.join(', ')})`,
   );
 }
 

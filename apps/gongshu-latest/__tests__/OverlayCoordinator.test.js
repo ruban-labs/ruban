@@ -1,7 +1,7 @@
 const {
   getVisibleOverlayIds,
   OverlayCoordinator,
-} = require('../src/components/ui/OverlayCoordinator');
+} = require('@ruban-labs/react-native-ui-overlay/coordinator');
 
 function entry(id, strategy = 'queue') {
   return { id, strategy, value: id };

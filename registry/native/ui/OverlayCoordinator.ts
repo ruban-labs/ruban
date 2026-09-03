@@ -22,11 +22,19 @@ export type OverlaySnapshot<Value> = {
 type OverlayListener<Value> = (snapshot: OverlaySnapshot<Value>) => void;
 
 export class OverlayCoordinator<Value> {
-  private phase: OverlayHostPhase = 'idle';
-  private active: Array<OverlayEntry<Value>> = [];
-  private queued: Array<OverlayEntry<Value>> = [];
-  private blockerCounts: Record<string, number> = {};
-  private listeners: Array<OverlayListener<Value>> = [];
+  private phase: OverlayHostPhase;
+  private active: Array<OverlayEntry<Value>>;
+  private queued: Array<OverlayEntry<Value>>;
+  private blockerCounts: Record<string, number>;
+  private listeners: Array<OverlayListener<Value>>;
+
+  constructor() {
+    this.phase = 'idle';
+    this.active = [];
+    this.queued = [];
+    this.blockerCounts = {};
+    this.listeners = [];
+  }
 
   getSnapshot(): OverlaySnapshot<Value> {
     return {
@@ -158,6 +166,9 @@ export class OverlayCoordinator<Value> {
 
     while (this.queued.length > 0) {
       const nextEntry = this.queued[0];
+      if (!nextEntry) {
+        return;
+      }
       if (this.active.length > 0 && nextEntry.strategy === 'queue') {
         return;
       }

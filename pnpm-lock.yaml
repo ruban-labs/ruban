@@ -99,6 +99,174 @@ importers:
         specifier: ^5.8.0
         version: 5.9.3
 
+  packages/react-native-ui-dialog:
+    devDependencies:
+      '@react-native/babel-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)
+      '@react-native/jest-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(react@19.2.8)
+      '@ruban-labs/react-native-ui-overlay':
+        specifier: workspace:*
+        version: link:../react-native-ui-overlay
+      '@ruban-labs/react-native-ui-theme':
+        specifier: workspace:*
+        version: link:../react-native-ui-theme
+      '@types/jest':
+        specifier: ^29.5.14
+        version: 29.5.14
+      '@types/react':
+        specifier: ^19.1.0
+        version: 19.2.18
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@26.2.0)
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-native:
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.8)
+      react-native-builder-bob:
+        specifier: ^0.43.0
+        version: 0.43.0
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
+  packages/react-native-ui-form:
+    devDependencies:
+      '@react-native/babel-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)
+      '@react-native/jest-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(react@19.2.8)
+      '@ruban-labs/react-native-ui-theme':
+        specifier: workspace:*
+        version: link:../react-native-ui-theme
+      '@types/jest':
+        specifier: ^29.5.14
+        version: 29.5.14
+      '@types/react':
+        specifier: ^19.1.0
+        version: 19.2.18
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@26.2.0)
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-native:
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.8)
+      react-native-builder-bob:
+        specifier: ^0.43.0
+        version: 0.43.0
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
+  packages/react-native-ui-overlay:
+    devDependencies:
+      '@react-native/babel-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)
+      '@react-native/jest-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(react@19.2.8)
+      '@types/jest':
+        specifier: ^29.5.14
+        version: 29.5.14
+      '@types/react':
+        specifier: ^19.1.0
+        version: 19.2.18
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@26.2.0)
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-native:
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.8)
+      react-native-builder-bob:
+        specifier: ^0.43.0
+        version: 0.43.0
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
+  packages/react-native-ui-sheet:
+    devDependencies:
+      '@react-native/babel-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)
+      '@react-native/jest-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(react@19.2.8)
+      '@ruban-labs/react-native-ui-overlay':
+        specifier: workspace:*
+        version: link:../react-native-ui-overlay
+      '@ruban-labs/react-native-ui-theme':
+        specifier: workspace:*
+        version: link:../react-native-ui-theme
+      '@types/jest':
+        specifier: ^29.5.14
+        version: 29.5.14
+      '@types/react':
+        specifier: ^19.1.0
+        version: 19.2.18
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@26.2.0)
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-native:
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.8)
+      react-native-builder-bob:
+        specifier: ^0.43.0
+        version: 0.43.0
+      react-native-safe-area-context:
+        specifier: 5.5.2
+        version: 5.5.2(react-native@0.87.0(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
+  packages/react-native-ui-theme:
+    devDependencies:
+      '@react-native/babel-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)
+      '@react-native/jest-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(react@19.2.8)
+      '@types/jest':
+        specifier: ^29.5.14
+        version: 29.5.14
+      '@types/react':
+        specifier: ^19.1.0
+        version: 19.2.18
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@26.2.0)
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-native:
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.8)
+      react-native-builder-bob:
+        specifier: ^0.43.0
+        version: 0.43.0
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
   website:
     dependencies:
       astro:
@@ -3485,6 +3653,12 @@ packages:
     resolution: {integrity: sha512-suE1OYf0umMQvzzQ+4Ba+5xMc8jLu60ILQi85x8SCBaBtVUSJfcaGvlv6+34xxXgy+a2PuyNzoOXr9STEweLrQ==, tarball: https://registry.npmjs.org/react-native-builder-bob/-/react-native-builder-bob-0.43.0.tgz}
     engines: {node: ^20.19.0 || ^22.12.0 || >= 23.4.0}
     hasBin: true
+
+  react-native-safe-area-context@5.5.2:
+    resolution: {integrity: sha512-t4YVbHa9uAGf+pHMabGrb0uHrD5ogAusSu842oikJ3YKXcYp6iB4PTGl0EZNkUIR3pCnw/CXKn42OCfhsS0JIw==, tarball: https://registry.npmjs.org/react-native-safe-area-context/-/react-native-safe-area-context-5.5.2.tgz}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
 
   react-native@0.87.0:
     resolution: {integrity: sha512-e7CeZOm1wBksIISI5oLNmH4/GJCqWrfNphF7PuBsLY2qUM6mtzqL23N7iLTW6U7LF45qYi+a4iAp5Y1kSk1vVw==, tarball: https://registry.npmjs.org/react-native/-/react-native-0.87.0.tgz}
@@ -8310,6 +8484,11 @@ snapshots:
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
+
+  react-native-safe-area-context@5.5.2(react-native@0.87.0(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.8))(react@19.2.8):
+    dependencies:
+      react: 19.2.8
+      react-native: 0.87.0(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.8)
 
   react-native@0.87.0(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.8):
     dependencies:

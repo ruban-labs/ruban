@@ -16,13 +16,18 @@
     "@react-navigation/native": "7.3.18",
     "@react-navigation/native-stack": "7.18.10",
     "@ruban-labs/react-native-collapsible": "file:ruban-collapsible-local.tgz",
-    "@ruban-labs/react-native-progress": "file:ruban-local.tgz",
+    "@ruban-labs/react-native-progress": "file:ruban-progress-local.tgz",
     "react": "18.3.1",
     "react-native": "0.77.3",
     "react-native-bootsplash": "6.3.12",
     "react-native-edge-to-edge": "1.4.3",
     "react-native-safe-area-context": "5.4.0",
-    "react-native-screens": "4.9.2"
+    "react-native-screens": "4.9.2",
+    "@ruban-labs/react-native-ui-theme": "file:ruban-ui-theme-local.tgz",
+    "@ruban-labs/react-native-ui-overlay": "file:ruban-ui-overlay-local.tgz",
+    "@ruban-labs/react-native-ui-dialog": "file:ruban-ui-dialog-local.tgz",
+    "@ruban-labs/react-native-ui-sheet": "file:ruban-ui-sheet-local.tgz",
+    "@ruban-labs/react-native-ui-form": "file:ruban-ui-form-local.tgz"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",

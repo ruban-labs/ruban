@@ -10,14 +10,24 @@ import {
   ShowcaseSection,
 } from '../../components/showcase/ComponentShowcase';
 import {Button} from '../../components/ui/Button';
-import {Checkbox} from '../../components/ui/Checkbox';
-import {Field, FieldError, FieldLabel} from '../../components/ui/Field';
-import {Input} from '../../components/ui/Input';
-import {RadioGroup, RadioGroupItem} from '../../components/ui/RadioGroup';
-import {Select, type SelectOption} from '../../components/ui/Select';
-import {Textarea} from '../../components/ui/Textarea';
-import {spacing, useRubanColors} from '../../design/tokens';
-import type {RubanThemeMode} from '../../design/theme-colors';
+import {Checkbox} from '@ruban-labs/react-native-ui-form/checkbox';
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+} from '@ruban-labs/react-native-ui-form/field';
+import {Input} from '@ruban-labs/react-native-ui-form/input';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '@ruban-labs/react-native-ui-form/radio-group';
+import {
+  Select,
+  type SelectOption,
+} from '@ruban-labs/react-native-ui-form/select';
+import {Textarea} from '@ruban-labs/react-native-ui-form/textarea';
+import {spacing, useRubanColors} from '@ruban-labs/react-native-ui-theme';
+import type {RubanThemeMode} from '@ruban-labs/react-native-ui-theme/colors';
 import type {RootStackParamList} from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ComponentDetail'> & {

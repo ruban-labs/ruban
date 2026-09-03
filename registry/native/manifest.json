@@ -4,38 +4,47 @@
   "items": [
     {
       "name": "overlay",
+      "package": "react-native-ui-overlay",
       "files": ["OverlayCoordinator.ts", "OverlayHost.tsx"]
     },
     {
       "name": "dialog",
+      "package": "react-native-ui-dialog",
       "files": ["Dialog.tsx"]
     },
     {
       "name": "bottom-sheet",
+      "package": "react-native-ui-sheet",
       "files": ["BottomSheetModal.tsx"]
     },
     {
       "name": "field",
+      "package": "react-native-ui-form",
       "files": ["Field.tsx"]
     },
     {
       "name": "input",
+      "package": "react-native-ui-form",
       "files": ["Input.tsx"]
     },
     {
       "name": "textarea",
+      "package": "react-native-ui-form",
       "files": ["Textarea.tsx"]
     },
     {
       "name": "checkbox",
+      "package": "react-native-ui-form",
       "files": ["Checkbox.tsx"]
     },
     {
       "name": "radio-group",
+      "package": "react-native-ui-form",
       "files": ["RadioGroup.tsx"]
     },
     {
       "name": "select",
+      "package": "react-native-ui-form",
       "files": ["Select.tsx"]
     }
   ],
