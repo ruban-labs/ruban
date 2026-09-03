@@ -30,6 +30,13 @@ V1 includes:
   fiat estimates, source attribution, freshness, and incremental refresh;
 - local activity and deterministic deep links for testing.
 
+Account capability parity is part of the V1 contract. Watch-only,
+private-key, and mnemonic-derived accounts follow identical read, permission,
+preparation, simulation, review, and activity paths. No feature may reject or
+degrade a watch-only account before the final signature-producing operation.
+At that boundary, local signing requires a signer-backed account and
+transaction broadcast requires a successful signature.
+
 V1 excludes:
 
 - non-EVM chain families;

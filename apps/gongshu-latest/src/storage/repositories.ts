@@ -9,6 +9,7 @@ import {
 import { getDataSource } from './dataSource';
 
 const selectedAccountKey = 'wallet.selected-account';
+const selectedChainKey = 'wallet.selected-chain';
 
 function toWalletAccount(row: WalletAccountRow): WalletAccount {
   return {
@@ -80,6 +81,30 @@ export const repositories = {
         {
           key: selectedAccountKey,
           value: accountId,
+          updatedAt: Date.now(),
+        },
+        ['key'],
+      );
+    });
+  },
+
+  async getSelectedChainId(): Promise<number | null> {
+    const dataSource = await getDataSource();
+    const row = await dataSource
+      .getRepository(AppStateEntity)
+      .findOneBy({ key: selectedChainKey });
+    if (!row) return null;
+    const chainId = Number(row.value);
+    return Number.isSafeInteger(chainId) && chainId > 0 ? chainId : null;
+  },
+
+  async setSelectedChainId(chainId: number): Promise<void> {
+    const dataSource = await getDataSource();
+    await dataSource.transaction(async manager => {
+      await manager.getRepository(AppStateEntity).upsert(
+        {
+          key: selectedChainKey,
+          value: String(chainId),
           updatedAt: Date.now(),
         },
         ['key'],

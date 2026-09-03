@@ -40,6 +40,15 @@ The first wallet release has a deliberately narrow boundary:
 - direct and controlled distribution first. Public store distribution is a
   later product and compliance decision, not a V1 dependency.
 
+Account origin is not a product mode. Watch-only, private-key, and
+mnemonic-derived accounts use the same Portfolio, DApp discovery, browser,
+read-only RPC, permission, transaction preparation, simulation, review, and
+activity flows. The interface does not branch early or badge account origin in
+ordinary use. Capability diverges only at the final operation that must produce
+a signature: a signer-backed account enters the Native signing boundary, while
+a watch-only account must choose another signer or stop. Transaction broadcast
+can begin only after that boundary succeeds.
+
 Private keys, mnemonics, and derived seeds never enter the React Native
 JavaScript runtime. A standalone Rust core owns derivation, parsing, and
 signing through audited cryptographic dependencies. Platform wrappers own
@@ -79,10 +88,10 @@ The complete capability-gated plan is documented in the
 
 The next refurbishment candidates are:
 
-| Package | Product role | Initial proof in Gongshu |
-| --- | --- | --- |
-| `@ruban-labs/react-native-collapsible` | Focused expand/collapse primitives | Library catalogue sections and detail disclosure |
-| `@ruban-labs/react-native-animatable` | Small declarative animation vocabulary | Page transitions, feedback, and component states |
+| Package                                               | Product role                               | Initial proof in Gongshu                           |
+| ----------------------------------------------------- | ------------------------------------------ | -------------------------------------------------- |
+| `@ruban-labs/react-native-collapsible`                | Focused expand/collapse primitives         | Library catalogue sections and detail disclosure   |
+| `@ruban-labs/react-native-animatable`                 | Small declarative animation vocabulary     | Page transitions, feedback, and component states   |
 | `@ruban-labs/react-native-keyboard-aware-scroll-view` | Reliable keyboard and form layout behavior | Search, forms, and interactive playground controls |
 
 Building these packages and building the Ruban app are the same program: every
@@ -93,10 +102,10 @@ compatibility scenario for the package.
 
 Keep three independent bare React Native apps under `apps/`:
 
-| App | React Native era | Navigation | Architecture capability |
-| --- | --- | --- | --- |
-| `gongshu-0.66` | 0.66.x | React Navigation 6 | Legacy Architecture only |
-| `gongshu-0.77` | 0.77.x | React Navigation 7 | Legacy and New Architecture |
+| App              | React Native era       | Navigation         | Architecture capability                         |
+| ---------------- | ---------------------- | ------------------ | ----------------------------------------------- |
+| `gongshu-0.66`   | 0.66.x                 | React Navigation 6 | Legacy Architecture only                        |
+| `gongshu-0.77`   | 0.77.x                 | React Navigation 7 | Legacy and New Architecture                     |
 | `gongshu-latest` | current pinned release | React Navigation 7 | Follow upstream; 0.82+ is New Architecture only |
 
 Each app owns its dependencies, package manager lockfile, native projects,
@@ -130,11 +139,11 @@ Architecture is a **build axis**, not a source fork.
 
 The minimum compile matrix is:
 
-| Era | Legacy Architecture | New Architecture |
-| --- | --- | --- |
-| RN 0.66 | Required | Unsupported |
-| RN 0.77 | Required | Required |
-| RN latest (currently 0.87) | Unsupported upstream | Required |
+| Era                        | Legacy Architecture  | New Architecture |
+| -------------------------- | -------------------- | ---------------- |
+| RN 0.66                    | Required             | Unsupported      |
+| RN 0.77                    | Required             | Required         |
+| RN latest (currently 0.87) | Unsupported upstream | Required         |
 
 If Ruban needs a recent dual-architecture comparison after the latest line has
 become New-Architecture-only, add a fourth pinned app at the last upstream
@@ -246,15 +255,31 @@ handled by consuming the new `insets.bottom`.
   screenshot review in every Gongshu era. Do not use layout properties absent
   from RN 0.66 to fake parity.
 
+### Wallet Choice Surfaces
+
+- The latest App uses source-owned Bottom Sheets for both network and address
+  selection, with only one active choice surface and no stacked platform Modal.
+- The network selector lists only networks that the wallet RPC layer actually
+  supports. Names, chain IDs, and logos come from a pinned
+  `@ruban-labs/web-assets` package; Metro statically bundles the PNGs and must
+  never fall back to a runtime URL.
+- The address selector exposes only public account fields: label, shortened
+  address, and selection state. Account origin belongs only in account
+  management, recovery, or final signer selection. Private keys, mnemonics,
+  derived seeds, and Native Vault internals never enter its view model.
+- The selected network and address live in the global SQLite `app_state` table
+  as the shared choice for Portfolio, DApp Provider, and signing context. Before
+  the first release, update the baseline schema directly and add no migration.
+
 ### Deep Link Identity
 
 Every simultaneously installable app owns exactly one URL scheme. Environment
 and RN era are both part of that scheme because iOS custom URL schemes cannot
 dispatch between apps by path after the scheme has been registered.
 
-| Era | Production | Regression | Debug |
-| --- | --- | --- | --- |
-| latest | `ruban://` | `ruban-regression://` | `ruban-debug://` |
+| Era     | Production       | Regression                  | Debug                  |
+| ------- | ---------------- | --------------------------- | ---------------------- |
+| latest  | `ruban://`       | `ruban-regression://`       | `ruban-debug://`       |
 | RN 0.77 | `ruban-rn077://` | `ruban-rn077-regression://` | `ruban-rn077-debug://` |
 | RN 0.66 | `ruban-rn066://` | `ruban-rn066-regression://` | `ruban-rn066-debug://` |
 

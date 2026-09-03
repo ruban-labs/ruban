@@ -5,17 +5,17 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import * as React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {RubanScreen} from '../components/RubanPrimitives';
-import {spacing, useRubanColors} from '../design/tokens';
+import {useRubanColors} from '../design/tokens';
 import type {RootStackParamList, TabParamList} from '../navigation/types';
 
 type Props = BottomTabScreenProps<TabParamList, 'DApps'>;
 
 const dapps = [
-  {name: 'Test DApp', category: 'TEST', domain: 'metamask.github.io', url: 'https://metamask.github.io/test-dapp/'},
-  {name: 'Uniswap', category: 'SWAP', domain: 'app.uniswap.org', url: 'https://app.uniswap.org/'},
-  {name: 'Aave', category: 'LEND', domain: 'app.aave.com', url: 'https://app.aave.com/'},
-  {name: 'Lido', category: 'STAKE', domain: 'stake.lido.fi', url: 'https://stake.lido.fi/'},
-  {name: 'OpenSea', category: 'NFT', domain: 'opensea.io', url: 'https://opensea.io/'},
+  {name: 'Test DApp', domain: 'metamask.github.io', url: 'https://metamask.github.io/test-dapp/'},
+  {name: 'Uniswap', domain: 'app.uniswap.org', url: 'https://app.uniswap.org/'},
+  {name: 'Aave', domain: 'app.aave.com', url: 'https://app.aave.com/'},
+  {name: 'Lido', domain: 'stake.lido.fi', url: 'https://stake.lido.fi/'},
+  {name: 'OpenSea', domain: 'opensea.io', url: 'https://opensea.io/'},
 ] as const;
 
 export default function DAppsScreen({navigation}: Props): React.ReactElement {
@@ -44,7 +44,6 @@ export default function DAppsScreen({navigation}: Props): React.ReactElement {
           <Text style={[styles.openUrl, {color: colors.accent}]}>OPEN URL</Text>
         </TouchableOpacity>
       </View>
-      <Text style={[styles.title, {color: colors.ink}]}>Launch</Text>
 
       <View style={styles.grid}>
         {dapps.map((dapp, index) => (
@@ -59,7 +58,7 @@ export default function DAppsScreen({navigation}: Props): React.ReactElement {
             <Text style={[styles.index, {color: index === 0 ? colors.contrastAccent : colors.accent}]}>0{index + 1}</Text>
             <View>
               <Text style={[styles.cardTitle, {color: index === 0 ? colors.inverse : colors.ink}]}>{dapp.name}</Text>
-              <Text style={[styles.cardMeta, {color: index === 0 ? colors.inverseMuted : colors.faint}]}>{dapp.category} · {dapp.domain}</Text>
+              <Text style={[styles.cardMeta, {color: index === 0 ? colors.inverseMuted : colors.faint}]}>{dapp.domain}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -89,8 +88,7 @@ const styles = StyleSheet.create({
   header: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
   wordmark: {fontSize: 11, lineHeight: 15, fontWeight: '900', letterSpacing: 1.7},
   openUrl: {fontSize: 9, lineHeight: 13, fontWeight: '900', letterSpacing: 1.1},
-  title: {marginTop: 28, fontSize: 48, lineHeight: 52, fontWeight: '800', letterSpacing: -2.4},
-  grid: {marginTop: spacing.xl, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between'},
+  grid: {marginTop: 28, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between'},
   card: {width: '48.5%', height: 168, marginBottom: 12, padding: 14, borderWidth: 1, justifyContent: 'space-between'},
   index: {fontSize: 10, fontWeight: '900', letterSpacing: 1},
   cardTitle: {fontSize: 22, lineHeight: 27, fontWeight: '800', letterSpacing: -0.7},

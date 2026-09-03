@@ -13,6 +13,7 @@ import {
   type SignedEip1559Transaction,
   type WalletAccount,
 } from '@ruban-labs/react-native-wallet-core';
+import { defaultEvmChains } from '@ruban-labs/react-native-evm-client';
 import * as React from 'react';
 import { repositories } from '../storage/repositories';
 
@@ -21,7 +22,9 @@ type WalletContextValue = {
   loading: boolean;
   accounts: WalletAccount[];
   selectedAccount: WalletAccount | null;
+  selectedChainId: number;
   selectAccount: (accountId: string) => void;
+  selectChain: (chainId: number) => void;
   createMnemonic: () => Promise<void>;
   importMnemonic: () => Promise<void>;
   importPrivateKey: () => Promise<void>;
@@ -42,6 +45,11 @@ type WalletContextValue = {
 };
 
 const WalletContext = React.createContext<WalletContextValue | null>(null);
+const defaultChainId = defaultEvmChains[0]?.id || 1;
+
+function isSupportedChain(chainId: number): boolean {
+  return defaultEvmChains.some(chain => chain.id === chainId);
+}
 
 export function WalletProvider({
   children,
@@ -54,11 +62,13 @@ export function WalletProvider({
   const [selectedAccountId, setSelectedAccountId] = React.useState<
     string | null
   >(null);
+  const [selectedChainId, setSelectedChainId] = React.useState(defaultChainId);
 
   const reload = React.useCallback(async (preferredId?: string) => {
-    const [nextAccounts, storedId] = await Promise.all([
+    const [nextAccounts, storedId, storedChainId] = await Promise.all([
       repositories.listWalletAccounts(),
       repositories.getSelectedAccountId(),
+      repositories.getSelectedChainId(),
     ]);
     const candidate = preferredId || storedId;
     const nextSelected = nextAccounts.some(account => account.id === candidate)
@@ -66,6 +76,11 @@ export function WalletProvider({
       : nextAccounts[0]?.id || null;
     setAccounts(nextAccounts);
     setSelectedAccountId(nextSelected);
+    setSelectedChainId(
+      storedChainId && isSupportedChain(storedChainId)
+        ? storedChainId
+        : defaultChainId,
+    );
     await repositories.setSelectedAccountId(nextSelected);
     setLoading(false);
   }, []);
@@ -77,6 +92,13 @@ export function WalletProvider({
   const selectAccount = React.useCallback((accountId: string) => {
     setSelectedAccountId(accountId);
     repositories.setSelectedAccountId(accountId).catch(() => {});
+  }, []);
+
+  const selectChain = React.useCallback((chainId: number) => {
+    if (!isSupportedChain(chainId))
+      throw new Error(`Unsupported chain ${chainId}`);
+    setSelectedChainId(chainId);
+    repositories.setSelectedChainId(chainId).catch(() => {});
   }, []);
 
   const runCreate = React.useCallback(
@@ -123,7 +145,9 @@ export function WalletProvider({
       loading,
       accounts,
       selectedAccount,
+      selectedChainId,
       selectAccount,
+      selectChain,
       createMnemonic: () => runCreate(() => presentCreateMnemonic('Primary')),
       importMnemonic: () =>
         runCreate(() => presentImportMnemonic('Imported phrase')),
@@ -174,7 +198,9 @@ export function WalletProvider({
       requireSigner,
       runCreate,
       selectAccount,
+      selectChain,
       selectedAccount,
+      selectedChainId,
       signingContext,
     ],
   );

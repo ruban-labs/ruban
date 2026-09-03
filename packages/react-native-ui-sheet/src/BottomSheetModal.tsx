@@ -152,7 +152,7 @@ function BottomSheetLayer({
 export type SelectionOption<Value extends string> = {
   value: Value;
   label: string;
-  meta: string;
+  meta?: string;
 };
 
 export function SelectionBottomSheet<Value extends string>({
@@ -208,18 +208,17 @@ export function SelectionBottomSheet<Value extends string>({
                 <Text style={[styles.optionLabel, { color: colors.ink }]}>
                   {option.label}
                 </Text>
-                <Text style={[styles.optionMeta, { color: colors.faint }]}>
-                  {option.meta}
-                </Text>
+                {option.meta ? (
+                  <Text style={[styles.optionMeta, { color: colors.faint }]}>
+                    {option.meta}
+                  </Text>
+                ) : null}
               </View>
-              <Text
-                style={[
-                  styles.optionState,
-                  { color: selected ? colors.accent : colors.faint },
-                ]}
-              >
-                {selected ? "SELECTED" : "—"}
-              </Text>
+              {selected ? (
+                <Text style={[styles.optionState, { color: colors.accent }]}>
+                  SELECTED
+                </Text>
+              ) : null}
             </Pressable>
           );
         })}

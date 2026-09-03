@@ -32,6 +32,12 @@ Native 环境中的真实可用性。
 - 第一阶段采用直接发行和受控内测。是否公开上架应用商店，是后续产品与合规决策，
   不是 V1 的前置条件。
 
+账户来源不是一种产品模式。观察地址、私钥账户和助记词派生账户共用完全一致的
+Portfolio、DApp 发现、浏览器、只读 RPC、权限、交易准备、模拟、确认与活动记录流程。
+普通使用中不提前分叉，也不反复标记账户来源。只有最后一步必须真正产生签名时，能力才
+分开：可签名账户进入 Native 签名边界；观察地址需要改选其它签名方式或停止。只有签名
+成功后，交易才能进入广播。
+
 私钥、助记词和派生种子不得进入 React Native JavaScript 运行时。独立 Rust Core
 通过经过审查的密码学依赖负责派生、解析与签名；平台包装层负责安全存储与用户在场验证；
 React Native 只能获得不透明的 Vault/账户标识和公开结果。同一个 Core 同时服务 Legacy
@@ -62,11 +68,11 @@ Ruban 对外强调的是**源码公开与 Native Speed**。安全仍是不可退
 
 下一批翻新候选：
 
-| 包 | 产品作用 | 在 Gongshu 中的第一处真实用法 |
-| --- | --- | --- |
-| `@ruban-labs/react-native-collapsible` | 专注的展开、收起能力 | 库目录分组与详情渐进展示 |
-| `@ruban-labs/react-native-animatable` | 小而清晰的声明式动画语言 | 页面切换、操作反馈与组件状态 |
-| `@ruban-labs/react-native-keyboard-aware-scroll-view` | 稳定处理键盘与表单布局 | 搜索、表单和 Playground 控件 |
+| 包                                                    | 产品作用                 | 在 Gongshu 中的第一处真实用法 |
+| ----------------------------------------------------- | ------------------------ | ----------------------------- |
+| `@ruban-labs/react-native-collapsible`                | 专注的展开、收起能力     | 库目录分组与详情渐进展示      |
+| `@ruban-labs/react-native-animatable`                 | 小而清晰的声明式动画语言 | 页面切换、操作反馈与组件状态  |
+| `@ruban-labs/react-native-keyboard-aware-scroll-view` | 稳定处理键盘与表单布局   | 搜索、表单和 Playground 控件  |
 
 做这些库和做 Ruban App 是同一件事：每个库都要解决 App 里的真实需求，每次 App
 集成都要沉淀成这个库的兼容性场景。
@@ -75,10 +81,10 @@ Ruban 对外强调的是**源码公开与 Native Speed**。安全仍是不可退
 
 在 `apps/` 下保留三个彼此独立的 bare React Native App：
 
-| App | React Native 时代 | 导航 | 架构能力 |
-| --- | --- | --- | --- |
-| `gongshu-0.66` | 0.66.x | React Navigation 6 | 只支持旧架构 |
-| `gongshu-0.77` | 0.77.x | React Navigation 7 | 同时支持旧架构与 New Architecture |
+| App              | React Native 时代  | 导航               | 架构能力                                 |
+| ---------------- | ------------------ | ------------------ | ---------------------------------------- |
+| `gongshu-0.66`   | 0.66.x             | React Navigation 6 | 只支持旧架构                             |
+| `gongshu-0.77`   | 0.77.x             | React Navigation 7 | 同时支持旧架构与 New Architecture        |
 | `gongshu-latest` | 当前固定的最新版本 | React Navigation 7 | 跟随上游；0.82 起只支持 New Architecture |
 
 每个 App 独立管理依赖、锁文件、原生工程、签名配置、Bundle ID 和发布产物。它们共享
@@ -104,11 +110,11 @@ Ruban 对外强调的是**源码公开与 Native Speed**。安全仍是不可退
 
 最低编译矩阵：
 
-| RN 时代 | 旧架构 | New Architecture |
-| --- | --- | --- |
-| RN 0.66 | 必须 | 上游不支持 |
-| RN 0.77 | 必须 | 必须 |
-| RN latest（当前固定为 0.87） | 上游不支持 | 必须 |
+| RN 时代                      | 旧架构     | New Architecture |
+| ---------------------------- | ---------- | ---------------- |
+| RN 0.66                      | 必须       | 上游不支持       |
+| RN 0.77                      | 必须       | 必须             |
+| RN latest（当前固定为 0.87） | 上游不支持 | 必须             |
 
 如果未来仍需要一个较新的双架构对照组，就新增第四个 App，固定在上游最后一个双架构
 版本 RN 0.81。不要把 `latest` 改造成上游不支持的状态。
@@ -196,14 +202,27 @@ Android 提供的 Window Insets 是唯一事实来源，导航模式变化后直
 - 同一选择面必须在三个 Gongshu 时代分别通过类型检查、原生编译和真机截图；旧时代不
   使用 RN 0.66 尚未支持的布局属性来伪造一致性。
 
+### 钱包选择面
+
+- latest App 的链选择器与地址选择器都使用项目自有 Bottom Sheet，保持一个活动选择面，
+  不叠加平台 Modal。
+- 链选择器只展示钱包 RPC 层已经真实支持的网络。名称、链 ID 与图标来自固定版本的
+  `@ruban-labs/web-assets` 本地资产；PNG 通过 Metro 静态映射进入 App 包，禁止运行时
+  URL fallback。
+- 地址选择器只展示公开账户字段：标签、缩略地址与选择状态。账户来源只在账户管理、
+  恢复或最终选择签名方式时出现。私钥、助记词、派生种子和 Native Vault 内部标识不得
+  进入展示模型。
+- 当前链和当前地址都写入全局 SQLite `app_state`，作为 Portfolio、DApp Provider 与签名
+  上下文共享的唯一选择状态；预发布阶段继续直接维护基线 schema，不新增迁移。
+
 ### Deep Link 安装身份
 
 每个可同时安装的 App 只拥有一个 URL scheme。环境和 RN 时代都进入 scheme，因为
 iOS 自定义 URL Scheme 注册后，系统不能再根据路径把链接分发给不同 App。
 
-| 时代 | Production | Regression | Debug |
-| --- | --- | --- | --- |
-| latest | `ruban://` | `ruban-regression://` | `ruban-debug://` |
+| 时代    | Production       | Regression                  | Debug                  |
+| ------- | ---------------- | --------------------------- | ---------------------- |
+| latest  | `ruban://`       | `ruban-regression://`       | `ruban-debug://`       |
 | RN 0.77 | `ruban-rn077://` | `ruban-rn077-regression://` | `ruban-rn077-debug://` |
 | RN 0.66 | `ruban-rn066://` | `ruban-rn066-regression://` | `ruban-rn066-debug://` |
 

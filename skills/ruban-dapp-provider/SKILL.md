@@ -94,6 +94,10 @@ own Alerts or competing Modals.
   document navigates or the screen unmounts.
 - Keep the Native wallet confirmation as the final key-use boundary. The App
   Bottom Sheet explains the DApp request; Native code authorizes secret-key use.
+- Keep watch-only and signer-backed accounts on the same request, permission,
+  RPC, preparation, simulation, and review path. Check signing capability only
+  at the final signature-producing operation; never reject a watch-only account
+  earlier merely because its source cannot sign locally.
 
 The review UI displays facts, not trust claims: origin, account, network,
 recipient, value, spender/operator, raw amount, decoded function, and bounded

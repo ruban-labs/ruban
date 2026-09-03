@@ -30,6 +30,11 @@ and avoid Expo Modules, Nitro runtime, or required config plugins. Additional
 native peers are rare, explicit, and package-specific. Expo compatibility is a
 welcome by-product, never a requirement.
 
+**One account experience until signing.** Watch-only, private-key, and
+mnemonic-derived accounts share the same portfolio, DApp, RPC, permission, and
+review flows. Account capability diverges only when an operation must produce
+a signature.
+
 ## Packages
 
 | Package | Status | Description |
@@ -41,6 +46,7 @@ welcome by-product, never a requirement.
 | [`@ruban-labs/react-native-ui-dialog`](./packages/react-native-ui-dialog) | 0.1.0, incubating | Composable dialogs built on the Theme and Overlay peers. |
 | [`@ruban-labs/react-native-ui-sheet`](./packages/react-native-ui-sheet) | 0.1.0, incubating | Bottom sheets and selection sheets with an explicit Safe Area peer. |
 | [`@ruban-labs/react-native-ui-form`](./packages/react-native-ui-form) | 0.1.0, incubating | Field, Input, Textarea, Checkbox, RadioGroup, and Select controls. |
+| [`@ruban-labs/react-native-ui-icons`](./packages/react-native-ui-icons) | 0.1.0, incubating | Theme-aware `currentColor` SVG icons with an explicit `react-native-svg` peer. |
 | `@ruban-labs/react-native-wallet-core` | In development | Native EVM key derivation, vault, and signing with a Rust core. |
 | `@ruban-labs/react-native-evm-client` | In development | Fast RPC selection, batching, normalization, and portfolio primitives. |
 | `@ruban-labs/react-native-dapp-bridge` | In development | Preloaded EIP-1193 content script and typed WebView host bridge. |

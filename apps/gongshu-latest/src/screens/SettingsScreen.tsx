@@ -67,9 +67,9 @@ function SettingsRow({
 }
 
 const appearanceOptions: ReadonlyArray<SelectionOption<AppearancePreference>> = [
-  {value: 'system', label: 'System', meta: 'FOLLOW DEVICE'},
-  {value: 'light', label: 'Light', meta: 'RUBAN LIGHT'},
-  {value: 'dark', label: 'Dark', meta: 'RUBAN DARK'},
+  {value: 'system', label: 'System'},
+  {value: 'light', label: 'Light'},
+  {value: 'dark', label: 'Dark'},
 ];
 
 function SettingsGroup({
@@ -104,7 +104,7 @@ function BuildInfoBottomSheet({
     <BottomSheetModal
       testID="settings-sheet-build"
       visible={visible}
-      title="Runtime & Compatibility"
+      title="Build & matrix"
       onDismiss={onDismiss}>
       <ScrollView bounces={false} contentContainerStyle={styles.sheetContent}>
         <SettingsGroup label="CURRENT APP" inSheet>
@@ -135,35 +135,24 @@ export default function SettingsScreen({route, navigation}: Props): React.ReactE
 
   return (
     <RubanScreen testID="screen-settings">
-      <View style={styles.header}>
-        <Text style={[styles.headerLabel, {color: colors.ink}]}>RUBAN / SETTINGS</Text>
-        <Text style={[styles.headerMeta, {color: colors.faint}]}>
-          WORKBENCH
-        </Text>
-      </View>
-      <Text style={[styles.title, {color: colors.ink}]}>Settings</Text>
+      <Text style={[styles.headerLabel, {color: colors.ink}]}>RUBAN / SETTINGS</Text>
 
-      <SettingsGroup label="PREFERENCES">
+      <SettingsGroup label="APP">
         <SettingsRow
           testID="settings-appearance"
           label="Appearance"
           value={appearance.toUpperCase()}
           onPress={() => navigation.setParams({sheet: 'appearance'})}
         />
-      </SettingsGroup>
-
-      <SettingsGroup label="TECHNICAL">
         <SettingsRow
           testID="settings-build"
-          label="Runtime & compatibility"
+          label="Build & matrix"
           value={`RN ${buildInfo.reactNative}`}
           onPress={() => navigation.setParams({sheet: 'build'})}
         />
       </SettingsGroup>
 
       <SettingsGroup label="ABOUT">
-        <SettingsRow label="Purpose" value="UI REFERENCE" />
-        <SettingsRow label="Audience" value="RN TEAMS" />
         <SettingsRow
           label="Ruban Labs"
           value="WEBSITE"
@@ -201,10 +190,7 @@ export default function SettingsScreen({route, navigation}: Props): React.ReactE
 }
 
 const styles = StyleSheet.create({
-  header: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
   headerLabel: {fontSize: 11, lineHeight: 15, fontWeight: '900', letterSpacing: 1.7},
-  headerMeta: {fontSize: 9, lineHeight: 12, fontWeight: '700', letterSpacing: 0.9},
-  title: {marginTop: 28, fontSize: 48, lineHeight: 52, fontWeight: '800', letterSpacing: -2.4},
   groupWrap: {marginTop: spacing.xl},
   sheetGroupWrap: {marginTop: spacing.lg},
   sheetContent: {paddingHorizontal: spacing.lg, paddingBottom: spacing.lg},

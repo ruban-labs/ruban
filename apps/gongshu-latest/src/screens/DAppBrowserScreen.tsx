@@ -10,9 +10,9 @@ import {
   type DappTestResult,
   parseDappTestResultMessage,
 } from '@ruban-labs/react-native-dapp-bridge';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   WebView,
@@ -21,9 +21,9 @@ import {
 } from 'react-native-webview';
 import { useRubanColors } from '../design/tokens';
 import { rubanDappProviderInfo } from '../dapp/providerIdentity';
-import {useRpcRequestReview} from '../dapp/RpcRequestReviewProvider';
-import {RpcReviewError} from '../dapp/rpcReviewQueue';
-import {createTransactionReview} from '../dapp/transactionReview';
+import { useRpcRequestReview } from '../dapp/RpcRequestReviewProvider';
+import { RpcReviewError } from '../dapp/rpcReviewQueue';
+import { createTransactionReview } from '../dapp/transactionReview';
 import type { RootStackParamList } from '../navigation/types';
 import { evmClient } from '../portfolio/usePortfolio';
 import { useFocusedRubanSystemBars } from '../system/RubanSystemBars';
@@ -38,9 +38,9 @@ type DAppBrowserViewProps = {
   testCommand?: DappTestCommand;
 };
 type DappTestState =
-  | {status: 'running'}
-  | {status: 'passed'; result: DappTestResult}
-  | {status: 'failed'; result: DappTestResult};
+  | { status: 'running' }
+  | { status: 'passed'; result: DappTestResult }
+  | { status: 'failed'; result: DappTestResult };
 
 class ProviderRpcError extends Error {
   constructor(readonly code: number, message: string) {
@@ -91,10 +91,10 @@ export function DAppBrowserView({
   const pendingMessages = React.useRef<string[]>([]);
   const [url, setUrl] = React.useState(initialUrl);
   const topLevelUrl = React.useRef(initialUrl);
-  const [chainId, setChainId] = React.useState(1);
+  const [chainId, setChainId] = React.useState(wallet.selectedChainId);
   const [progress, setProgress] = React.useState(0);
   const [testState, setTestState] = React.useState<DappTestState | null>(
-    testCommand ? {status: 'running'} : null,
+    testCommand ? { status: 'running' } : null,
   );
   const startedTestRun = React.useRef<string | null>(null);
   const providerScript = React.useMemo(
@@ -108,6 +108,10 @@ export function DAppBrowserView({
   );
 
   useFocusedRubanSystemBars(colors.mode, colors.surface);
+
+  React.useEffect(() => {
+    setChainId(wallet.selectedChainId);
+  }, [wallet.selectedChainId]);
 
   const reply = React.useCallback(
     (
@@ -154,8 +158,8 @@ export function DAppBrowserView({
         chainName: chain?.name,
         badge: 'ACCOUNT ACCESS',
         rows: [
-          {label: 'ACCOUNT', value: wallet.selectedAccount.address},
-          {label: 'NETWORK', value: chain?.name || `Chain ${chainId}`},
+          { label: 'ACCOUNT', value: wallet.selectedAccount.address },
+          { label: 'NETWORK', value: chain?.name || `Chain ${chainId}` },
         ],
         approveLabel: 'CONNECT',
       });
@@ -249,12 +253,13 @@ export function DAppBrowserView({
           origin,
           badge: 'NETWORK',
           rows: [
-            {label: 'FROM', value: currentChain?.name || `Chain ${chainId}`},
-            {label: 'TO', value: nextChain?.name || `Chain ${nextChainId}`},
+            { label: 'FROM', value: currentChain?.name || `Chain ${chainId}` },
+            { label: 'TO', value: nextChain?.name || `Chain ${nextChainId}` },
           ],
           approveLabel: 'SWITCH',
         });
         setChainId(nextChainId);
+        wallet.selectChain(nextChainId);
         webView.current?.injectJavaScript(
           createBridgeEventScript(request, 'chainChanged', [
             `0x${nextChainId.toString(16)}`,
@@ -290,7 +295,7 @@ export function DAppBrowserView({
           chainName: evmClient.getChain(chainId)?.name,
           badge: 'MESSAGE',
           rows: [
-            {label: 'ACCOUNT', value: wallet.selectedAccount.address},
+            { label: 'ACCOUNT', value: wallet.selectedAccount.address },
             {
               label: 'NETWORK',
               value: evmClient.getChain(chainId)?.name || `Chain ${chainId}`,
@@ -328,7 +333,7 @@ export function DAppBrowserView({
           chainName: evmClient.getChain(chainId)?.name,
           badge: 'EIP-712',
           rows: [
-            {label: 'ACCOUNT', value: wallet.selectedAccount.address},
+            { label: 'ACCOUNT', value: wallet.selectedAccount.address },
             {
               label: 'NETWORK',
               value: evmClient.getChain(chainId)?.name || `Chain ${chainId}`,
@@ -404,9 +409,11 @@ export function DAppBrowserView({
             testCommand.runId,
           );
           if (result) {
-            setTestState({status: result.status, result});
+            setTestState({ status: result.status, result });
             console.info(
-              `RUBAN_DAPP_TEST ${result.status.toUpperCase()} runId=${result.runId} method=${result.method}`,
+              `RUBAN_DAPP_TEST ${result.status.toUpperCase()} runId=${
+                result.runId
+              } method=${result.method}`,
             );
             return;
           }
@@ -421,7 +428,7 @@ export function DAppBrowserView({
                 error instanceof Error ? error.message : 'Invalid test result',
             },
           };
-          setTestState({status: 'failed', result});
+          setTestState({ status: 'failed', result });
           return;
         }
       }
@@ -487,16 +494,14 @@ export function DAppBrowserView({
   const executeTestCommand = React.useCallback(() => {
     if (!testCommand || startedTestRun.current === testCommand.runId) return;
     startedTestRun.current = testCommand.runId;
-    setTestState({status: 'running'});
-    webView.current?.injectJavaScript(
-      createDappTestCommandScript(testCommand),
-    );
+    setTestState({ status: 'running' });
+    webView.current?.injectJavaScript(createDappTestCommandScript(testCommand));
   }, [testCommand]);
 
   const reload = React.useCallback(() => {
     if (testCommand) {
       startedTestRun.current = null;
-      setTestState({status: 'running'});
+      setTestState({ status: 'running' });
     }
     webView.current?.reload();
   }, [testCommand]);
@@ -521,10 +526,7 @@ export function DAppBrowserView({
             CHAIN {chainId}
           </Text>
         </View>
-        <TouchableOpacity
-          onPress={reload}
-          style={styles.back}
-        >
+        <TouchableOpacity onPress={reload} style={styles.back}>
           <Text style={[styles.reload, { color: colors.accent }]}>↻</Text>
         </TouchableOpacity>
       </View>
@@ -545,8 +547,8 @@ export function DAppBrowserView({
             testState.status === 'passed'
               ? 'dapp-test-pass'
               : testState.status === 'failed'
-                ? 'dapp-test-fail'
-                : 'dapp-test-running'
+              ? 'dapp-test-fail'
+              : 'dapp-test-running'
           }
           style={[
             styles.testStatus,
@@ -557,8 +559,11 @@ export function DAppBrowserView({
                   : colors.surfaceRaised,
               borderBottomColor: colors.border,
             },
-          ]}>
-          <Text style={[styles.testLabel, {color: colors.faint}]}>RPC TEST</Text>
+          ]}
+        >
+          <Text style={[styles.testLabel, { color: colors.faint }]}>
+            RPC TEST
+          </Text>
           <Text
             numberOfLines={1}
             style={[
@@ -567,14 +572,15 @@ export function DAppBrowserView({
                 color:
                   testState.status === 'failed' ? colors.alert : colors.ink,
               },
-            ]}>
+            ]}
+          >
             {testCommand.method} · {testState.status.toUpperCase()}
           </Text>
         </View>
       ) : null}
       <WebView<RubanWebViewExtensionProps>
         ref={webView}
-        source={{uri: initialUrl}}
+        source={{ uri: initialUrl }}
         injectedJavaScriptBeforeContentLoaded={providerScript}
         injectedJavaScriptBeforeContentLoadedForMainFrameOnly
         onMessage={onMessage}
@@ -600,9 +606,9 @@ function reviewId(request: DappBridgeRequest): string {
   return `${request.sessionId}:${request.documentId}:${request.id}`;
 }
 
-function providerError(error: unknown): {code: number; message: string} {
+function providerError(error: unknown): { code: number; message: string } {
   if (error instanceof ProviderRpcError || error instanceof RpcReviewError) {
-    return {code: error.code, message: error.message};
+    return { code: error.code, message: error.message };
   }
   return {
     code: 4200,
@@ -627,7 +633,9 @@ function previewHexMessage(message: string): string {
 function formatJsonPreview(value: string): string {
   try {
     const formatted = JSON.stringify(JSON.parse(value), null, 2);
-    return formatted.length <= 2400 ? formatted : `${formatted.slice(0, 2400)}…`;
+    return formatted.length <= 2400
+      ? formatted
+      : `${formatted.slice(0, 2400)}…`;
   } catch {
     return value.length <= 2400 ? value : `${value.slice(0, 2400)}…`;
   }
@@ -681,6 +689,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  testLabel: {fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 1.1},
-  testValue: {marginLeft: 12, flex: 1, textAlign: 'right', fontSize: 10, lineHeight: 14, fontWeight: '800'},
+  testLabel: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '900',
+    letterSpacing: 1.1,
+  },
+  testValue: {
+    marginLeft: 12,
+    flex: 1,
+    textAlign: 'right',
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '800',
+  },
 });
