@@ -47,7 +47,7 @@ export default function CollapsibleShowcaseScreen({route, navigation, onBack}: P
 
   return (
     <ComponentShowcaseScreen
-      index="07"
+      index="13"
       name="Collapsible"
       category="STRUCTURE"
       distribution="PACKAGE"
@@ -198,4 +198,3 @@ const styles = StyleSheet.create({
   alignmentLine: {width: '100%', height: 4},
   alignmentLineShort: {width: '58%', height: 3, marginTop: 7},
 });
-

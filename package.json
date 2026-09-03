@@ -18,6 +18,8 @@
     "brand:app-store:check-screenshots": "node scripts/brand/frame-app-store-screenshots.mjs --check",
     "design:theme:generate": "node scripts/design/generate-theme-colors.mjs",
     "design:theme:check": "node scripts/design/generate-theme-colors.mjs --check",
+    "registry:sync": "node scripts/design/sync-source-registry.mjs",
+    "registry:check": "node scripts/design/sync-source-registry.mjs --check",
     "site:build": "pnpm design:theme:check && pnpm --filter @ruban-labs/website build",
     "site:check": "pnpm design:theme:check && pnpm --filter @ruban-labs/website check && pnpm --filter @ruban-labs/website build && node scripts/site/check.mjs",
     "site:dev": "pnpm design:theme:check && pnpm --filter @ruban-labs/website dev",
@@ -41,6 +43,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.0",
     "acorn": "^8.18.0",
+    "prettier": "2.8.8",
     "sharp": "0.35.4"
   }
 }

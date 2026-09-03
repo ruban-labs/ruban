@@ -59,6 +59,9 @@ jobs:
         run: pnpm -r test
       - if: needs.changes.outputs.verify == 'true'
         run: pnpm -r build
+      - name: Source registry drift
+        if: needs.changes.outputs.verify == 'true'
+        run: pnpm registry:check
       - name: Published package contract
         if: needs.changes.outputs.verify == 'true'
         run: pnpm check:packages

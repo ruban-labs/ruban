@@ -19,6 +19,7 @@ import process from 'node:process';
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 const appsRoot = path.join(repoRoot, 'apps');
 const demoSource = path.join(repoRoot, 'scripts', 'dev', 'gongshu-demo', 'GongshuBench.js');
+const sourceRegistryScript = path.join(repoRoot, 'scripts', 'design', 'sync-source-registry.mjs');
 const APPS = ['gongshu-0.66', 'gongshu-0.77', 'gongshu-latest'];
 const LIBRARIES = [
   {
@@ -100,6 +101,8 @@ function packLibrary(library, appDir) {
 function syncApp(app, options) {
   const appDir = path.join(appsRoot, app);
   if (!fs.existsSync(path.join(appDir, 'package.json'))) fail(`app ${app} not found`);
+
+  run(process.execPath, [sourceRegistryScript, '--check', '--app', app], {cwd: repoRoot});
 
   fs.copyFileSync(demoSource, path.join(appDir, 'GongshuBench.js'));
 

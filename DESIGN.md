@@ -352,6 +352,13 @@ link. Labels, controls, specimens, and data rows are the documentation; do not
 add instructional paragraphs to the screen. Build the complete screen in
 `gongshu-latest` first, then port the same scenario to RN 0.77 and RN 0.66.
 
+Source-owned components have one canonical registry under `registry/native`.
+The registry sync writes committed copies into each standalone Gongshu source
+tree and formats each copy with that app's own Prettier contract. It does not
+create a shared runtime, workspace dependency, or symlink. `pnpm registry:check`
+fails when an app copy drifts from the canonical source, while era-specific
+navigation, native dependencies, and product framing remain local to each app.
+
 The first source-owned primitives establish these contracts:
 
 - **Button** — `primary`, `secondary`, `outline`, `ghost`, and `destructive`
@@ -369,6 +376,15 @@ The first source-owned primitives establish these contracts:
 - **Switch** — controlled through `checked` and `onCheckedChange`, with `sm` and
   `md` sizes, a minimum 44-point touch target, switch semantics, and explicit
   disabled state.
+- **Form Kit** — `Field` owns required, description, error, disabled, and invalid
+  semantics; `Input` and `Textarea` inherit that state; `Checkbox`, `RadioGroup`,
+  and `Select` remain controlled. `Select` uses a source-owned React Native
+  bottom sheet and introduces no external runtime dependency.
+
+`ruban://components/form` opens the composed Form Workbench. It is a compact
+recipe rather than another primitive: all six Form Kit components participate
+in one validation and submit flow, and the submit action exposes a deterministic
+`form-workbench-saved` state for device smoke verification.
 
 ## Agent Design Contract
 

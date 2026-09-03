@@ -16,6 +16,12 @@ type ComponentName =
   | 'Badge'
   | 'Separator'
   | 'Switch'
+  | 'Field'
+  | 'Input'
+  | 'Textarea'
+  | 'Checkbox'
+  | 'Radio Group'
+  | 'Select'
   | 'Progress'
   | 'Collapsible';
 type ComponentTarget =
@@ -24,6 +30,12 @@ type ComponentTarget =
   | 'badge'
   | 'separator'
   | 'switch'
+  | 'field'
+  | 'input'
+  | 'textarea'
+  | 'checkbox'
+  | 'radio-group'
+  | 'select'
   | 'progress'
   | 'collapsible';
 type ComponentItem = {
@@ -42,8 +54,14 @@ const componentInventory: readonly ComponentItem[] = [
   {index: '03', name: 'Badge', category: 'STATUS', distribution: 'source', state: 'preview', target: 'badge'},
   {index: '04', name: 'Separator', category: 'STRUCTURE', distribution: 'source', state: 'preview', target: 'separator'},
   {index: '05', name: 'Switch', category: 'CONTROL', distribution: 'source', state: 'preview', target: 'switch'},
-  {index: '06', name: 'Progress', category: 'FEEDBACK', distribution: 'package', state: 'ready', target: 'progress'},
-  {index: '07', name: 'Collapsible', category: 'STRUCTURE', distribution: 'package', state: 'ready', target: 'collapsible'},
+  {index: '06', name: 'Field', category: 'FORM', distribution: 'source', state: 'preview', target: 'field'},
+  {index: '07', name: 'Input', category: 'FORM', distribution: 'source', state: 'preview', target: 'input'},
+  {index: '08', name: 'Textarea', category: 'FORM', distribution: 'source', state: 'preview', target: 'textarea'},
+  {index: '09', name: 'Checkbox', category: 'CONTROL', distribution: 'source', state: 'preview', target: 'checkbox'},
+  {index: '10', name: 'Radio Group', category: 'CONTROL', distribution: 'source', state: 'preview', target: 'radio-group'},
+  {index: '11', name: 'Select', category: 'CONTROL', distribution: 'source', state: 'preview', target: 'select'},
+  {index: '12', name: 'Progress', category: 'FEEDBACK', distribution: 'package', state: 'ready', target: 'progress'},
+  {index: '13', name: 'Collapsible', category: 'STRUCTURE', distribution: 'package', state: 'ready', target: 'collapsible'},
 ];
 
 const groups: ReadonlyArray<{
@@ -86,6 +104,51 @@ function ComponentPreview({name, colors}: {name: ComponentName; colors: RubanCol
     return (
       <View style={[styles.previewSwitch, {backgroundColor: colors.accentSoft}]}>
         <View style={[styles.previewSwitchThumb, {backgroundColor: colors.accent}]} />
+      </View>
+    );
+  }
+
+  if (name === 'Field') {
+    return (
+      <View style={styles.previewField}>
+        <View style={[styles.previewLabel, {backgroundColor: colors.ink}]} />
+        <View style={[styles.previewInput, {borderColor: colors.borderStrong}]} />
+      </View>
+    );
+  }
+
+  if (name === 'Input') {
+    return <View style={[styles.previewInput, {borderColor: colors.borderStrong}]} />;
+  }
+
+  if (name === 'Textarea') {
+    return <View style={[styles.previewTextarea, {borderColor: colors.borderStrong}]} />;
+  }
+
+  if (name === 'Checkbox') {
+    return (
+      <View style={[styles.previewCheckbox, {backgroundColor: colors.accent, borderColor: colors.accent}]}>
+        <Text style={[styles.previewCheckmark, {color: colors.inverse}]}>✓</Text>
+      </View>
+    );
+  }
+
+  if (name === 'Radio Group') {
+    return (
+      <View style={styles.previewRadioGroup}>
+        <View style={[styles.previewRadio, {borderColor: colors.accent}]}>
+          <View style={[styles.previewRadioDot, {backgroundColor: colors.accent}]} />
+        </View>
+        <View style={[styles.previewRadio, {borderColor: colors.borderStrong}]} />
+      </View>
+    );
+  }
+
+  if (name === 'Select') {
+    return (
+      <View style={[styles.previewSelect, {borderColor: colors.borderStrong}]}>
+        <View style={[styles.previewSelectLine, {backgroundColor: colors.ink}]} />
+        <Text style={[styles.previewSelectArrow, {color: colors.accent}]}>↓</Text>
       </View>
     );
   }
@@ -259,6 +322,16 @@ export default function HomeScreen({navigation}: Props): React.ReactElement {
       </View>
 
       <TouchableOpacity
+        testID="home-open-form-workbench"
+        accessibilityRole="button"
+        activeOpacity={0.78}
+        onPress={() => rootNavigation?.navigate('ComponentDetail', {component: 'form', theme: 'light'})}
+        style={[styles.formLink, {backgroundColor: colors.accent}]}>
+        <Text style={[styles.playgroundLabel, {color: colors.inverse}]}>OPEN FORM WORKBENCH</Text>
+        <Text style={[styles.playgroundArrow, {color: colors.inverse}]}>→</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
         testID="home-open-playground"
         accessibilityRole="button"
         activeOpacity={0.78}
@@ -315,10 +388,23 @@ const styles = StyleSheet.create({
   previewSeparator: {width: 76, height: 2},
   previewSwitch: {width: 48, height: 26, padding: 3, alignItems: 'flex-end', justifyContent: 'center'},
   previewSwitchThumb: {width: 20, height: 20},
+  previewField: {width: 76},
+  previewLabel: {width: 34, height: 3, marginBottom: 5},
+  previewInput: {width: 76, height: 28, borderWidth: 1},
+  previewTextarea: {width: 76, height: 40, borderWidth: 1},
+  previewCheckbox: {width: 22, height: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center'},
+  previewCheckmark: {fontSize: 13, lineHeight: 16, fontWeight: '900'},
+  previewRadioGroup: {flexDirection: 'row'},
+  previewRadio: {width: 22, height: 22, marginLeft: 7, borderWidth: 1, borderRadius: 11, alignItems: 'center', justifyContent: 'center'},
+  previewRadioDot: {width: 10, height: 10, borderRadius: 5},
+  previewSelect: {width: 76, height: 30, paddingHorizontal: 8, borderWidth: 1, flexDirection: 'row', alignItems: 'center'},
+  previewSelectLine: {flex: 1, height: 2},
+  previewSelectArrow: {marginLeft: 7, fontSize: 13, lineHeight: 16, fontWeight: '900'},
   previewDisclosure: {width: 76, height: 42, padding: 6, borderWidth: 1},
   previewDisclosureHeader: {height: 7},
   previewDisclosureLine: {width: 52, height: 2, marginTop: 7},
   previewDisclosureLineShort: {width: 34, height: 2, marginTop: 5},
+  formLink: {minHeight: 56, marginTop: 2, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
   playgroundLink: {minHeight: 56, marginTop: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
   playgroundLabel: {fontSize: 11, lineHeight: 15, fontWeight: '900', letterSpacing: 1.3},
   playgroundArrow: {fontSize: 22},

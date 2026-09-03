@@ -47,7 +47,7 @@ export default function CollapsibleShowcaseScreen({route, navigation, onBack}: P
 
   return (
     <ComponentShowcaseScreen
-      index="07"
+      index="13"
       name="Collapsible"
       category="STRUCTURE"
       distribution="PACKAGE"

@@ -43,6 +43,14 @@ test("one consumer fixture selects only its typecheck era", () => {
   assert.deepEqual(result.ios, []);
 });
 
+test("source registry changes verify drift and every Gongshu era", () => {
+  const result = classifyChangedPaths(["registry/native/ui/Input.tsx"]);
+
+  assert.equal(result.verify, true);
+  assert.equal(result.full, false);
+  assert.deepEqual(result.ios, ["rn-0.66", "rn-0.77", "rn-latest"]);
+});
+
 test("shared package changes run every compatibility layer", () => {
   const result = classifyChangedPaths(["packages/react-native-progress/src/index.ts"]);
 

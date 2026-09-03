@@ -125,6 +125,12 @@ export function classifyChangedPaths(inputPaths, { forceFull = false } = {}) {
       continue;
     }
 
+    if (path.startsWith("registry/") || path === "scripts/design/sync-source-registry.mjs") {
+      verify = true;
+      addAll(ios);
+      continue;
+    }
+
     if (path === "scripts/ci/typecheck-matrix.mjs") {
       verify = true;
       addAll(typecheck);

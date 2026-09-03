@@ -42,6 +42,22 @@ const SCENARIOS = [
     path: 'settings?sheet=build',
     testId: 'settings-sheet-build',
   },
+  {
+    name: 'form-workbench-submit',
+    path: 'components/form?theme=light',
+    testId: 'screen-component-form-workbench',
+    actions: [
+      {tap: 'form-workbench-direction-code'},
+      {tap: 'form-workbench-accepted'},
+      {tap: 'form-workbench-accepted'},
+      {tap: 'form-workbench-channel'},
+      {waitFor: 'form-workbench-channel-sheet'},
+      {tap: 'form-workbench-channel-option-push'},
+      {tap: 'form-workbench-submit'},
+      {waitFor: 'form-workbench-saved'},
+      {waitForText: 'CODE · PUSH'},
+    ],
+  },
 ];
 
 const argv = process.argv.slice(2);
@@ -115,6 +131,65 @@ async function waitForTestId(testId) {
   );
 }
 
+async function waitForText(text) {
+  while (Date.now() < deadline) {
+    const xml = readHierarchy();
+    if (xml.includes(`text="${text}"`)) {
+      return;
+    }
+    await sleep(750);
+  }
+
+  throw new Error(`timed out waiting for text ${text}`);
+}
+
+function nodeBounds(xml, testId) {
+  const nodes = xml.match(/<node\b[^>]*>/g) || [];
+  const node = nodes.find(value => value.includes(`resource-id="${testId}"`));
+  const match = node?.match(/bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/);
+  if (!match) {
+    return null;
+  }
+  return match.slice(1).map(Number);
+}
+
+function screenSize() {
+  const output = outputOf(adb('shell', 'wm', 'size'));
+  const matches = [...output.matchAll(/(\d+)x(\d+)/g)];
+  const selected = matches[matches.length - 1];
+  return selected ? {width: Number(selected[1]), height: Number(selected[2])} : {width: 1080, height: 1920};
+}
+
+async function tapTestId(testId) {
+  const size = screenSize();
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const bounds = nodeBounds(readHierarchy(), testId);
+    if (bounds && bounds[2] > bounds[0] && bounds[3] > bounds[1]) {
+      const x = Math.round((bounds[0] + bounds[2]) / 2);
+      const y = Math.round((bounds[1] + bounds[3]) / 2);
+      requireAdb(adb('shell', 'input', 'tap', String(x), String(y)), `tap ${testId}`);
+      return;
+    }
+
+    requireAdb(
+      adb(
+        'shell',
+        'input',
+        'swipe',
+        String(Math.round(size.width * 0.5)),
+        String(Math.round(size.height * 0.8)),
+        String(Math.round(size.width * 0.5)),
+        String(Math.round(size.height * 0.3)),
+        '650'
+      ),
+      `scroll to ${testId}`
+    );
+    await sleep(500);
+  }
+
+  throw new Error(`could not find tappable bounds for ${testId}`);
+}
+
 try {
   requireAdb(adb('get-state'), 'device readiness');
   requireAdb(adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP'), 'wake device');
@@ -143,6 +218,16 @@ try {
     );
     requireAdb(started, `launch ${scenario.name}`);
     await waitForTestId(scenario.testId);
+    for (const action of scenario.actions || []) {
+      if (action.tap) {
+        await tapTestId(action.tap);
+        await sleep(250);
+      } else if (action.waitFor) {
+        await waitForTestId(action.waitFor);
+      } else if (action.waitForText) {
+        await waitForText(action.waitForText);
+      }
+    }
     console.log(`  ${scenario.name}: PASS (${scenario.testId})`);
   }
 

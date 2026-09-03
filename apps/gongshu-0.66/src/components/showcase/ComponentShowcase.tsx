@@ -38,9 +38,15 @@ function ComponentShowcaseContent({
   children,
 }: ComponentShowcaseScreenProps): React.ReactElement {
   const colors = useRubanColors();
+  const screenId = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 
   return (
-    <RubanScreen testID={`screen-component-${name.toLowerCase()}`}>
+    <RubanScreen
+      testID={`screen-component-${screenId}`}
+      scrollProps={{keyboardShouldPersistTaps: 'handled'}}>
       <View style={styles.topBar}>
         <Pressable accessibilityRole="button" onPress={onBack} hitSlop={8}>
           <Text style={[styles.backLabel, {color: colors.ink}]}>

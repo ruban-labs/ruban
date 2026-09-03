@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "targetDirectory": "src/components/ui",
+  "items": [
+    {
+      "name": "field",
+      "files": ["Field.tsx"]
+    },
+    {
+      "name": "input",
+      "files": ["Input.tsx"]
+    },
+    {
+      "name": "textarea",
+      "files": ["Textarea.tsx"]
+    },
+    {
+      "name": "checkbox",
+      "files": ["Checkbox.tsx"]
+    },
+    {
+      "name": "radio-group",
+      "files": ["RadioGroup.tsx"]
+    },
+    {
+      "name": "select",
+      "files": ["Select.tsx"]
+    }
+  ],
+  "verificationFiles": [
+    {
+      "source": "examples/FormKitShowcaseScreen.tsx",
+      "target": "src/screens/components/FormKitShowcaseScreen.tsx"
+    },
+    {
+      "source": "examples/FormWorkbenchScreen.tsx",
+      "target": "src/screens/components/FormWorkbenchScreen.tsx"
+    }
+  ]
+}

@@ -271,6 +271,11 @@ deep link 冷启动时，顶部返回和 Android 系统返回都落到 Component
 标签、控件、实物状态和数据表就是文档。新的组件先在 `gongshu-latest` 完成这套页面，
 再把同一场景移植到 RN 0.77 与 0.66。
 
+source-owned 组件以 `registry/native` 作为唯一 canonical registry。同步脚本把源码复制为
+三套 Gongshu 应用各自提交到仓库的文件，并按目标应用自己的 Prettier 规则格式化。它不引入
+共享运行时、workspace 依赖或软链接；`pnpm registry:check` 负责阻止副本漂移，而各时代的
+导航、原生依赖和产品表达仍归各应用独立维护。
+
 第一批 source-owned primitive 定义如下：
 
 - **Button**：`primary`、`secondary`、`outline`、`ghost`、`destructive` 五种 variant，
@@ -283,6 +288,13 @@ deep link 冷启动时，顶部返回和 Android 系统返回都落到 Component
   hairline / regular / bold 粗细；默认只承担装饰作用，不进入无障碍树。
 - **Switch**：由 `checked` 与 `onCheckedChange` 完全受控，提供 `sm`、`md` 两种 size，
   保证最小 44pt 触控区，并明确暴露 switch 语义和 disabled 状态。
+- **Form Kit**：`Field` 统一承载 required、description、error、disabled 与 invalid 语义；
+  `Input`、`Textarea` 自动继承状态；`Checkbox`、`RadioGroup`、`Select` 保持受控。
+  `Select` 使用 source-owned 的纯 React Native Bottom Sheet，不增加外部运行时依赖。
+
+`ruban://components/form` 打开组合式 Form Workbench。它是 recipe 而不是新的 primitive：
+六个 Form Kit 组件共同完成一次校验与提交，并暴露确定性的 `form-workbench-saved` 状态，
+供真机 smoke 验证实际状态转换。
 
 ## Agent 设计契约
 
