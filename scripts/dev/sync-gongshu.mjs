@@ -47,7 +47,8 @@ function newestMtime(directory) {
   return newest;
 }
 
-function ensureLibraryBuilt(library) {
+function ensureLibraryBuilt(library, nativePlatform) {
+  const manifest = JSON.parse(fs.readFileSync(path.join(library.directory, 'package.json'), 'utf8'));
   const sourceMtime = newestMtime(path.join(library.directory, 'src'));
   const outputDirs = ['commonjs', 'module', 'typescript'].map((target) =>
     path.join(library.directory, 'lib', target),
@@ -59,6 +60,10 @@ function ensureLibraryBuilt(library) {
   if (outputIsStale) {
     console.log(`sync-gongshu: ${library.name} lib/ missing or stale, building first`);
     run('pnpm', ['--filter', library.name, 'build'], { cwd: repoRoot });
+  }
+  if (nativePlatform && manifest.ruban?.nativeCode) {
+    console.log(`sync-gongshu: building ${library.name} native artifacts for ${nativePlatform}`);
+    run('pnpm', ['--filter', library.name, `build:native:${nativePlatform}`], {cwd: repoRoot});
   }
 }
 
@@ -143,6 +148,11 @@ function syncApp(app, options) {
 
 const argv = process.argv.slice(2);
 const skipInstall = argv.includes('--skip-install');
+const nativePlatformIndex = argv.indexOf('--native-platform');
+const nativePlatform = nativePlatformIndex >= 0 ? argv[nativePlatformIndex + 1] : null;
+if (nativePlatform && !['android', 'ios'].includes(nativePlatform)) {
+  fail('expected --native-platform <android|ios>');
+}
 let selected = [];
 if (argv.includes('--all')) {
   selected = APPS;
@@ -153,5 +163,5 @@ if (argv.includes('--all')) {
   selected = [app];
 }
 
-for (const library of LIBRARIES) ensureLibraryBuilt(library);
+for (const library of LIBRARIES) ensureLibraryBuilt(library, nativePlatform);
 for (const app of selected) syncApp(app, { skipInstall });

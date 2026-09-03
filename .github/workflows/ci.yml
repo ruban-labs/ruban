@@ -161,7 +161,7 @@ jobs:
         with:
           node-version: ${{ matrix.era-node }}
       - name: Sync app (demo + tarball + deps)
-        run: node scripts/dev/sync-gongshu.mjs --app ${{ matrix.app }}
+        run: node scripts/dev/sync-gongshu.mjs --app ${{ matrix.app }} --native-platform ios
       - name: Patch 0.66 era compat (boost mirror + yoga bool-bitwise)
         if: matrix.era == '0.66'
         working-directory: apps/${{ matrix.app }}
@@ -174,6 +174,8 @@ jobs:
           grep -c 'hadOverflow() ||' node_modules/react-native/ReactCommon/yoga/yoga/Yoga.cpp
       - name: Pod install
         working-directory: apps/${{ matrix.app }}/ios
+        env:
+          NO_FLIPPER: ${{ matrix.era == '0.66' && '1' || '0' }}
         run: pod install
       - name: Patch 0.66 boost hash for C++17 (Xcode 15 libc++)
         if: matrix.era == '0.66'

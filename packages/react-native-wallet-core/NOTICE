@@ -1,0 +1,6 @@
+Ruban Wallet Core
+
+This package uses independently maintained cryptographic and Ethereum protocol
+libraries. Their licenses and exact versions are recorded by Cargo.lock. Ruban
+does not implement cryptographic primitives and does not claim that dependency
+review is equivalent to an independent security audit.

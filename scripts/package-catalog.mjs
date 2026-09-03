@@ -8,6 +8,9 @@ export const RUBAN_PACKAGE_DEFINITIONS = [
   ['@ruban-labs/react-native-ui-dialog', 'react-native-ui-dialog', 'ruban-ui-dialog-local.tgz'],
   ['@ruban-labs/react-native-ui-sheet', 'react-native-ui-sheet', 'ruban-ui-sheet-local.tgz'],
   ['@ruban-labs/react-native-ui-form', 'react-native-ui-form', 'ruban-ui-form-local.tgz'],
+  ['@ruban-labs/react-native-wallet-core', 'react-native-wallet-core', 'ruban-wallet-core-local.tgz'],
+  ['@ruban-labs/react-native-evm-client', 'react-native-evm-client', 'ruban-evm-client-local.tgz'],
+  ['@ruban-labs/react-native-dapp-bridge', 'react-native-dapp-bridge', 'ruban-dapp-bridge-local.tgz'],
 ];
 
 export function resolveRubanPackages(repositoryRoot) {

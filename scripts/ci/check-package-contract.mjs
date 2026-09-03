@@ -45,13 +45,19 @@ for (const packageDirectory of packageDirectories) {
   if (manifest.peerDependencies?.react !== '>=17.0.0') fail(`${label}: React peer floor must be >=17.0.0`);
   if (manifest.peerDependencies?.['react-native'] !== '>=0.66.0') fail(`${label}: React Native peer floor must be >=0.66.0`);
   if (manifest.ruban?.reactNativeFloor !== '0.66.0') fail(`${label}: ruban.reactNativeFloor must be 0.66.0`);
-  if (manifest.ruban?.nativeCode !== false) fail(`${label}: nativeCode must be false for the current library line`);
+  if (typeof manifest.ruban?.nativeCode !== 'boolean') fail(`${label}: ruban.nativeCode must be boolean`);
   if (manifest.ruban?.runtimePolicy === 'zero-dependency' && Object.keys(manifest.dependencies ?? {}).length > 0) {
     fail(`${label}: zero-dependency packages cannot declare runtime dependencies`);
   }
 
   for (const entry of ['src', 'lib', 'NOTICE']) {
     if (!hasFileEntry(manifest, entry)) fail(`${label}: files must include ${entry}`);
+  }
+
+  if (manifest.ruban?.nativeCode) {
+    for (const entry of ['android', 'ios', 'rust']) {
+      if (!hasFileEntry(manifest, entry)) fail(`${label}: native package files must include ${entry}`);
+    }
   }
 
   for (const script of ['build', 'test', 'typecheck']) {

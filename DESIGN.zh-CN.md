@@ -17,6 +17,47 @@ Ruban 由三个互相支撑的部分组成：
 App 可以使用 React Navigation 等应用基础设施。“零运行时依赖”约束的是对外发布的
 Ruban 库，不是用于验证这些库的 App。
 
+## 长期产品方向
+
+Ruban 将从组件工场逐步发展为真正可用的、自托管 EVM DApp 工作台。latest Gongshu
+App 是主要产品载体；较早的 Gongshu 版本继续作为兼容版本，用来证明发布包在历史 React
+Native 环境中的真实可用性。
+
+钱包第一版刻意收窄边界：
+
+- 只支持 EVM 外部账户（EOA）；
+- 支持创建或导入助记词、导入私钥，以及添加观察地址；
+- 提供本地加密 Vault 与 Native 签名，同时把 WalletConnect 作为额外的外部签名方式；
+- 提供 DApp 发现、浏览会话、按来源隔离的权限、交易确认、提交和本地活动记录；
+- 第一阶段采用直接发行和受控内测。是否公开上架应用商店，是后续产品与合规决策，
+  不是 V1 的前置条件。
+
+私钥、助记词和派生种子不得进入 React Native JavaScript 运行时。独立 Rust Core
+通过经过审查的密码学依赖负责派生、解析与签名；平台包装层负责安全存储与用户在场验证；
+React Native 只能获得不透明的 Vault/账户标识和公开结果。同一个 Core 同时服务 Legacy
+Native Module 与 TurboModule 适配层。
+
+Ruban 不自行实现密码学原语，也不把“第三方依赖经过审查”宣传成“Ruban 已通过安全审计”。
+依赖来源、许可证、测试向量、差分测试、模糊测试、可复现构建和独立审计，都是明确的发行门槛。
+
+Ruban 对外强调的是**源码公开与 Native Speed**。安全仍是不可退让的工程底线，但不作为
+营销口号。V1 包含一个 cache-first Portfolio，用来展示配置网络中的原生资产和经过明确
+选择的 ERC-20 资产。链上读取、价格/Indexer 请求、数据新鲜度、取消、批处理和 Provider
+延迟都是可观察的产品契约，不藏在实现细节里。
+
+速度拆成三条独立衡量的轴：
+
+- **构建快**：按受影响目录运行 CI，Native 产物使用内容寻址，并复用 Cargo、Gradle、
+  Xcode、CocoaPods 与 Metro 缓存；
+- **运行快**：衡量冷启动、可交互时间、帧稳定性、内存压力、DApp Ready 与确认耗时；
+- **同步快**：缓存首屏、增量补水、批量链上读取、自适应 Provider 选择和可替换 Indexer。
+
+快不能牺牲数据新鲜度和来源解释。节点竞速与缓存渲染只有在网络、观察时间、来源和过期
+状态都明确时才算有效。
+
+完整的能力门槛路线见
+[EVM 钱包 V1 路线图](./docs/wallet-v1-roadmap.zh-CN.md)。
+
 ## 近期库路线
 
 下一批翻新候选：
@@ -96,6 +137,19 @@ GitHub Releases、内部发行和 TestFlight 发放。
 About 不是一级 Tab。品牌、来源、版本、许可证、赞助与解决方案入口都归入 Settings
 中的 About 分组。兼容矩阵归入 Build & Matrix Modal，避免把低频信息抬成一级导航或
 在页面上平铺。
+
+### 顶部安全区归属
+
+每个 Screen 都必须且只能消费一次状态栏区域。新页面默认使用 `RubanScreen`，或使用
+`react-native-safe-area-context` 并包含 top edge。React Navigation 自带 Header
+可以成为安全区 owner；显式采用沉浸式设计的页面可以把背景绘制到状态栏后方，但工具栏、
+交互控件与主体内容仍必须根据 `insets.top` 定位。
+
+- 每条路由必须明确一个顶部安全区 owner：Navigation Header、路由 Frame 或沉浸式布局。
+- 隐藏 Navigation Header 不代表页面内容可以从物理屏幕坐标零开始。
+- 禁止使用 React Native 自带的 `SafeAreaView`；它不能提供这里需要的 Android
+  edge-to-edge 契约，统一使用 `react-native-safe-area-context`。
+- Header 已经消费顶部安全区时，页面不得再次增加 top inset。
 
 ### 底部安全区归属
 

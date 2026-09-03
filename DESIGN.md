@@ -21,6 +21,60 @@ The apps may depend on application infrastructure such as React Navigation.
 The zero-runtime-dependency charter applies to published Ruban libraries, not
 to the apps that exercise them.
 
+## Long-term Product Direction
+
+Ruban will evolve from a component workbench into a real, self-custodial EVM
+DApp workbench. Its primary product surface is the latest Gongshu application;
+the older Gongshu eras remain compatibility editions that prove the published
+packages against historical React Native environments.
+
+The first wallet release has a deliberately narrow boundary:
+
+- EVM externally owned accounts only;
+- create or import a mnemonic, import a private key, and add watch-only
+  addresses;
+- local encrypted vault and native signing, with WalletConnect as an
+  additional external signer;
+- DApp discovery, browser sessions, origin-scoped permissions, transaction
+  review, submission, and local activity;
+- direct and controlled distribution first. Public store distribution is a
+  later product and compliance decision, not a V1 dependency.
+
+Private keys, mnemonics, and derived seeds never enter the React Native
+JavaScript runtime. A standalone Rust core owns derivation, parsing, and
+signing through audited cryptographic dependencies. Platform wrappers own
+secure storage and user-presence policy, while React Native receives only
+opaque vault/account identifiers and public results. The same core serves the
+Legacy Native Module and TurboModule adapters.
+
+Ruban does not implement cryptographic primitives itself and does not describe
+third-party dependency review as a Ruban security audit. Dependency provenance,
+licensing, test vectors, differential tests, fuzzing, reproducible builds, and
+an independent audit are explicit release gates.
+
+Ruban's public position is **open source and native speed**. Security remains a
+non-negotiable engineering baseline rather than the slogan. V1 includes a
+cache-first portfolio for native assets and deliberately selected ERC-20
+assets across configured EVM networks. Chain reads, price/indexer requests,
+freshness, cancellation, batching, and provider latency are visible parts of
+the product contract rather than hidden implementation details.
+
+Speed is measured on three independent axes:
+
+- **build speed** — affected-path CI, content-addressed native artifacts, and
+  reusable Cargo, Gradle, Xcode, CocoaPods, and Metro caches;
+- **runtime speed** — cold start, interaction readiness, frame stability,
+  memory pressure, DApp readiness, and confirmation latency;
+- **sync speed** — cached first paint, incremental hydration, batched chain
+  reads, adaptive provider selection, and replaceable indexer inputs.
+
+A fast result must remain fresh and attributable. Racing providers or rendering
+cache is valid only when chain, observation time, source, and stale state remain
+explicit.
+
+The complete capability-gated plan is documented in the
+[EVM Wallet V1 roadmap](./docs/wallet-v1-roadmap.md).
+
 ## Near-term Library Roadmap
 
 The next refurbishment candidates are:
@@ -117,6 +171,22 @@ About is not a primary tab. Brand, provenance, version, licence, sponsorship,
 and solution links belong to its Settings group. Compatibility belongs in the
 Build & Matrix Modal; low-frequency metadata must not consume primary
 navigation or remain expanded on the page.
+
+### Top Inset Ownership
+
+Every screen must reserve the status-bar region exactly once. New screens use
+`RubanScreen` or `react-native-safe-area-context` with the top edge by default.
+A React Navigation header may own that inset instead; a deliberately immersive
+route may paint behind the status bar, but its toolbar, controls, and primary
+content still position themselves from `insets.top`.
+
+- A route must declare one top inset owner: its navigation header, its route
+  frame, or its immersive layout.
+- Hiding a navigation header never implies that content may begin at physical
+  screen coordinate zero.
+- Do not use React Native core `SafeAreaView`; it does not provide the required
+  Android edge-to-edge contract. Use `react-native-safe-area-context`.
+- Do not combine a header-owned inset with page-level top padding.
 
 ### Bottom Inset Ownership
 

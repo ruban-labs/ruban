@@ -1431,7 +1431,13 @@ if (!fs.existsSync(path.join(appDir, 'node_modules', 'react-native', 'cli.js')))
 }
 
 if (options.sync && !options.dryRun) {
-  command(process.execPath, ['scripts/dev/sync-gongshu.mjs', '--app', app.directory]);
+  command(process.execPath, [
+    'scripts/dev/sync-gongshu.mjs',
+    '--app',
+    app.directory,
+    '--native-platform',
+    options.platform,
+  ]);
 }
 
 const cacheKey = inputKey(appDir, options, app);

@@ -1,20 +1,26 @@
 # Ruban Labs
 
-Small, sharp React Native tools. Named after **Lu Ban** (鲁班), the legendary
+Small, sharp, foundation-independent React Native tools. Named after **Lu Ban** (鲁班), the legendary
 master craftsman - the **R** stands for React.
 
 > **Measure with the ruler. Build with the tools.**
 
 Product direction, the Gongshu compatibility matrix, and the shared visual
 contract live in [DESIGN.md](./DESIGN.md) ([简体中文](./DESIGN.zh-CN.md)).
+The long-term wallet direction and its gated first-release plan live in the
+[EVM Wallet V1 roadmap](./docs/wallet-v1-roadmap.md)
+([简体中文](./docs/wallet-v1-roadmap.zh-CN.md)).
 
-Two surfaces, one program:
+Three surfaces, one program:
 
 - **The ruler** - [awesome-native-react](https://github.com/richardo2016/awesome-native-react):
   a machine-audited index of the React Native ecosystem. Every library measured
   for maintenance health and new-architecture readiness, every two days.
 - **The tools** - this monorepo: focused, dependency-free React Native libraries.
   One tool does one thing, to the extreme.
+- **The product** - Ruban Mobile: an open-source, native-speed EVM wallet and
+  DApp workbench. Security is an engineering baseline; inspectability and
+  measurable speed are the public promise.
 
 ## Charter
 
@@ -35,6 +41,9 @@ welcome by-product, never a requirement.
 | [`@ruban-labs/react-native-ui-dialog`](./packages/react-native-ui-dialog) | 0.1.0, incubating | Composable dialogs built on the Theme and Overlay peers. |
 | [`@ruban-labs/react-native-ui-sheet`](./packages/react-native-ui-sheet) | 0.1.0, incubating | Bottom sheets and selection sheets with an explicit Safe Area peer. |
 | [`@ruban-labs/react-native-ui-form`](./packages/react-native-ui-form) | 0.1.0, incubating | Field, Input, Textarea, Checkbox, RadioGroup, and Select controls. |
+| `@ruban-labs/react-native-wallet-core` | In development | Native EVM key derivation, vault, and signing with a Rust core. |
+| `@ruban-labs/react-native-evm-client` | In development | Fast RPC selection, batching, normalization, and portfolio primitives. |
+| `@ruban-labs/react-native-dapp-bridge` | In development | Preloaded EIP-1193 content script and typed WebView host bridge. |
 | `@ruban-labs/react-native-animatable` | Planned | Small declarative animation vocabulary. |
 | `@ruban-labs/react-native-keyboard-aware-scroll-view` | Planned | Reliable keyboard-aware layout and scrolling. |
 

@@ -121,7 +121,7 @@ jobs:
           node-version: ${{ matrix.eraNode }}
 
       - name: Sync standalone app
-        run: node scripts/dev/sync-gongshu.mjs --app ${{ matrix.app }}
+        run: node scripts/dev/sync-gongshu.mjs --app ${{ matrix.app }} --native-platform ${{ matrix.platform }}
 
       - uses: actions/create-github-app-token@v3
         id: signing-token

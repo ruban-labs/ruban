@@ -25,13 +25,24 @@ export type SettingsRouteParams = {
   sheet?: 'appearance' | 'build';
 };
 
+export type DAppTestRouteParams = {
+  dapp?: string;
+  method?: string;
+  params?: string;
+  runId?: string;
+  timeoutMs?: string;
+};
+
 export type TabParamList = {
   Home: undefined;
-  Playground: PlaygroundRouteParams | undefined;
+  DApps: undefined;
   Settings: SettingsRouteParams | undefined;
 };
 
 export type RootStackParamList = {
   Main: NavigatorScreenParams<TabParamList> | undefined;
+  DeveloperLab: PlaygroundRouteParams | undefined;
+  DAppBrowser: {url: string; title?: string};
+  DAppTest: DAppTestRouteParams;
   ComponentDetail: ComponentDetailRouteParams;
 };

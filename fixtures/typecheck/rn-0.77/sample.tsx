@@ -1,35 +1,66 @@
-import * as React from 'react';
-import Collapsible, {Accordion} from '@ruban-labs/react-native-collapsible';
-import AccordionDeep from '@ruban-labs/react-native-collapsible/Accordion';
+import * as React from "react";
+import Collapsible, { Accordion } from "@ruban-labs/react-native-collapsible";
+import AccordionDeep from "@ruban-labs/react-native-collapsible/Accordion";
+import {
+  createProviderContentScript,
+  DappBridgeHostSession,
+} from "@ruban-labs/react-native-dapp-bridge";
+import { createEvmClient } from "@ruban-labs/react-native-evm-client";
 import {
   Bar,
   Circle,
   CircleSnail,
   Pie,
   DEFAULT_COLOR,
-} from '@ruban-labs/react-native-progress';
-import {Dialog} from '@ruban-labs/react-native-ui-dialog';
-import {Checkbox} from '@ruban-labs/react-native-ui-form/checkbox';
-import {Field, FieldLabel} from '@ruban-labs/react-native-ui-form/field';
-import {Input} from '@ruban-labs/react-native-ui-form/input';
-import {RadioGroup, RadioGroupItem} from '@ruban-labs/react-native-ui-form/radio-group';
-import {Select} from '@ruban-labs/react-native-ui-form/select';
-import {Textarea} from '@ruban-labs/react-native-ui-form/textarea';
-import {OverlayProvider} from '@ruban-labs/react-native-ui-overlay';
-import {BottomSheetModal} from '@ruban-labs/react-native-ui-sheet';
-import {RubanThemeProvider} from '@ruban-labs/react-native-ui-theme';
+} from "@ruban-labs/react-native-progress";
+import { Dialog } from "@ruban-labs/react-native-ui-dialog";
+import { Checkbox } from "@ruban-labs/react-native-ui-form/checkbox";
+import { Field, FieldLabel } from "@ruban-labs/react-native-ui-form/field";
+import { Input } from "@ruban-labs/react-native-ui-form/input";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@ruban-labs/react-native-ui-form/radio-group";
+import { Select } from "@ruban-labs/react-native-ui-form/select";
+import { Textarea } from "@ruban-labs/react-native-ui-form/textarea";
+import { OverlayProvider } from "@ruban-labs/react-native-ui-overlay";
+import { BottomSheetModal } from "@ruban-labs/react-native-ui-sheet";
+import { RubanThemeProvider } from "@ruban-labs/react-native-ui-theme";
+import { isWalletCoreAvailable } from "@ruban-labs/react-native-wallet-core";
+
+const bridgeSession = new DappBridgeHostSession("fixture-session");
+const providerScript = createProviderContentScript({
+  sessionId: bridgeSession.sessionId,
+  providerInfo: {
+    name: "Ruban Fixture",
+    icon: "data:image/svg+xml;base64,PHN2Zy8+",
+    rdns: "work.ruban-labs.fixture",
+  },
+});
+const evmClient = createEvmClient({
+  fetch: async () => ({ ok: true, status: 200, json: async () => ({}) }),
+});
+void providerScript;
+void evmClient;
+void isWalletCoreAvailable;
 
 export function Sample(): React.ReactElement {
-  const sections = ['FIRST', 'SECOND'] as const;
+  const sections = ["FIRST", "SECOND"] as const;
 
   return (
     <>
       <RubanThemeProvider mode="light">
         <OverlayProvider>
           <Dialog.Root>
-            <Dialog.Content><FieldLabel>Dialog</FieldLabel></Dialog.Content>
+            <Dialog.Content>
+              <FieldLabel>Dialog</FieldLabel>
+            </Dialog.Content>
           </Dialog.Root>
-          <BottomSheetModal visible={false} title="Sheet" onDismiss={() => undefined}>
+          <BottomSheetModal
+            visible={false}
+            title="Sheet"
+            onDismiss={() => undefined}
+          >
             <FieldLabel>Sheet</FieldLabel>
           </BottomSheetModal>
           <Field>
@@ -40,7 +71,7 @@ export function Sample(): React.ReactElement {
             <RadioGroup value="one">
               <RadioGroupItem label="One" value="one" />
             </RadioGroup>
-            <Select options={[{label: 'One', value: 'one'}]} value="one" />
+            <Select options={[{ label: "One", value: "one" }]} value="one" />
           </Field>
         </OverlayProvider>
       </RubanThemeProvider>
@@ -51,7 +82,7 @@ export function Sample(): React.ReactElement {
         sections={sections}
         activeSections={[0]}
         onChange={() => undefined}
-        renderHeader={section => <Bar>{section}</Bar>}
+        renderHeader={(section) => <Bar>{section}</Bar>}
         renderContent={() => <Circle progress={0.4} />}
       />
       <AccordionDeep
@@ -80,7 +111,7 @@ export function Sample(): React.ReactElement {
       <Pie progress={0.3} unfilledColor="#eeeeee" borderWidth={2} />
       <Pie indeterminate direction="counter-clockwise" />
       <CircleSnail
-        color={['#ff0000', '#00ff00']}
+        color={["#ff0000", "#00ff00"]}
         duration={900}
         spinDuration={4000}
         hidesWhenStopped

@@ -3,6 +3,7 @@ import { StyleSheet, useColorScheme, View } from 'react-native';
 import { enableScreens } from 'react-native-screens';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OverlayProvider } from '@ruban-labs/react-native-ui-overlay';
+import { RpcRequestReviewProvider } from './src/dapp/RpcRequestReviewProvider';
 import { RubanThemeProvider, useRubanColors } from './src/design/tokens';
 import AppNavigator from './src/navigation/AppNavigator';
 import { useReleaseRuntimeHealth } from './src/releaseRuntime';
@@ -12,6 +13,7 @@ import {
 } from './src/settings/AppPreferences';
 import { useBootSplashExit } from './src/startup/useBootSplashExit';
 import { RubanSystemBars } from './src/system/RubanSystemBars';
+import { WalletProvider } from './src/wallet/WalletContext';
 
 enableScreens(true);
 
@@ -40,7 +42,9 @@ function ThemedApp(): React.ReactElement {
   return (
     <RubanThemeProvider mode={mode}>
       <OverlayProvider>
-        <AppSurface onReady={hideBootSplash} />
+        <RpcRequestReviewProvider>
+          <AppSurface onReady={hideBootSplash} />
+        </RpcRequestReviewProvider>
       </OverlayProvider>
     </RubanThemeProvider>
   );
@@ -52,7 +56,9 @@ function App(): React.ReactElement {
   return (
     <SafeAreaProvider>
       <AppPreferencesProvider>
-        <ThemedApp />
+        <WalletProvider>
+          <ThemedApp />
+        </WalletProvider>
       </AppPreferencesProvider>
     </SafeAreaProvider>
   );

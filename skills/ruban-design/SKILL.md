@@ -18,3 +18,11 @@ product surface. They are the durable product and visual charter.
 Do not turn the brand mark into a parallel app design system. Brand identity is
 the stable recognizer; the app's semantic token system remains independently
 owned by the Gongshu apps.
+
+## Screen frame default
+
+Every new Screen must identify one status-bar inset owner. Default to
+`RubanScreen` or `react-native-safe-area-context` with the top edge. A React
+Navigation header may own it instead. Immersive screens may paint through the
+status bar only when their controls and primary content still use `insets.top`.
+Never use React Native core `SafeAreaView`, and never apply the top inset twice.

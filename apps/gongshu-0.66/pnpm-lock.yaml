@@ -17,6 +17,12 @@ dependencies:
   '@ruban-labs/react-native-collapsible':
     specifier: file:ruban-collapsible-local.tgz
     version: file:ruban-collapsible-local.tgz(react-native@0.66.4)(react@17.0.2)
+  '@ruban-labs/react-native-dapp-bridge':
+    specifier: file:ruban-dapp-bridge-local.tgz
+    version: file:ruban-dapp-bridge-local.tgz(react-native@0.66.4)(react@17.0.2)
+  '@ruban-labs/react-native-evm-client':
+    specifier: file:ruban-evm-client-local.tgz
+    version: file:ruban-evm-client-local.tgz(react-native@0.66.4)(react@17.0.2)
   '@ruban-labs/react-native-progress':
     specifier: file:ruban-progress-local.tgz
     version: file:ruban-progress-local.tgz(react-native@0.66.4)(react@17.0.2)
@@ -35,6 +41,9 @@ dependencies:
   '@ruban-labs/react-native-ui-theme':
     specifier: file:ruban-ui-theme-local.tgz
     version: file:ruban-ui-theme-local.tgz(react-native@0.66.4)(react@17.0.2)
+  '@ruban-labs/react-native-wallet-core':
+    specifier: file:ruban-wallet-core-local.tgz
+    version: file:ruban-wallet-core-local.tgz(react-native@0.66.4)(react@17.0.2)
   react:
     specifier: 17.0.2
     version: 17.0.2
@@ -8580,6 +8589,32 @@ packages:
       react-native: 0.66.4(@babel/core@7.29.7)(@babel/preset-env@7.29.7)(react@17.0.2)
     dev: false
 
+  file:ruban-dapp-bridge-local.tgz(react-native@0.66.4)(react@17.0.2):
+    resolution: {integrity: sha512-P2wnxiPoLykzWAvNb/1ybUeFrWDZVPaH4Af9E4Z6LS/JY0gOMTbNoh6Q0fufceKBH7ppId0dAmIzpy0aoEcyLQ==, tarball: file:ruban-dapp-bridge-local.tgz}
+    id: file:ruban-dapp-bridge-local.tgz
+    name: '@ruban-labs/react-native-dapp-bridge'
+    version: 0.1.0
+    peerDependencies:
+      react: '>=17.0.0'
+      react-native: '>=0.66.0'
+    dependencies:
+      react: 17.0.2
+      react-native: 0.66.4(@babel/core@7.29.7)(@babel/preset-env@7.29.7)(react@17.0.2)
+    dev: false
+
+  file:ruban-evm-client-local.tgz(react-native@0.66.4)(react@17.0.2):
+    resolution: {integrity: sha512-he25icVv3lUVcgjHuCRPxN1UeqN4aa9wRktGTwzHsmC4E+ZusDrDk6ccsUcANVc+Qto1vokRA6z7TZ76/WPeOQ==, tarball: file:ruban-evm-client-local.tgz}
+    id: file:ruban-evm-client-local.tgz
+    name: '@ruban-labs/react-native-evm-client'
+    version: 0.1.0
+    peerDependencies:
+      react: '>=17.0.0'
+      react-native: '>=0.66.0'
+    dependencies:
+      react: 17.0.2
+      react-native: 0.66.4(@babel/core@7.29.7)(@babel/preset-env@7.29.7)(react@17.0.2)
+    dev: false
+
   file:ruban-progress-local.tgz(react-native@0.66.4)(react@17.0.2):
     resolution: {integrity: sha512-abZESJoCHDw6sKP1uRa4mIKjCTuqFOcmNYuUfZKzuEZfBAQtUs4pXFfj+zF2A6YT5MqUmJW5H3NXsyoAFTYzpQ==, tarball: file:ruban-progress-local.tgz}
     id: file:ruban-progress-local.tgz
@@ -8661,6 +8696,19 @@ packages:
     resolution: {integrity: sha512-aT8L1GEQy9hin/1C1sEmL4Qkgmq62peD3btGRcdngQXwQwAsx+SKs4AIhRpuUudaeI3PXBr+aNQMqQHFtoU4GQ==, tarball: file:ruban-ui-theme-local.tgz}
     id: file:ruban-ui-theme-local.tgz
     name: '@ruban-labs/react-native-ui-theme'
+    version: 0.1.0
+    peerDependencies:
+      react: '>=17.0.0'
+      react-native: '>=0.66.0'
+    dependencies:
+      react: 17.0.2
+      react-native: 0.66.4(@babel/core@7.29.7)(@babel/preset-env@7.29.7)(react@17.0.2)
+    dev: false
+
+  file:ruban-wallet-core-local.tgz(react-native@0.66.4)(react@17.0.2):
+    resolution: {integrity: sha512-hPUAgC0dYD0DpkvI/tYn352hYGOiIy+L2nfJ037zIEtC/ruRX19hVF5xoUEoyCnZS/zgjuYzG45Paf3rn8vLyw==, tarball: file:ruban-wallet-core-local.tgz}
+    id: file:ruban-wallet-core-local.tgz
+    name: '@ruban-labs/react-native-wallet-core'
     version: 0.1.0
     peerDependencies:
       react: '>=17.0.0'

@@ -20,6 +20,12 @@ importers:
       '@ruban-labs/react-native-collapsible':
         specifier: file:ruban-collapsible-local.tgz
         version: file:ruban-collapsible-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
+      '@ruban-labs/react-native-dapp-bridge':
+        specifier: file:ruban-dapp-bridge-local.tgz
+        version: file:ruban-dapp-bridge-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
+      '@ruban-labs/react-native-evm-client':
+        specifier: file:ruban-evm-client-local.tgz
+        version: file:ruban-evm-client-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
       '@ruban-labs/react-native-progress':
         specifier: file:ruban-progress-local.tgz
         version: file:ruban-progress-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
@@ -38,6 +44,9 @@ importers:
       '@ruban-labs/react-native-ui-theme':
         specifier: file:ruban-ui-theme-local.tgz
         version: file:ruban-ui-theme-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
+      '@ruban-labs/react-native-wallet-core':
+        specifier: file:ruban-wallet-core-local.tgz
+        version: file:ruban-wallet-core-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -1161,6 +1170,20 @@ packages:
       react: '>=17.0.0'
       react-native: '>=0.66.0'
 
+  '@ruban-labs/react-native-dapp-bridge@file:ruban-dapp-bridge-local.tgz':
+    resolution: {integrity: sha512-P2wnxiPoLykzWAvNb/1ybUeFrWDZVPaH4Af9E4Z6LS/JY0gOMTbNoh6Q0fufceKBH7ppId0dAmIzpy0aoEcyLQ==, tarball: file:ruban-dapp-bridge-local.tgz}
+    version: 0.1.0
+    peerDependencies:
+      react: '>=17.0.0'
+      react-native: '>=0.66.0'
+
+  '@ruban-labs/react-native-evm-client@file:ruban-evm-client-local.tgz':
+    resolution: {integrity: sha512-he25icVv3lUVcgjHuCRPxN1UeqN4aa9wRktGTwzHsmC4E+ZusDrDk6ccsUcANVc+Qto1vokRA6z7TZ76/WPeOQ==, tarball: file:ruban-evm-client-local.tgz}
+    version: 0.1.0
+    peerDependencies:
+      react: '>=17.0.0'
+      react-native: '>=0.66.0'
+
   '@ruban-labs/react-native-progress@file:ruban-progress-local.tgz':
     resolution: {integrity: sha512-abZESJoCHDw6sKP1uRa4mIKjCTuqFOcmNYuUfZKzuEZfBAQtUs4pXFfj+zF2A6YT5MqUmJW5H3NXsyoAFTYzpQ==, tarball: file:ruban-progress-local.tgz}
     version: 6.0.0
@@ -1204,6 +1227,13 @@ packages:
 
   '@ruban-labs/react-native-ui-theme@file:ruban-ui-theme-local.tgz':
     resolution: {integrity: sha512-aT8L1GEQy9hin/1C1sEmL4Qkgmq62peD3btGRcdngQXwQwAsx+SKs4AIhRpuUudaeI3PXBr+aNQMqQHFtoU4GQ==, tarball: file:ruban-ui-theme-local.tgz}
+    version: 0.1.0
+    peerDependencies:
+      react: '>=17.0.0'
+      react-native: '>=0.66.0'
+
+  '@ruban-labs/react-native-wallet-core@file:ruban-wallet-core-local.tgz':
+    resolution: {integrity: sha512-sOezxGXCkiuP56MVfrjcBj3QbgGp7TmXW3rBRNUXF7PJVAs7SDhfJh1e2W4E44JXsF4sFHUuzLFjgzj3qKLWmg==, tarball: file:ruban-wallet-core-local.tgz}
     version: 0.1.0
     peerDependencies:
       react: '>=17.0.0'
@@ -5754,9 +5784,7 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
       - '@babel/preset-env'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.77.3': {}
 
@@ -5840,6 +5868,16 @@ snapshots:
       react: 18.3.1
       react-native: 0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1)
 
+  '@ruban-labs/react-native-dapp-bridge@file:ruban-dapp-bridge-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-native: 0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1)
+
+  '@ruban-labs/react-native-evm-client@file:ruban-evm-client-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-native: 0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1)
+
   '@ruban-labs/react-native-progress@file:ruban-progress-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)':
     dependencies:
       react: 18.3.1
@@ -5872,6 +5910,11 @@ snapshots:
       react-native-safe-area-context: 5.4.0(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
 
   '@ruban-labs/react-native-ui-theme@file:ruban-ui-theme-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-native: 0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1)
+
+  '@ruban-labs/react-native-wallet-core@file:ruban-wallet-core-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)':
     dependencies:
       react: 18.3.1
       react-native: 0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1)

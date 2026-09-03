@@ -27,7 +27,10 @@
     "@ruban-labs/react-native-ui-overlay": "file:ruban-ui-overlay-local.tgz",
     "@ruban-labs/react-native-ui-dialog": "file:ruban-ui-dialog-local.tgz",
     "@ruban-labs/react-native-ui-sheet": "file:ruban-ui-sheet-local.tgz",
-    "@ruban-labs/react-native-ui-form": "file:ruban-ui-form-local.tgz"
+    "@ruban-labs/react-native-ui-form": "file:ruban-ui-form-local.tgz",
+    "@ruban-labs/react-native-wallet-core": "file:ruban-wallet-core-local.tgz",
+    "@ruban-labs/react-native-evm-client": "file:ruban-evm-client-local.tgz",
+    "@ruban-labs/react-native-dapp-bridge": "file:ruban-dapp-bridge-local.tgz"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
