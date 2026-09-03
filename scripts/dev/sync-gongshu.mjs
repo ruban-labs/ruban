@@ -119,7 +119,7 @@ function syncApp(app, options) {
   }
   let manifestChanged = false;
   for (const library of LIBRARIES) {
-    const dependency = `file:./${library.tarball}`;
+    const dependency = `file:${library.tarball}`;
     if (manifest.dependencies[library.name] !== dependency) {
       manifest.dependencies[library.name] = dependency;
       manifestChanged = true;
@@ -143,7 +143,7 @@ function syncApp(app, options) {
     });
   }
   console.log(`sync-gongshu: ${app} installing with ${manifest.packageManager} (Node ${process.version})`);
-  run('corepack', ['pnpm', 'install', '--force'], {
+  run('corepack', ['pnpm', 'install', '--force', '--no-frozen-lockfile'], {
     cwd: appDir,
     env: { ...process.env, NODE_ENV: 'development' },
   });

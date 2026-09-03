@@ -18,10 +18,10 @@ importers:
         specifier: 7.18.10
         version: 7.18.10(@react-navigation/native@7.3.18(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1))(react-native-safe-area-context@5.4.0(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1))(react-native-screens@4.9.2(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1))(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
       '@ruban-labs/react-native-collapsible':
-        specifier: file:./ruban-collapsible-local.tgz
+        specifier: file:ruban-collapsible-local.tgz
         version: file:ruban-collapsible-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
       '@ruban-labs/react-native-progress':
-        specifier: file:./ruban-local.tgz
+        specifier: file:ruban-local.tgz
         version: file:ruban-local.tgz(react-native@0.77.3(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@react-native-community/cli@15.0.1(typescript@5.0.4))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
       react:
         specifier: 18.3.1
@@ -1140,7 +1140,7 @@ packages:
     resolution: {integrity: sha512-GI7eJm8/KsZUQaYcXvEExikKurRZRgEsSzyZ7faENfi65yqJBCXjDMwyN1pF6pNW1MoLH1ErDwDivFxY6BzD3w==}
 
   '@ruban-labs/react-native-collapsible@file:ruban-collapsible-local.tgz':
-    resolution: {integrity: sha512-bPX41VlZF/KBD95q2FvmZsG+7c6CMMKXJ/e97f/0SBxtrwijbx62q2PtCVp2XDvGy9jGKr7/cnw0Jsn77NAgOg==, tarball: file:ruban-collapsible-local.tgz}
+    resolution: {integrity: sha512-voAeITTzVPjFGn4VBRN7GuT/bwRQqg7d0RUGN6eexJRqvVVg0h8JT51+hnNWtpnJgKaA4hE3Hy+ZBbJU2wOr1Q==, tarball: file:ruban-collapsible-local.tgz}
     version: 2.0.0
     peerDependencies:
       react: '>=17.0.0'
@@ -5698,7 +5698,9 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
       - '@babel/preset-env'
+      - bufferutil
       - supports-color
+      - utf-8-validate
 
   '@react-native/normalize-colors@0.77.3': {}
 

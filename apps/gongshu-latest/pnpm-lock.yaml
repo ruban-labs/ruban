@@ -24,7 +24,7 @@ importers:
         specifier: file:ruban-collapsible-local.tgz
         version: file:ruban-collapsible-local.tgz(react-native@0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
       '@ruban-labs/react-native-progress':
-        specifier: file:./ruban-local.tgz
+        specifier: file:ruban-local.tgz
         version: file:ruban-local.tgz(react-native@0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
       '@zoontek/react-native-navigation-bar':
         specifier: 2.0.1
@@ -1284,7 +1284,7 @@ packages:
     resolution: {integrity: sha512-GI7eJm8/KsZUQaYcXvEExikKurRZRgEsSzyZ7faENfi65yqJBCXjDMwyN1pF6pNW1MoLH1ErDwDivFxY6BzD3w==}
 
   '@ruban-labs/react-native-collapsible@file:ruban-collapsible-local.tgz':
-    resolution: {integrity: sha512-bPX41VlZF/KBD95q2FvmZsG+7c6CMMKXJ/e97f/0SBxtrwijbx62q2PtCVp2XDvGy9jGKr7/cnw0Jsn77NAgOg==, tarball: file:ruban-collapsible-local.tgz}
+    resolution: {integrity: sha512-voAeITTzVPjFGn4VBRN7GuT/bwRQqg7d0RUGN6eexJRqvVVg0h8JT51+hnNWtpnJgKaA4hE3Hy+ZBbJU2wOr1Q==, tarball: file:ruban-collapsible-local.tgz}
     version: 2.0.0
     peerDependencies:
       react: '>=17.0.0'
