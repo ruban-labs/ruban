@@ -4,35 +4,17 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveRustToolchain } from "./rust-environment.mjs";
 
 const packageRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   ".."
 );
 const repositoryRoot = path.resolve(packageRoot, "..", "..");
-const workspaceLocalRoot = process.env.RAY_WORKSPACE_LOCAL_ROOT;
-
-if (!workspaceLocalRoot) {
-  throw new Error(
-    "RAY_WORKSPACE_LOCAL_ROOT is required to resolve the managed Rust toolchain"
-  );
-}
-
-const cargoHome = path.join(
-  workspaceLocalRoot,
-  "toolchains",
-  "rust",
-  "cargo-home"
-);
-const rustupHome = path.join(
-  workspaceLocalRoot,
-  "toolchains",
-  "rust",
-  "rustup-home"
-);
-const cargo = path.join(cargoHome, "bin", "cargo");
-const rustup = path.join(cargoHome, "bin", "rustup");
-const targetDirectory = path.join(repositoryRoot, ".cache", "rust-target");
+const toolchain = resolveRustToolchain({ repositoryRoot });
+const cargo = toolchain.cargo;
+const rustup = toolchain.rustup;
+const targetDirectory = toolchain.environment.CARGO_TARGET_DIR;
 const rustRoot = path.join(packageRoot, "rust");
 const requested =
   readArgument("--platform") ||
@@ -76,15 +58,9 @@ function run(command, args, options = {}) {
     : "";
 }
 
-function managedEnvironment(extra = {}) {
+function rustEnvironment(extra = {}) {
   return {
-    ...process.env,
-    CARGO_HOME: cargoHome,
-    RUSTUP_HOME: rustupHome,
-    RUSTUP_DIST_SERVER: process.env.RUSTUP_DIST_SERVER || "https://rsproxy.cn",
-    RUSTUP_UPDATE_ROOT:
-      process.env.RUSTUP_UPDATE_ROOT || "https://rsproxy.cn/rustup",
-    CARGO_TARGET_DIR: targetDirectory,
+    ...toolchain.environment,
     ...extra,
   };
 }
@@ -93,12 +69,12 @@ function ensureTargets(targets) {
   const installed = new Set(
     run(rustup, ["target", "list", "--installed"], {
       capture: true,
-      env: managedEnvironment(),
+      env: rustEnvironment(),
     }).split(/\s+/)
   );
   const missing = targets.filter((target) => !installed.has(target));
   if (missing.length > 0)
-    run(rustup, ["target", "add", ...missing], { env: managedEnvironment() });
+    run(rustup, ["target", "add", ...missing], { env: rustEnvironment() });
 }
 
 function sourceFingerprint(platform, extra) {
@@ -223,7 +199,7 @@ function buildAndroid() {
     const linker = path.join(toolchain, compiler);
     const key = target.toUpperCase().replaceAll("-", "_");
     run(cargo, ["build", "--release", "--locked", "--target", target], {
-      env: managedEnvironment({
+      env: rustEnvironment({
         [`CARGO_TARGET_${key}_LINKER`]: linker,
         [`CC_${target.replaceAll("-", "_")}`]: linker,
         RUSTFLAGS: "-C link-arg=-Wl,-z,max-page-size=16384",
@@ -264,7 +240,7 @@ function buildIos() {
   ensureTargets(targets);
   for (const target of targets) {
     run(cargo, ["build", "--release", "--locked", "--target", target], {
-      env: managedEnvironment({ IPHONEOS_DEPLOYMENT_TARGET: "12.4" }),
+      env: rustEnvironment({ IPHONEOS_DEPLOYMENT_TARGET: "12.4" }),
     });
   }
   const staging = path.join(repositoryRoot, ".cache", "rust-native", "ios");

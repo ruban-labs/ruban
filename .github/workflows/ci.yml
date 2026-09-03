@@ -51,6 +51,19 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: Install Rust toolchain
+        if: needs.changes.outputs.verify == 'true'
+        run: rustup toolchain install 1.96.0 --profile minimal --no-self-update
+      - name: Restore Rust cache
+        if: needs.changes.outputs.verify == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            .cache/rust-target
+          key: rust-${{ runner.os }}-${{ hashFiles('packages/react-native-wallet-core/rust/Cargo.lock') }}
+          restore-keys: rust-${{ runner.os }}-
       - if: needs.changes.outputs.verify == 'true' || (needs.changes.outputs.site == 'true' && github.event_name != 'push')
         run: pnpm install --frozen-lockfile
       - if: needs.changes.outputs.verify == 'true'
@@ -154,6 +167,17 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: Install Rust toolchain
+        run: rustup toolchain install 1.96.0 --profile minimal --no-self-update
+      - name: Restore Rust cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            .cache/rust-target
+          key: rust-${{ runner.os }}-${{ hashFiles('packages/react-native-wallet-core/rust/Cargo.lock') }}
+          restore-keys: rust-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r build
       - name: Switch to era Node ${{ matrix.era-node }}

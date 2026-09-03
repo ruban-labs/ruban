@@ -2,7 +2,13 @@
   "name": "@ruban-labs/react-native-wallet-core",
   "version": "0.1.0",
   "description": "Native EVM vault, derivation, and signing for bare React Native.",
-  "keywords": ["react-native", "evm", "wallet", "rust", "native-module"],
+  "keywords": [
+    "react-native",
+    "evm",
+    "wallet",
+    "rust",
+    "native-module"
+  ],
   "license": "MIT",
   "homepage": "https://github.com/ruban-labs/ruban/tree/main/packages/react-native-wallet-core",
   "repository": {
@@ -35,15 +41,18 @@
     "!**/__tests__",
     "!rust/target"
   ],
-  "publishConfig": {"access": "public"},
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": false,
   "scripts": {
-    "build": "bob build && pnpm build:rust:host",
+    "build": "bob build",
     "build:native": "node scripts/build-native.mjs --platform all",
     "build:native:android": "node scripts/build-native.mjs --platform android",
     "build:native:ios": "node scripts/build-native.mjs --platform ios",
     "build:rust:host": "node scripts/run-cargo.mjs build --release",
-    "test": "jest --passWithNoTests && pnpm test:rust",
+    "test": "jest --passWithNoTests && pnpm test:tooling && pnpm test:rust",
+    "test:tooling": "node --test scripts/rust-environment.test.mjs",
     "test:rust": "node scripts/run-cargo.mjs test",
     "typecheck": "tsc --noEmit"
   },
@@ -70,6 +79,10 @@
   "react-native-builder-bob": {
     "source": "src",
     "output": "lib",
-    "targets": ["commonjs", "module", "typescript"]
+    "targets": [
+      "commonjs",
+      "module",
+      "typescript"
+    ]
   }
 }
