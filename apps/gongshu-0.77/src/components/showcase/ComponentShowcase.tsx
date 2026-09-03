@@ -43,7 +43,11 @@ function ComponentShowcaseContent({
       testID={`screen-component-${screenId}`}
       scrollProps={{keyboardShouldPersistTaps: 'handled'}}>
       <View style={styles.topBar}>
-        <Pressable accessibilityRole="button" onPress={onBack} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Back to components"
+          onPress={onBack}
+          hitSlop={8}>
           <Text style={[styles.backLabel, {color: colors.ink}]}>← COMPONENTS</Text>
         </Pressable>
         <View style={[styles.themeControl, {borderColor: colors.borderStrong}]}>

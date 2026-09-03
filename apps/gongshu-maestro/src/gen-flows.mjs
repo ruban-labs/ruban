@@ -15,18 +15,21 @@ const APPS = [
   {
     era: '0.66',
     scheme: 'ruban-rn066-debug',
+    homeTitle: 'Components',
     android: 'com.rubanlabs.mobile.gongshu.rn066.debug',
     ios: 'com.rubanlabs.mobile.gongshu.rn066.debug',
   },
   {
     era: '0.77',
     scheme: 'ruban-rn077-debug',
+    homeTitle: 'Components',
     android: 'com.rubanlabs.mobile.gongshu.rn077.debug',
     ios: 'com.rubanlabs.mobile.gongshu.rn077.debug',
   },
   {
     era: 'latest',
     scheme: 'ruban-debug',
+    homeTitle: 'Library',
     android: 'com.rubanlabs.mobile.debug',
     ios: 'com.rubanlabs.mobile.debug',
   },
@@ -42,6 +45,7 @@ for (const platform of TEMPLATES) {
     const rendered = template
       .replaceAll('{{appId}}', app[platform])
       .replaceAll('{{era}}', app.era)
+      .replaceAll('{{homeTitle}}', app.homeTitle)
       .replaceAll('{{scheme}}', app.scheme);
     const outFile = path.join(flowsDir, `${platform}-${app.era}-demo-smoke.yaml`);
     fs.writeFileSync(outFile, rendered);
