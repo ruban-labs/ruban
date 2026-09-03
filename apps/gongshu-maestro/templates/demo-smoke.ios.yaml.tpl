@@ -32,12 +32,9 @@ appId: {{appId}}
       text: "{{homeTitle}}"
     timeout: 20000
 - openLink: "{{scheme}}://components/badge?theme=light&variant=live&size=md"
-- extendedWaitUntil:
-    visible:
-      text: "Open"
-    timeout: 180000
 - tapOn:
-    text: "Open"
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Back to components"
@@ -45,6 +42,9 @@ appId: {{appId}}
 - assertVisible:
     text: "LIVE"
 - openLink: "{{scheme}}://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Live separator vertical accent bold"
@@ -54,6 +54,9 @@ appId: {{appId}}
 - assertVisible:
     text: "Live separator vertical accent bold"
 - openLink: "{{scheme}}://components/switch?theme=light&state=on&size=md"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Live switch state ON"
@@ -66,7 +69,68 @@ appId: {{appId}}
     text: "Live switch"
 - assertVisible:
     text: "Live switch state OFF"
+- openLink: "{{scheme}}://components/dialog?theme=light&scenario=sequential"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      text: "FIRST DIALOG"
+    timeout: 60000
+- tapOn:
+    text: "NEXT DIALOG"
+- extendedWaitUntil:
+    visible:
+      text: "SECOND DIALOG"
+    timeout: 60000
+- assertNotVisible:
+    text: "FIRST DIALOG"
+- tapOn:
+    text: "DONE"
+- openLink: "{{scheme}}://components/dialog?theme=dark&scenario=nested"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      text: "PARENT DIALOG"
+    timeout: 60000
+- tapOn:
+    text: "OPEN CONFIRMATION"
+- extendedWaitUntil:
+    visible:
+      text: "CONFIRM ACTION"
+    timeout: 60000
+- tapOn:
+    text: "RETURN TO PARENT"
+- extendedWaitUntil:
+    visible:
+      text: "PARENT DIALOG"
+    timeout: 60000
+- tapOn:
+    text: "CLOSE"
+- openLink: "{{scheme}}://components/dialog?theme=light&scenario=external"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      text: "RELEASE GATE"
+    timeout: 60000
+- assertNotVisible:
+    text: "GATED DIALOG"
+- tapOn:
+    text: "RELEASE GATE"
+- extendedWaitUntil:
+    visible:
+      text: "GATED DIALOG"
+    timeout: 60000
+- tapOn:
+    text: "DONE"
 - openLink: "{{scheme}}://home"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "{{homeTitle}}"

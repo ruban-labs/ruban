@@ -54,25 +54,37 @@ function newestTool(root, relativeCandidates) {
   fail(`required Android tool not found below ${root}`);
 }
 
-function collectNativeLibraries(root) {
-  const libraries = [];
-  const pending = [root];
-  while (pending.length > 0) {
-    const current = pending.pop();
-    for (const entry of fs.readdirSync(current, {withFileTypes: true})) {
-      const entryPath = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        pending.push(entryPath);
-        continue;
-      }
-      if (!entry.isFile() || !entry.name.endsWith('.so')) continue;
-      const relativePath = path.relative(root, entryPath);
-      const segments = relativePath.split(path.sep);
-      const libIndex = segments.lastIndexOf('lib');
-      const abi = libIndex === -1 ? null : segments[libIndex + 1];
-      if (supportedAbis.has(abi)) libraries.push({abi, entryPath, relativePath});
-    }
+function extractArchiveEntry(artifact, archivePath, outputPath) {
+  const result = spawnSync('unzip', ['-p', artifact, archivePath], {
+    encoding: null,
+    maxBuffer: 256 * 1024 * 1024,
+  });
+  if (result.error) fail(`unzip: ${result.error.message}`);
+  if (result.status !== 0) {
+    process.stderr.write(result.stderr?.toString('utf8') || '');
+    fail(`unable to extract ${archivePath}`);
   }
+  fs.writeFileSync(outputPath, result.stdout);
+}
+
+function collectNativeLibraries(artifact, extractionRoot) {
+  const libraries = [];
+  const archivePaths = run('unzip', ['-Z1', artifact])
+    .split('\n')
+    .filter(Boolean);
+
+  for (const [index, archivePath] of archivePaths.entries()) {
+    if (!archivePath.endsWith('.so')) continue;
+    const segments = archivePath.split('/');
+    const libIndex = segments.lastIndexOf('lib');
+    const abi = libIndex === -1 ? null : segments[libIndex + 1];
+    if (!supportedAbis.has(abi)) continue;
+
+    const entryPath = path.join(extractionRoot, `${index}-${path.basename(archivePath)}`);
+    extractArchiveEntry(artifact, archivePath, entryPath);
+    libraries.push({abi, entryPath, relativePath: archivePath});
+  }
+
   return libraries;
 }
 
@@ -108,8 +120,7 @@ if (extension === '.apk') {
 
 const extractionRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ruban-page-size-'));
 try {
-  run('unzip', ['-qq', artifact, '-d', extractionRoot]);
-  const libraries = collectNativeLibraries(extractionRoot);
+  const libraries = collectNativeLibraries(artifact, extractionRoot);
   if (libraries.length === 0) fail('artifact contains no arm64-v8a or x86_64 libraries');
 
   const failures = [];

@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {Animated, Pressable, StyleSheet, Text, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {
   RubanThemeProvider,
   spacing,
@@ -54,7 +54,7 @@ export function BottomSheetModal({
       useNativeDriver: true,
     });
 
-    animation.start(({ finished }) => {
+    animation.start(({finished}) => {
       if (finished && !visible) {
         setMounted(false);
       }
@@ -70,8 +70,7 @@ export function BottomSheetModal({
           title={title}
           onDismiss={onDismiss}
           progress={progress}
-          testID={testID}
-        >
+          testID={testID}>
           {children}
         </BottomSheetLayer>
       </RubanThemeProvider>
@@ -111,7 +110,7 @@ function BottomSheetLayer({
 
   return (
     <View style={styles.overlay}>
-      <Animated.View style={[styles.backdrop, { opacity: progress }]}>
+      <Animated.View style={[styles.backdrop, {opacity: progress}]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Close ${title}`}
@@ -128,17 +127,17 @@ function BottomSheetLayer({
           {
             backgroundColor: colors.navigationSurface,
             borderColor: colors.borderStrong,
-            transform: [{ translateY }],
+            transform: [{translateY}],
           },
-        ]}
-      >
-        <View
-          style={[styles.handle, { backgroundColor: colors.borderStrong }]}
-        />
-        <View style={[styles.header, { borderBottomColor: colors.border }]}>
-          <Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
-          <Pressable accessibilityRole="button" onPress={onDismiss} hitSlop={8}>
-            <Text style={[styles.close, { color: colors.faint }]}>CLOSE</Text>
+        ]}>
+        <View style={[styles.handle, {backgroundColor: colors.borderStrong}]} />
+        <View style={[styles.header, {borderBottomColor: colors.border}]}>
+          <Text style={[styles.title, {color: colors.ink}]}>{title}</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={onDismiss}
+            hitSlop={8}>
+            <Text style={[styles.close, {color: colors.faint}]}>CLOSE</Text>
           </Pressable>
         </View>
         <SafeAreaView edges={['bottom']} style={styles.safeArea}>
@@ -179,8 +178,7 @@ export function SelectionBottomSheet<Value extends string>({
       visible={visible}
       title={title}
       onDismiss={onDismiss}
-      testID={testID}
-    >
+      testID={testID}>
       <View style={styles.options}>
         {options.map(option => {
           const selected = option.value === value;
@@ -190,34 +188,32 @@ export function SelectionBottomSheet<Value extends string>({
               key={option.value}
               testID={`sheet-option-${option.value}`}
               accessibilityRole="radio"
-              accessibilityState={{ selected }}
+              accessibilityState={{selected}}
               onPress={() => {
                 onChange(option.value);
                 onDismiss();
               }}
-              style={({ pressed }) => [
+              style={({pressed}) => [
                 styles.option,
-                { borderBottomColor: colors.border },
+                {borderBottomColor: colors.border},
                 selected
-                  ? { backgroundColor: colors.navigationActive }
+                  ? {backgroundColor: colors.navigationActive}
                   : undefined,
                 pressed ? styles.pressed : undefined,
-              ]}
-            >
+              ]}>
               <View>
-                <Text style={[styles.optionLabel, { color: colors.ink }]}>
+                <Text style={[styles.optionLabel, {color: colors.ink}]}>
                   {option.label}
                 </Text>
-                <Text style={[styles.optionMeta, { color: colors.faint }]}>
+                <Text style={[styles.optionMeta, {color: colors.faint}]}>
                   {option.meta}
                 </Text>
               </View>
               <Text
                 style={[
                   styles.optionState,
-                  { color: selected ? colors.accent : colors.faint },
-                ]}
-              >
+                  {color: selected ? colors.accent : colors.faint},
+                ]}>
                 {selected ? 'SELECTED' : '—'}
               </Text>
             </Pressable>
@@ -229,7 +225,7 @@ export function SelectionBottomSheet<Value extends string>({
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'flex-end' },
+  overlay: {flex: 1, justifyContent: 'flex-end'},
   backdrop: {
     position: 'absolute',
     top: 0,
@@ -238,8 +234,8 @@ const styles = StyleSheet.create({
     left: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.56)',
   },
-  sheet: { maxHeight: '82%', borderTopWidth: 1 },
-  handle: { width: 42, height: 3, marginTop: 10, alignSelf: 'center' },
+  sheet: {maxHeight: '82%', borderTopWidth: 1},
+  handle: {width: 42, height: 3, marginTop: 10, alignSelf: 'center'},
   header: {
     minHeight: 66,
     paddingHorizontal: spacing.lg,
@@ -260,8 +256,8 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1.1,
   },
-  safeArea: { flexShrink: 1 },
-  options: { paddingBottom: spacing.sm },
+  safeArea: {flexShrink: 1},
+  options: {paddingBottom: spacing.sm},
   option: {
     minHeight: 76,
     paddingHorizontal: spacing.lg,
@@ -270,7 +266,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  optionLabel: { fontSize: 16, lineHeight: 21, fontWeight: '800' },
+  optionLabel: {fontSize: 16, lineHeight: 21, fontWeight: '800'},
   optionMeta: {
     marginTop: 4,
     fontSize: 8,
@@ -284,5 +280,5 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0.8,
   },
-  pressed: { opacity: 0.62 },
+  pressed: {opacity: 0.62},
 });

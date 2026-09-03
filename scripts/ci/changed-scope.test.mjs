@@ -30,10 +30,12 @@ test("one standalone app selects only its iOS era", () => {
 });
 
 test("Android-only app changes do not start an iOS build", () => {
-  const result = classifyChangedPaths(["apps/gongshu-latest/android/app/build.gradle"]);
+  for (const app of ["gongshu-0.66", "gongshu-0.77", "gongshu-latest"]) {
+    const result = classifyChangedPaths([`apps/${app}/android/app/build.gradle`]);
 
-  assert.deepEqual(result.ios, []);
-  assert.equal(result.full, false);
+    assert.deepEqual(result.ios, [], app);
+    assert.equal(result.full, false, app);
+  }
 });
 
 test("one consumer fixture selects only its typecheck era", () => {

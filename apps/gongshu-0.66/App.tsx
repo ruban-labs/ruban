@@ -2,6 +2,7 @@ import * as React from 'react';
 import {StyleSheet, useColorScheme, View} from 'react-native';
 import {enableScreens} from 'react-native-screens';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {OverlayProvider} from './src/components/ui/OverlayHost';
 import {RubanThemeProvider, useRubanColors} from './src/design/tokens';
 import AppNavigator from './src/navigation/AppNavigator';
 import {useReleaseRuntimeHealth} from './src/releaseRuntime';
@@ -38,7 +39,9 @@ function ThemedApp(): React.ReactElement {
 
   return (
     <RubanThemeProvider mode={mode}>
-      <AppSurface onReady={hideBootSplash} />
+      <OverlayProvider>
+        <AppSurface onReady={hideBootSplash} />
+      </OverlayProvider>
     </RubanThemeProvider>
   );
 }

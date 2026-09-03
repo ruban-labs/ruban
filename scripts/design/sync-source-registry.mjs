@@ -93,7 +93,7 @@ function validateManifest(value) {
     for (const file of item.files) {
       if (
         typeof file !== "string" ||
-        !/^[A-Za-z][A-Za-z0-9]*\.tsx$/.test(file)
+        !/^[A-Za-z][A-Za-z0-9]*\.tsx?$/.test(file)
       ) {
         throw new Error(`Registry item ${item.name} has invalid file ${file}`);
       }
@@ -130,13 +130,39 @@ function validateManifest(value) {
     outputs.push(file);
   }
 
+  if (!Array.isArray(value.testFiles)) {
+    throw new Error("Source registry manifest must contain testFiles");
+  }
+  for (const file of value.testFiles) {
+    if (
+      typeof file.source !== "string" ||
+      !/^tests\/[A-Za-z][A-Za-z0-9]*\.test\.js$/.test(file.source) ||
+      typeof file.target !== "string" ||
+      !/^__tests__\/[A-Za-z][A-Za-z0-9]*\.test\.js$/.test(file.target)
+    ) {
+      throw new Error("Source registry manifest contains an invalid test file");
+    }
+    if (outputs.some((output) => output.target === file.target)) {
+      throw new Error(
+        `Registry target is assigned more than once: ${file.target}`
+      );
+    }
+    outputs.push(file);
+  }
+
   return outputs;
 }
 
 function adaptSourceForApp(source, appName) {
-  if (appName !== "gongshu-0.66") {
-    return source;
+  if (appName === "gongshu-0.66") {
+    return source
+      .replace(/\n\s*navigationBarTranslucent(?=\n)/g, "")
+      .replaceAll("ruban-debug://", "ruban-rn066-debug://");
   }
 
-  return source.replace(/\n\s*navigationBarTranslucent(?=\n)/g, "");
+  if (appName === "gongshu-0.77") {
+    return source.replaceAll("ruban-debug://", "ruban-rn077-debug://");
+  }
+
+  return source;
 }

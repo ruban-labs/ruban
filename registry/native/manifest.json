@@ -3,6 +3,18 @@
   "targetDirectory": "src/components/ui",
   "items": [
     {
+      "name": "overlay",
+      "files": ["OverlayCoordinator.ts", "OverlayHost.tsx"]
+    },
+    {
+      "name": "dialog",
+      "files": ["Dialog.tsx"]
+    },
+    {
+      "name": "bottom-sheet",
+      "files": ["BottomSheetModal.tsx"]
+    },
+    {
       "name": "field",
       "files": ["Field.tsx"]
     },
@@ -29,12 +41,22 @@
   ],
   "verificationFiles": [
     {
+      "source": "examples/DialogShowcaseScreen.tsx",
+      "target": "src/screens/components/DialogShowcaseScreen.tsx"
+    },
+    {
       "source": "examples/FormKitShowcaseScreen.tsx",
       "target": "src/screens/components/FormKitShowcaseScreen.tsx"
     },
     {
       "source": "examples/FormWorkbenchScreen.tsx",
       "target": "src/screens/components/FormWorkbenchScreen.tsx"
+    }
+  ],
+  "testFiles": [
+    {
+      "source": "tests/OverlayCoordinator.test.js",
+      "target": "__tests__/OverlayCoordinator.test.js"
     }
   ]
 }

@@ -297,7 +297,7 @@ PODS:
     - React-perflogger (= 0.66.4)
   - RNBootSplash (4.7.5):
     - React-Core
-  - RNScreens (3.29.0):
+  - RNScreens (3.23.0):
     - React-Core
     - React-RCTImage
   - Yoga (1.14.0)
@@ -432,15 +432,15 @@ SPEC CHECKSUMS:
   RCTTypeSafety: c475a7059eb77935fa53d2c17db299893f057d5d
   React: f64af14e3f2c50f6f2c91a5fd250e4ff1b3c3459
   React-callinvoker: b74e4ae80287780dcdf0cab262bcb581eeef56e7
-  React-Core: 3eb7432bad96ff1d25aebc1defbae013fee2fd0e
+  React-Core: a56f8d616a46434aa3a3d712dbb32d69aba8fa5f
   React-CoreModules: ad9e1fd5650e16666c57a08328df86fd7e480cb9
-  React-cxxreact: 02633ff398cf7e91a2c1e12590d323c4a4b8668a
-  React-hermes: 7b4c6617b4d4c880d0f44e629651810bf3417440
-  React-jsi: 805c41a927d6499fb811772acb971467d9204633
-  React-jsiexecutor: 94ce921e1d8ce7023366873ec371f3441383b396
+  React-cxxreact: 85a52c8f263a91133007ac756ddcc6ae6405d9b3
+  React-hermes: 3db71f5c8d1d9eb1971ad9ea24914a7f230d20e3
+  React-jsi: 0409f5f36a7f6f15a850c81f5e3ae54de03eec5b
+  React-jsiexecutor: 1a5cf123b4d15d2aeb8b5b7b28890d23ceb609db
   React-jsinspector: d0374f7509d407d2264168b6d0fad0b54e300b85
-  React-logger: 933f80c97c633ee8965d609876848148e3fef438
-  react-native-safe-area-context: ab8f4a3d8180913bd78ae75dd599c94cce3d5e9a
+  React-logger: c53054c6b1903783ee9b9dbc9569c5be7b11473e
+  react-native-safe-area-context: 6a3861f1430525c1de5afb90334c809b5aaab487
   React-perflogger: 93075d8931c32cd1fce8a98c15d2d5ccc4d891bd
   React-RCTActionSheet: 7d3041e6761b4f3044a37079ddcb156575fb6d89
   React-RCTAnimation: 743e88b55ac62511ae5c2e22803d4f503f2a3a13
@@ -452,9 +452,9 @@ SPEC CHECKSUMS:
   React-RCTText: f8a21c3499ab322326290fa9b701ae29aa093aa5
   React-RCTVibration: e3ffca672dd3772536cb844274094b0e2c31b187
   React-runtimeexecutor: dec32ee6f2e2a26e13e58152271535fadff5455a
-  ReactCommon: 57b69f6383eafcbd7da625bfa6003810332313c4
-  RNBootSplash: 85f6b879c080e958afdb4c62ee04497b05fd7552
-  RNScreens: fa9b582d85ae5d62c91c66003b5278458fed7aaa
+  ReactCommon: f39022bb54fc20ee99ab1ef3f5001c929df8448a
+  RNBootSplash: 21095c4567847829470786b03b6892c5efed5299
+  RNScreens: f1a2bc1890623ba12ff757d72e54d04af1cb7842
   Yoga: e7dc4e71caba6472ff48ad7d234389b91dadc280
 
 PODFILE CHECKSUM: 9491cb047a367cbd2b709f0a9b1a30fbc57f7e3a

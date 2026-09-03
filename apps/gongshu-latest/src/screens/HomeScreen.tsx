@@ -21,6 +21,7 @@ type ComponentName =
   | 'Checkbox'
   | 'Radio Group'
   | 'Select'
+  | 'Dialog'
   | 'Progress'
   | 'Collapsible';
 type ComponentTarget =
@@ -35,6 +36,7 @@ type ComponentTarget =
   | 'checkbox'
   | 'radio-group'
   | 'select'
+  | 'dialog'
   | 'progress'
   | 'collapsible';
 type ComponentItem = {
@@ -59,8 +61,9 @@ const componentInventory: readonly ComponentItem[] = [
   {index: '09', name: 'Checkbox', category: 'CONTROL', distribution: 'source', state: 'ready', target: 'checkbox'},
   {index: '10', name: 'Radio Group', category: 'CONTROL', distribution: 'source', state: 'ready', target: 'radio-group'},
   {index: '11', name: 'Select', category: 'CONTROL', distribution: 'source', state: 'ready', target: 'select'},
-  {index: '12', name: 'Progress', category: 'FEEDBACK', distribution: 'package', state: 'ready', target: 'progress'},
-  {index: '13', name: 'Collapsible', category: 'STRUCTURE', distribution: 'package', state: 'ready', target: 'collapsible'},
+  {index: '12', name: 'Dialog', category: 'OVERLAY', distribution: 'source', state: 'ready', target: 'dialog'},
+  {index: '13', name: 'Progress', category: 'FEEDBACK', distribution: 'package', state: 'ready', target: 'progress'},
+  {index: '14', name: 'Collapsible', category: 'STRUCTURE', distribution: 'package', state: 'ready', target: 'collapsible'},
 ];
 
 const groups: ReadonlyArray<{
@@ -148,6 +151,14 @@ function ComponentPreview({name, colors}: {name: ComponentName; colors: RubanCol
       <View style={[styles.previewSelect, {borderColor: colors.borderStrong}]}>
         <View style={[styles.previewSelectLine, {backgroundColor: colors.ink}]} />
         <Text style={[styles.previewSelectArrow, {color: colors.accent}]}>↓</Text>
+      </View>
+    );
+  }
+
+  if (name === 'Dialog') {
+    return (
+      <View style={[styles.previewDialog, {backgroundColor: colors.contrast}]}>
+        <View style={[styles.previewDialogCard, {backgroundColor: colors.surface, borderColor: colors.borderStrong}]} />
       </View>
     );
   }
@@ -291,7 +302,7 @@ export default function HomeScreen({navigation}: Props): React.ReactElement {
       <View style={[styles.buildStrip, {borderColor: colors.border}]}>
         <View style={styles.buildCell}>
           <Text style={[styles.buildLabel, {color: colors.faint}]}>CORE</Text>
-          <Text style={[styles.buildValue, {color: colors.ink}]}>11</Text>
+          <Text style={[styles.buildValue, {color: colors.ink}]}>12</Text>
         </View>
         <View style={[styles.buildCell, styles.buildCellBorder, {borderColor: colors.border}]}>
           <Text style={[styles.buildLabel, {color: colors.faint}]}>PACKAGES</Text>
@@ -397,6 +408,8 @@ const styles = StyleSheet.create({
   previewSelect: {width: 76, height: 30, paddingHorizontal: 8, borderWidth: 1, flexDirection: 'row', alignItems: 'center'},
   previewSelectLine: {flex: 1, height: 2},
   previewSelectArrow: {marginLeft: 7, fontSize: 13, lineHeight: 16, fontWeight: '900'},
+  previewDialog: {width: 76, height: 42, alignItems: 'center', justifyContent: 'center'},
+  previewDialogCard: {width: 48, height: 24, borderWidth: 1},
   previewDisclosure: {width: 76, height: 42, padding: 6, borderWidth: 1},
   previewDisclosureHeader: {height: 7},
   previewDisclosureLine: {width: 52, height: 2, marginTop: 7},

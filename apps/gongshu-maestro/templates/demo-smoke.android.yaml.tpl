@@ -60,6 +60,55 @@ appId: {{appId}}
     text: "Live switch"
 - assertVisible:
     text: "Live switch state OFF"
+- openLink: "{{scheme}}://components/dialog?theme=light&scenario=sequential"
+- extendedWaitUntil:
+    visible:
+      text: "FIRST DIALOG"
+    timeout: 20000
+- tapOn:
+    text: "NEXT DIALOG"
+- extendedWaitUntil:
+    visible:
+      text: "SECOND DIALOG"
+    timeout: 20000
+- assertNotVisible:
+    text: "FIRST DIALOG"
+- tapOn:
+    text: "DONE"
+- openLink: "{{scheme}}://components/dialog?theme=dark&scenario=nested"
+- extendedWaitUntil:
+    visible:
+      text: "PARENT DIALOG"
+    timeout: 20000
+- tapOn:
+    text: "OPEN CONFIRMATION"
+- extendedWaitUntil:
+    visible:
+      text: "CONFIRM ACTION"
+    timeout: 20000
+- tapOn:
+    text: "RETURN TO PARENT"
+- extendedWaitUntil:
+    visible:
+      text: "PARENT DIALOG"
+    timeout: 20000
+- tapOn:
+    text: "CLOSE"
+- openLink: "{{scheme}}://components/dialog?theme=light&scenario=external"
+- extendedWaitUntil:
+    visible:
+      text: "RELEASE GATE"
+    timeout: 20000
+- assertNotVisible:
+    text: "GATED DIALOG"
+- tapOn:
+    text: "RELEASE GATE"
+- extendedWaitUntil:
+    visible:
+      text: "GATED DIALOG"
+    timeout: 20000
+- tapOn:
+    text: "DONE"
 - openLink: "{{scheme}}://home"
 - extendedWaitUntil:
     visible:

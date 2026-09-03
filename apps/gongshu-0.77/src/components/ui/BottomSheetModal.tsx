@@ -1,13 +1,20 @@
 import * as React from 'react';
-import {Animated, Modal, Pressable, StyleSheet, Text, View} from 'react-native';
+import {Animated, Pressable, StyleSheet, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {spacing, useRubanColors} from '../../design/tokens';
+import {RubanThemeProvider, spacing, useRubanColors} from '../../design/tokens';
+import {
+  useOverlayLayer,
+  useStableOverlayId,
+  type OverlayStrategy,
+} from './OverlayHost';
 
 type BottomSheetModalProps = {
   visible: boolean;
   title: string;
   onDismiss: () => void;
   children: React.ReactNode;
+  overlayId?: string;
+  strategy?: OverlayStrategy;
   testID?: string;
 };
 
@@ -16,9 +23,13 @@ export function BottomSheetModal({
   title,
   onDismiss,
   children,
+  overlayId,
+  strategy = 'queue',
   testID,
-}: BottomSheetModalProps): React.ReactElement | null {
-  const colors = useRubanColors();
+}: BottomSheetModalProps): null {
+  const generatedId = useStableOverlayId('bottom-sheet');
+  const resolvedId = overlayId || generatedId;
+  const themeMode = useRubanColors().mode;
   const [mounted, setMounted] = React.useState(visible);
   const progress = React.useRef(new Animated.Value(visible ? 1 : 0)).current;
 
@@ -48,63 +59,85 @@ export function BottomSheetModal({
     return () => animation.stop();
   }, [mounted, progress, visible]);
 
-  if (!mounted) {
-    return null;
-  }
+  const content = React.useMemo(
+    () => (
+      <RubanThemeProvider mode={themeMode}>
+        <BottomSheetLayer
+          title={title}
+          onDismiss={onDismiss}
+          progress={progress}
+          testID={testID}>
+          {children}
+        </BottomSheetLayer>
+      </RubanThemeProvider>
+    ),
+    [children, onDismiss, progress, testID, themeMode, title],
+  );
 
+  useOverlayLayer({
+    id: resolvedId,
+    visible: mounted,
+    strategy,
+    content,
+    onRequestClose: onDismiss,
+  });
+
+  return null;
+}
+
+function BottomSheetLayer({
+  title,
+  onDismiss,
+  progress,
+  children,
+  testID,
+}: {
+  title: string;
+  onDismiss: () => void;
+  progress: Animated.Value;
+  children: React.ReactNode;
+  testID?: string;
+}): React.ReactElement {
+  const colors = useRubanColors();
   const translateY = progress.interpolate({
     inputRange: [0, 1],
     outputRange: [520, 0],
   });
 
   return (
-    <Modal
-      visible
-      transparent
-      hardwareAccelerated
-      statusBarTranslucent
-      navigationBarTranslucent
-      animationType="none"
-      onRequestClose={onDismiss}>
-      <View style={styles.overlay}>
-        <Animated.View style={[styles.backdrop, {opacity: progress}]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Close ${title}`}
-            onPress={onDismiss}
-            style={StyleSheet.absoluteFill}
-          />
-        </Animated.View>
+    <View style={styles.overlay}>
+      <Animated.View style={[styles.backdrop, {opacity: progress}]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Close ${title}`}
+          onPress={onDismiss}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
 
-        <Animated.View
-          testID={testID}
-          accessibilityViewIsModal
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: colors.navigationSurface,
-              borderColor: colors.borderStrong,
-              transform: [{translateY}],
-            },
-          ]}>
-          <View
-            style={[styles.handle, {backgroundColor: colors.borderStrong}]}
-          />
-          <View style={[styles.header, {borderBottomColor: colors.border}]}>
-            <Text style={[styles.title, {color: colors.ink}]}>{title}</Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={onDismiss}
-              hitSlop={8}>
-              <Text style={[styles.close, {color: colors.faint}]}>CLOSE</Text>
-            </Pressable>
-          </View>
-          <SafeAreaView edges={['bottom']} style={styles.safeArea}>
-            {children}
-          </SafeAreaView>
-        </Animated.View>
-      </View>
-    </Modal>
+      <Animated.View
+        testID={testID}
+        accessibilityViewIsModal
+        style={[
+          styles.sheet,
+          {
+            backgroundColor: colors.navigationSurface,
+            borderColor: colors.borderStrong,
+            transform: [{translateY}],
+          },
+        ]}>
+        <View style={[styles.handle, {backgroundColor: colors.borderStrong}]} />
+        <View style={[styles.header, {borderBottomColor: colors.border}]}>
+          <Text style={[styles.title, {color: colors.ink}]}>{title}</Text>
+          <Pressable accessibilityRole="button" onPress={onDismiss} hitSlop={8}>
+            <Text style={[styles.close, {color: colors.faint}]}>CLOSE</Text>
+          </Pressable>
+        </View>
+        <SafeAreaView edges={['bottom']} style={styles.safeArea}>
+          {children}
+        </SafeAreaView>
+      </Animated.View>
+    </View>
   );
 }
 
@@ -210,7 +243,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.45,
   },
-  close: {fontSize: 8, lineHeight: 11, fontWeight: '900', letterSpacing: 1.1},
+  close: {
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: '900',
+    letterSpacing: 1.1,
+  },
   safeArea: {flexShrink: 1},
   options: {paddingBottom: spacing.sm},
   option: {
