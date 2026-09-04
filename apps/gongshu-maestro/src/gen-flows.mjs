@@ -136,6 +136,8 @@ for (const platform of TEMPLATES) {
       .replaceAll('{{afterButtonShowcase}}', afterButtonShowcase(app))
       .replaceAll('{{openPlayground}}', openPlayground(app, platform))
       .replaceAll('{{openSettings}}', openSettings(app, platform))
+      .replaceAll('{{buttonShowcaseReady}}', 'Button')
+      .replaceAll('{{badgeShowcaseReady}}', 'LIVE')
       .replaceAll('{{buttonSelector}}', platform === 'ios' ? '01.*Button.*' : 'Button');
     const outFile = path.join(flowsDir, `${platform}-${app.era}-demo-smoke.yaml`);
     fs.writeFileSync(outFile, rendered);

@@ -21,7 +21,7 @@ appId: com.rubanlabs.mobile.debug
     optional: true
 - extendedWaitUntil:
     visible:
-      text: ".*COMPONENTS.*"
+      text: "Button"
     timeout: 20000
 - assertNotVisible:
     text: "Playground"
@@ -34,7 +34,7 @@ appId: com.rubanlabs.mobile.debug
     optional: true
 - extendedWaitUntil:
     visible:
-      text: ".*COMPONENTS.*"
+      text: "LIVE"
     timeout: 120000
 - assertVisible:
     text: "LIVE"

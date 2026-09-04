@@ -19,7 +19,7 @@ appId: com.rubanlabs.mobile.gongshu.rn066.debug
     text: "01.*Button.*"
 - extendedWaitUntil:
     visible:
-      text: ".*COMPONENTS.*"
+      text: "Button"
     timeout: 20000
 - assertNotVisible:
     text: "Playground"
@@ -37,7 +37,7 @@ appId: com.rubanlabs.mobile.gongshu.rn066.debug
     optional: true
 - extendedWaitUntil:
     visible:
-      text: ".*COMPONENTS.*"
+      text: "LIVE"
     timeout: 120000
 - assertVisible:
     text: "LIVE"
