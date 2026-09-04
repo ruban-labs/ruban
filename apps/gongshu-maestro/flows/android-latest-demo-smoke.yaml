@@ -9,14 +9,13 @@ appId: com.rubanlabs.mobile.debug
 - setOrientation: portrait
 - extendedWaitUntil:
     visible:
-      text: "Library"
-    timeout: 60000
+      text: "Portfolio"
+    timeout: 120000
 - assertVisible:
-    text: "Button"
+    text: "Create a wallet"
 - assertVisible:
-    text: "Playground"
-- tapOn:
-    text: "Button"
+    text: "Ethereum"
+- openLink: "ruban-debug://components/button?theme=light&variant=primary&size=md&state=default"
 - extendedWaitUntil:
     visible:
       text: "Back to components"
@@ -25,12 +24,7 @@ appId: com.rubanlabs.mobile.debug
     text: "Playground"
 - assertNotVisible:
     text: "Settings"
-- tapOn:
-    text: "Back to components"
-- extendedWaitUntil:
-    visible:
-      text: "Library"
-    timeout: 20000
+
 - openLink: "ruban-debug://components/badge?theme=light&variant=live&size=md"
 - extendedWaitUntil:
     visible:
@@ -109,13 +103,7 @@ appId: com.rubanlabs.mobile.debug
     timeout: 20000
 - tapOn:
     text: "DONE"
-- openLink: "ruban-debug://home"
-- extendedWaitUntil:
-    visible:
-      text: "Library"
-    timeout: 20000
-- tapOn:
-    text: "Playground"
+- openLink: "ruban-debug://lab/design?theme=light"
 - extendedWaitUntil:
     visible:
       text: "PLAYGROUND"
@@ -124,8 +112,7 @@ appId: com.rubanlabs.mobile.debug
     text: "LIGHT"
 - assertVisible:
     text: "TYPE"
-- tapOn:
-    text: "Settings"
+- openLink: "ruban-debug://settings"
 - extendedWaitUntil:
     visible:
       text: "Settings"
@@ -134,14 +121,14 @@ appId: com.rubanlabs.mobile.debug
     text: "Appearance"
 - scrollUntilVisible:
     element:
-      text: "Runtime & compatibility.*"
+      text: "Build & matrix.*"
     direction: DOWN
     timeout: 20000
 - tapOn:
-    text: "Runtime & compatibility.*"
+    text: "Build & matrix.*"
 - extendedWaitUntil:
     visible:
-      text: "Runtime & Compatibility"
+      text: "Build & matrix"
     timeout: 20000
 - assertVisible:
     text: "HERMES"

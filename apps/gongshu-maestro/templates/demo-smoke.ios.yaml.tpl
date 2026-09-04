@@ -7,16 +7,8 @@ appId: {{appId}}
 - launchApp:
     clearState: true
 - setOrientation: portrait
-- extendedWaitUntil:
-    visible:
-      text: "{{homeTitle}}"
-    timeout: 120000
-- assertVisible:
-    text: "01.*Button.*"
-- assertVisible:
-    text: "Playground"
-- tapOn:
-    text: "01.*Button.*"
+{{initialAssertions}}
+{{openButtonShowcase}}
 - extendedWaitUntil:
     visible:
       text: "Back to components"
@@ -25,12 +17,7 @@ appId: {{appId}}
     text: "Playground"
 - assertNotVisible:
     text: "Settings"
-- tapOn:
-    text: "Back to components"
-- extendedWaitUntil:
-    visible:
-      text: "{{homeTitle}}"
-    timeout: 20000
+{{afterButtonShowcase}}
 - openLink: "{{scheme}}://components/badge?theme=light&variant=live&size=md"
 - tapOn:
     text: "^(Open|打开)$"
@@ -127,16 +114,7 @@ appId: {{appId}}
     timeout: 60000
 - tapOn:
     text: "DONE"
-- openLink: "{{scheme}}://home"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
-- extendedWaitUntil:
-    visible:
-      text: "{{homeTitle}}"
-    timeout: 20000
-- tapOn:
-    text: "Playground"
+{{openPlayground}}
 - extendedWaitUntil:
     visible:
       text: "PLAYGROUND"
@@ -145,8 +123,7 @@ appId: {{appId}}
     text: "LIGHT"
 - assertVisible:
     text: "TYPE"
-- tapOn:
-    text: "Settings"
+{{openSettings}}
 - extendedWaitUntil:
     visible:
       text: "Settings"

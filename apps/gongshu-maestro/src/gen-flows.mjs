@@ -33,9 +33,9 @@ const APPS = [
   {
     era: 'latest',
     scheme: 'ruban-debug',
-    homeTitle: 'Library',
-    settingsBuildEntry: 'Runtime & compatibility',
-    settingsBuildTitle: 'Runtime & Compatibility',
+    homeTitle: 'Portfolio',
+    settingsBuildEntry: 'Build & matrix',
+    settingsBuildTitle: 'Build & matrix',
     android: 'com.rubanlabs.mobile.debug',
     ios: 'com.rubanlabs.mobile.debug',
   },
@@ -44,6 +44,82 @@ const APPS = [
 const TEMPLATES = ['android', 'ios'];
 const flowsDir = path.join(harnessRoot, 'flows');
 fs.mkdirSync(flowsDir, { recursive: true });
+
+function openPrompt(platform) {
+  return platform === 'ios'
+    ? `- tapOn:
+    text: "^(Open|打开)$"
+    optional: true\n`
+    : '';
+}
+
+function initialAssertions(app, platform) {
+  if (app.era === 'latest') {
+    return `- extendedWaitUntil:
+    visible:
+      text: "Portfolio"
+    timeout: 120000
+- assertVisible:
+    text: "Create a wallet"
+- assertVisible:
+    text: "Ethereum"`;
+  }
+
+  return `- extendedWaitUntil:
+    visible:
+      text: "${app.homeTitle}"
+    timeout: ${platform === 'ios' ? '120000' : '60000'}
+- assertVisible:
+    text: "{{buttonSelector}}"
+- assertVisible:
+    text: "Playground"`;
+}
+
+function openButtonShowcase(app, platform) {
+  if (app.era === 'latest') {
+    return `- openLink: "${app.scheme}://components/button?theme=light&variant=primary&size=md&state=default"
+${openPrompt(platform)}`.trimEnd();
+  }
+
+  return `- tapOn:
+    text: "{{buttonSelector}}"`;
+}
+
+function afterButtonShowcase(app) {
+  if (app.era === 'latest') return '';
+
+  return `- tapOn:
+    text: "Back to components"
+- extendedWaitUntil:
+    visible:
+      text: "${app.homeTitle}"
+    timeout: 20000`;
+}
+
+function openPlayground(app, platform) {
+  if (app.era === 'latest') {
+    return `- openLink: "${app.scheme}://lab/design?theme=light"
+${openPrompt(platform)}`.trimEnd();
+  }
+
+  return `- openLink: "${app.scheme}://home"
+${openPrompt(platform)}- extendedWaitUntil:
+    visible:
+      text: "${app.homeTitle}"
+    timeout: 20000
+- tapOn:
+    text: "Playground"`;
+}
+
+function openSettings(app, platform) {
+  if (app.era === 'latest') {
+    return `- openLink: "${app.scheme}://settings"
+${openPrompt(platform)}`.trimEnd();
+  }
+
+  return `- tapOn:
+    text: "Settings"`;
+}
 
 for (const platform of TEMPLATES) {
   const template = fs.readFileSync(path.join(harnessRoot, 'templates', `demo-smoke.${platform}.yaml.tpl`), 'utf8');
@@ -54,7 +130,13 @@ for (const platform of TEMPLATES) {
       .replaceAll('{{homeTitle}}', app.homeTitle)
       .replaceAll('{{settingsBuildEntry}}', app.settingsBuildEntry)
       .replaceAll('{{settingsBuildTitle}}', app.settingsBuildTitle)
-      .replaceAll('{{scheme}}', app.scheme);
+      .replaceAll('{{scheme}}', app.scheme)
+      .replaceAll('{{initialAssertions}}', initialAssertions(app, platform))
+      .replaceAll('{{openButtonShowcase}}', openButtonShowcase(app, platform))
+      .replaceAll('{{afterButtonShowcase}}', afterButtonShowcase(app))
+      .replaceAll('{{openPlayground}}', openPlayground(app, platform))
+      .replaceAll('{{openSettings}}', openSettings(app, platform))
+      .replaceAll('{{buttonSelector}}', platform === 'ios' ? '01.*Button.*' : 'Button');
     const outFile = path.join(flowsDir, `${platform}-${app.era}-demo-smoke.yaml`);
     fs.writeFileSync(outFile, rendered);
     console.log(`gen-flows: wrote ${path.relative(harnessRoot, outFile)}`);
