@@ -29,11 +29,16 @@ test("one standalone app selects only its iOS era", () => {
   assert.deepEqual(result.bundle, []);
 });
 
-test("Android-only app changes do not start an iOS build", () => {
-  for (const app of ["gongshu-0.66", "gongshu-0.77", "gongshu-latest"]) {
+test("Android-only app changes select their Android build without an iOS build", () => {
+  for (const [app, era] of [
+    ["gongshu-0.66", "rn-0.66"],
+    ["gongshu-0.77", "rn-0.77"],
+    ["gongshu-latest", "rn-latest"],
+  ]) {
     const result = classifyChangedPaths([`apps/${app}/android/app/build.gradle`]);
 
     assert.deepEqual(result.ios, [], app);
+    assert.deepEqual(result.android, [era], app);
     assert.equal(result.full, false, app);
   }
 });
@@ -62,6 +67,7 @@ test("shared package changes run every compatibility layer", () => {
   assert.deepEqual(result.typecheck, ["rn-0.66", "rn-0.77", "rn-latest"]);
   assert.deepEqual(result.bundle, ["rn-0.66", "rn-0.77", "rn-latest"]);
   assert.deepEqual(result.ios, ["rn-0.66", "rn-0.77", "rn-latest"]);
+  assert.deepEqual(result.android, ["rn-0.66", "rn-0.77", "rn-latest"]);
 });
 
 test("release tooling runs core verification without native smoke", () => {
@@ -85,6 +91,8 @@ test("workflow outputs contain only selected matrix rows", () => {
   assert.deepEqual(JSON.parse(outputs.ios_matrix).include.map((entry) => entry.era), ["0.66"]);
   assert.equal(outputs.typecheck, "false");
   assert.deepEqual(JSON.parse(outputs.typecheck_matrix), { include: [] });
+  assert.equal(outputs.android, "false");
+  assert.deepEqual(JSON.parse(outputs.android_matrix), { include: [] });
 });
 
 test("manual runs force every matrix", () => {
@@ -94,4 +102,5 @@ test("manual runs force every matrix", () => {
   assert.equal(JSON.parse(outputs.typecheck_matrix).include.length, 3);
   assert.equal(JSON.parse(outputs.bundle_matrix).include.length, 3);
   assert.equal(JSON.parse(outputs.ios_matrix).include.length, 3);
+  assert.equal(JSON.parse(outputs.android_matrix).include.length, 3);
 });
