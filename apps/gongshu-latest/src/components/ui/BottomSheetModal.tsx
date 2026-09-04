@@ -83,6 +83,7 @@ export function BottomSheetModalRoot({
     <GorhomBottomSheetModal
       ref={modalRef}
       name={overlayId}
+      accessible={false}
       index={0}
       animateOnMount
       enableDynamicSizing
