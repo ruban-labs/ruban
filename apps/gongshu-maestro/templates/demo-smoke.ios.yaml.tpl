@@ -11,7 +11,7 @@ appId: {{appId}}
 {{openButtonShowcase}}
 - extendedWaitUntil:
     visible:
-      text: "Back to components"
+      text: ".*COMPONENTS.*"
     timeout: 20000
 - assertNotVisible:
     text: "Playground"
@@ -24,7 +24,7 @@ appId: {{appId}}
     optional: true
 - extendedWaitUntil:
     visible:
-      text: "Back to components"
+      text: ".*COMPONENTS.*"
     timeout: 120000
 - assertVisible:
     text: "LIVE"
