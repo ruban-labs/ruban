@@ -1,12 +1,13 @@
-import * as React from 'react';
-import {useColorScheme} from 'react-native';
-import {rubanSemanticColors, type RubanThemeMode} from './theme-colors';
+import * as React from "react";
+import { useColorScheme } from "react-native";
+import { rubanSemanticColors, type RubanThemeMode } from "./theme-colors";
 
 export type RubanColors = {
-  mode: 'light' | 'dark';
+  mode: "light" | "dark";
   canvas: string;
   surface: string;
   surfaceRaised: string;
+  choiceSurface: string;
   navigationSurface: string;
   navigationActive: string;
   ink: string;
@@ -36,37 +37,38 @@ function createRubanColors(mode: RubanThemeMode): RubanColors {
 
   return {
     mode,
-    canvas: theme['surface-page'],
-    surface: theme['surface-card'],
-    surfaceRaised: theme['surface-card-muted'],
-    navigationSurface: theme['surface-navigation'],
-    navigationActive: theme['surface-navigation-active'],
-    ink: theme['text-primary'],
-    muted: theme['text-secondary'],
-    faint: theme['text-tertiary'],
-    border: theme['border-default'],
-    borderStrong: theme['border-strong'],
-    accent: theme['action-primary'],
-    accentPressed: theme['action-primary-pressed'],
-    accentSoft: theme['surface-selected'],
-    alert: theme['action-alert'],
-    alertPressed: theme['action-alert-pressed'],
-    alertSoft: theme['surface-alert'],
-    alertForeground: theme['text-on-alert'],
-    success: theme['text-live'],
-    successSoft: theme['surface-live'],
-    contrast: theme['surface-contrast'],
-    contrastAccent: theme['contrast-accent'],
-    inverse: theme['text-inverse'],
-    inverseMuted: theme['text-inverse-muted'],
-    inverseBorder: theme['border-inverse'],
-    focusRing: theme['focus-ring'],
+    canvas: theme["surface-page"],
+    surface: theme["surface-card"],
+    surfaceRaised: theme["surface-card-muted"],
+    choiceSurface: theme["surface-choice"],
+    navigationSurface: theme["surface-navigation"],
+    navigationActive: theme["surface-navigation-active"],
+    ink: theme["text-primary"],
+    muted: theme["text-secondary"],
+    faint: theme["text-tertiary"],
+    border: theme["border-default"],
+    borderStrong: theme["border-strong"],
+    accent: theme["action-primary"],
+    accentPressed: theme["action-primary-pressed"],
+    accentSoft: theme["surface-selected"],
+    alert: theme["action-alert"],
+    alertPressed: theme["action-alert-pressed"],
+    alertSoft: theme["surface-alert"],
+    alertForeground: theme["text-on-alert"],
+    success: theme["text-live"],
+    successSoft: theme["surface-live"],
+    contrast: theme["surface-contrast"],
+    contrastAccent: theme["contrast-accent"],
+    inverse: theme["text-inverse"],
+    inverseMuted: theme["text-inverse-muted"],
+    inverseBorder: theme["border-inverse"],
+    focusRing: theme["focus-ring"],
   };
 }
 
-export const lightColors = createRubanColors('light');
-export const darkColors = createRubanColors('dark');
-export const rubanColors = {light: lightColors, dark: darkColors} as const;
+export const lightColors = createRubanColors("light");
+export const darkColors = createRubanColors("dark");
+export const rubanColors = { light: lightColors, dark: darkColors } as const;
 
 const RubanThemeContext = React.createContext<RubanColors | null>(null);
 
@@ -79,7 +81,11 @@ export function RubanThemeProvider({
   mode,
   children,
 }: RubanThemeProviderProps): React.ReactElement {
-  return React.createElement(RubanThemeContext.Provider, {value: rubanColors[mode]}, children);
+  return React.createElement(
+    RubanThemeContext.Provider,
+    { value: rubanColors[mode] },
+    children
+  );
 }
 
 export const spacing = {
@@ -101,5 +107,5 @@ export const radius = {
 export function useRubanColors(): RubanColors {
   const overriddenColors = React.useContext(RubanThemeContext);
   const systemMode = useColorScheme();
-  return overriddenColors || (systemMode === 'dark' ? darkColors : lightColors);
+  return overriddenColors || (systemMode === "dark" ? darkColors : lightColors);
 }

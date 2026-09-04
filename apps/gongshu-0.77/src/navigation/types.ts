@@ -22,7 +22,7 @@ export type ComponentDetailRouteParams = {
 };
 
 export type SettingsRouteParams = {
-  sheet?: 'appearance' | 'build';
+  sheet?: 'appearance' | 'build' | 'playground';
 };
 
 export type TabParamList = {

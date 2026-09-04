@@ -19,7 +19,7 @@ import {
   HomeIcon,
   SettingsIcon,
 } from '@ruban-labs/react-native-ui-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRubanColors } from '../design/tokens';
 import ComponentDetailScreen from '../screens/components/ComponentDetailScreen';
@@ -94,10 +94,7 @@ const RubanTabButton = React.memo(function RubanTabButtonView({
         pressed ? styles.tabButtonPressed : undefined,
       ]}
     >
-      <TabIcon size={20} color={color} />
-      <Text style={[styles.tabLabel, { color }]}>
-        {label}
-      </Text>
+      <TabIcon size={23} color={color} />
     </Pressable>
   );
 });
@@ -293,11 +290,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabButtonPressed: { opacity: 0.62 },
-  tabLabel: {
-    marginTop: 3,
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: '700',
-    letterSpacing: 0.25,
-  },
 });

@@ -18,6 +18,7 @@
   --ruban-color-acid-15: rgba(217, 255, 69, 0.15);
   --ruban-color-neutral-canvas: rgba(243, 244, 246, 1);
   --ruban-color-neutral-surface: rgba(255, 255, 255, 1);
+  --ruban-color-neutral-soft: rgba(16, 17, 20, 0.08);
   --ruban-color-neutral-line: rgba(216, 219, 226, 1);
   --ruban-color-neutral-muted: rgba(16, 17, 20, 0.58);
   --ruban-color-editorial: rgba(20, 33, 61, 1);
@@ -29,6 +30,7 @@
   --ruban-surface-page: var(--ruban-color-neutral-canvas);
   --ruban-surface-card: var(--ruban-color-neutral-surface);
   --ruban-surface-card-muted: var(--ruban-color-ink-15);
+  --ruban-surface-choice: var(--ruban-color-neutral-soft);
   --ruban-surface-navigation: var(--ruban-color-neutral-surface);
   --ruban-surface-navigation-active: var(--ruban-color-cobalt-15);
   --ruban-surface-selected: var(--ruban-color-cobalt-15);
@@ -73,6 +75,7 @@
   --ruban-color-acid-15: rgba(224, 255, 102, 0.15);
   --ruban-color-neutral-canvas: rgba(9, 11, 16, 1);
   --ruban-color-neutral-surface: rgba(19, 22, 29, 1);
+  --ruban-color-neutral-soft: rgba(244, 246, 250, 0.15);
   --ruban-color-neutral-line: rgba(244, 246, 250, 0.14);
   --ruban-color-neutral-muted: rgba(244, 246, 250, 0.56);
   --ruban-color-editorial: rgba(220, 227, 255, 1);
@@ -84,6 +87,7 @@
   --ruban-surface-page: var(--ruban-color-neutral-canvas);
   --ruban-surface-card: var(--ruban-color-ink-15);
   --ruban-surface-card-muted: var(--ruban-color-ink-30);
+  --ruban-surface-choice: var(--ruban-color-neutral-soft);
   --ruban-surface-navigation: var(--ruban-color-neutral-surface);
   --ruban-surface-navigation-active: var(--ruban-color-cobalt-15);
   --ruban-surface-selected: var(--ruban-color-cobalt-30);
@@ -129,6 +133,7 @@
     --ruban-color-acid-15: rgba(224, 255, 102, 0.15);
     --ruban-color-neutral-canvas: rgba(9, 11, 16, 1);
     --ruban-color-neutral-surface: rgba(19, 22, 29, 1);
+    --ruban-color-neutral-soft: rgba(244, 246, 250, 0.15);
     --ruban-color-neutral-line: rgba(244, 246, 250, 0.14);
     --ruban-color-neutral-muted: rgba(244, 246, 250, 0.56);
     --ruban-color-editorial: rgba(220, 227, 255, 1);
@@ -140,6 +145,7 @@
     --ruban-surface-page: var(--ruban-color-neutral-canvas);
     --ruban-surface-card: var(--ruban-color-ink-15);
     --ruban-surface-card-muted: var(--ruban-color-ink-30);
+    --ruban-surface-choice: var(--ruban-color-neutral-soft);
     --ruban-surface-navigation: var(--ruban-color-neutral-surface);
     --ruban-surface-navigation-active: var(--ruban-color-cobalt-15);
     --ruban-surface-selected: var(--ruban-color-cobalt-30);

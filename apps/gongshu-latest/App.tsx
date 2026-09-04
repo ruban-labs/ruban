@@ -1,5 +1,7 @@
 import * as React from 'react';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { StyleSheet, useColorScheme, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { enableScreens } from 'react-native-screens';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OverlayProvider } from '@ruban-labs/react-native-ui-overlay';
@@ -54,13 +56,17 @@ function App(): React.ReactElement {
   useReleaseRuntimeHealth();
 
   return (
-    <SafeAreaProvider>
-      <AppPreferencesProvider>
-        <WalletProvider>
-          <ThemedApp />
-        </WalletProvider>
-      </AppPreferencesProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <BottomSheetModalProvider>
+          <AppPreferencesProvider>
+            <WalletProvider>
+              <ThemedApp />
+            </WalletProvider>
+          </AppPreferencesProvider>
+        </BottomSheetModalProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

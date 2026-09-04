@@ -1,4 +1,3 @@
-import { BottomSheetModal } from '@ruban-labs/react-native-ui-sheet';
 import { CheckIcon } from '@ruban-labs/react-native-ui-icons';
 import type { WalletAccount } from '@ruban-labs/react-native-wallet-core';
 import * as React from 'react';
@@ -10,6 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { BottomSheetModal } from '../components/ui/BottomSheetModal';
 import { spacing, useRubanColors } from '../design/tokens';
 import type { PortfolioChainCatalogEntry } from '../portfolio/chainCatalog';
 

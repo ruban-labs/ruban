@@ -6,12 +6,20 @@ import {
   type LinkingOptions,
   type Theme,
 } from '@react-navigation/native';
-import {createBottomTabNavigator, type BottomTabBarProps} from '@react-navigation/bottom-tabs';
+import {
+  createBottomTabNavigator,
+  type BottomTabBarProps,
+} from '@react-navigation/bottom-tabs';
 import {
   createNativeStackNavigator,
   type NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {
+  HomeIcon,
+  SettingsIcon,
+  TabsIcon,
+} from '@ruban-labs/react-native-ui-icons';
+import {Pressable, StyleSheet, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useRubanColors} from '../design/tokens';
 import ComponentDetailScreen from '../screens/components/ComponentDetailScreen';
@@ -29,7 +37,11 @@ type AppNavigatorProps = {
 };
 
 const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: ['ruban-rn077://', 'ruban-rn077-regression://', 'ruban-rn077-debug://'],
+  prefixes: [
+    'ruban-rn077://',
+    'ruban-rn077-regression://',
+    'ruban-rn077-debug://',
+  ],
   config: {
     initialRouteName: 'Main',
     screens: {
@@ -61,6 +73,13 @@ const RubanTabButton = React.memo(function RubanTabButtonView({
   onLongPress,
 }: RubanTabButtonProps): React.ReactElement {
   const colors = useRubanColors();
+  const color = focused ? colors.ink : colors.faint;
+  const TabIcon =
+    name === 'Home'
+      ? HomeIcon
+      : name === 'Playground'
+      ? TabsIcon
+      : SettingsIcon;
 
   return (
     <Pressable
@@ -76,55 +95,68 @@ const RubanTabButton = React.memo(function RubanTabButtonView({
         focused ? {backgroundColor: colors.navigationActive} : undefined,
         pressed ? styles.tabButtonPressed : undefined,
       ]}>
-      <Text style={[styles.tabLabel, {color: focused ? colors.ink : colors.faint}]}>{label}</Text>
+      <TabIcon size={23} color={color} />
     </Pressable>
   );
 });
 
-function RubanTabBar({state, navigation}: BottomTabBarProps): React.ReactElement {
+function RubanTabBar({
+  state,
+  navigation,
+}: BottomTabBarProps): React.ReactElement {
   const colors = useRubanColors();
   const insets = useSafeAreaInsets();
   const activeRouteName = state.routes[state.index]?.name;
-  const homeKey = state.routes.find(route => route.name === 'Home')?.key ?? state.routes[0].key;
+  const homeKey =
+    state.routes.find(route => route.name === 'Home')?.key ??
+    state.routes[0].key;
   const playgroundKey =
-    state.routes.find(route => route.name === 'Playground')?.key ?? state.routes[0].key;
-  const settingsKey = state.routes.find(route => route.name === 'Settings')?.key ?? state.routes[0].key;
+    state.routes.find(route => route.name === 'Playground')?.key ??
+    state.routes[0].key;
+  const settingsKey =
+    state.routes.find(route => route.name === 'Settings')?.key ??
+    state.routes[0].key;
   const openHome = React.useCallback(() => {
-    const event = navigation.emit({type: 'tabPress', target: homeKey, canPreventDefault: true});
+    const event = navigation.emit({
+      type: 'tabPress',
+      target: homeKey,
+      canPreventDefault: true,
+    });
     if (!event.defaultPrevented) {
       navigation.navigate('Home');
     }
   }, [homeKey, navigation]);
-  const openPlayground = React.useCallback(
-    () => {
-      const event = navigation.emit({
-        type: 'tabPress',
-        target: playgroundKey,
-        canPreventDefault: true,
-      });
-      if (!event.defaultPrevented) {
-        navigation.navigate('Playground', {tool: 'design'});
-      }
-    },
-    [navigation, playgroundKey]
-  );
+  const openPlayground = React.useCallback(() => {
+    const event = navigation.emit({
+      type: 'tabPress',
+      target: playgroundKey,
+      canPreventDefault: true,
+    });
+    if (!event.defaultPrevented) {
+      navigation.navigate('Playground', {tool: 'design'});
+    }
+  }, [navigation, playgroundKey]);
   const openSettings = React.useCallback(() => {
-    const event = navigation.emit({type: 'tabPress', target: settingsKey, canPreventDefault: true});
+    const event = navigation.emit({
+      type: 'tabPress',
+      target: settingsKey,
+      canPreventDefault: true,
+    });
     if (!event.defaultPrevented) {
       navigation.navigate('Settings');
     }
   }, [navigation, settingsKey]);
   const longPressHome = React.useCallback(
     () => navigation.emit({type: 'tabLongPress', target: homeKey}),
-    [homeKey, navigation]
+    [homeKey, navigation],
   );
   const longPressPlayground = React.useCallback(
     () => navigation.emit({type: 'tabLongPress', target: playgroundKey}),
-    [navigation, playgroundKey]
+    [navigation, playgroundKey],
   );
   const longPressSettings = React.useCallback(
     () => navigation.emit({type: 'tabLongPress', target: settingsKey}),
-    [navigation, settingsKey]
+    [navigation, settingsKey],
   );
 
   return (
@@ -182,7 +214,7 @@ function MainTabs(): React.ReactElement {
 }
 
 function ComponentDetailRoute(
-  props: NativeStackScreenProps<RootStackParamList, 'ComponentDetail'>
+  props: NativeStackScreenProps<RootStackParamList, 'ComponentDetail'>,
 ): React.ReactElement {
   return (
     <ScreenFrame bottomInset="screen-owned">
@@ -191,7 +223,9 @@ function ComponentDetailRoute(
   );
 }
 
-export default function AppNavigator({onReady}: AppNavigatorProps): React.ReactElement {
+export default function AppNavigator({
+  onReady,
+}: AppNavigatorProps): React.ReactElement {
   const colors = useRubanColors();
   const baseTheme = colors.mode === 'dark' ? DarkTheme : DefaultTheme;
   const theme = React.useMemo<Theme>(
@@ -207,7 +241,7 @@ export default function AppNavigator({onReady}: AppNavigatorProps): React.ReactE
         notification: colors.accent,
       },
     }),
-    [baseTheme, colors]
+    [baseTheme, colors],
   );
 
   return (
@@ -215,8 +249,15 @@ export default function AppNavigator({onReady}: AppNavigatorProps): React.ReactE
       <RootStack.Navigator
         initialRouteName="Main"
         screenOptions={{headerShown: false, animation: 'slide_from_right'}}>
-        <RootStack.Screen name="Main" component={MainTabs} options={{animation: 'none'}} />
-        <RootStack.Screen name="ComponentDetail" component={ComponentDetailRoute} />
+        <RootStack.Screen
+          name="Main"
+          component={MainTabs}
+          options={{animation: 'none'}}
+        />
+        <RootStack.Screen
+          name="ComponentDetail"
+          component={ComponentDetailRoute}
+        />
       </RootStack.Navigator>
     </NavigationContainer>
   );
@@ -229,7 +270,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     flexDirection: 'row',
   },
-  tabButton: {flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center'},
+  tabButton: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   tabButtonPressed: {opacity: 0.62},
-  tabLabel: {fontSize: 11, lineHeight: 14, fontWeight: '700', letterSpacing: 0.25},
 });

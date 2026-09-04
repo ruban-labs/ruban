@@ -30,6 +30,40 @@ shows. Accessibility copy remains user-facing copy and must stay meaningful.
 Before adding visible text, ask whether removing it would prevent the user from
 completing the task. If not, do not add it.
 
+Prefer a familiar semantic icon when it can communicate an action or state
+without ambiguity. Do not repeat the same meaning as adjacent text. Preserve an
+accessible label and use text whenever an icon alone would make the decision
+unclear.
+
+Simple, low-count options in a Bottom Sheet use separate compact inset cards.
+Match the page's horizontal content margins and leave visible space between
+choices. Prefer borderless semantic fills over outlining every card: use a
+muted raised surface for an unselected choice and the active navigation surface
+for the selected choice. Give each choice a familiar left icon and keep the
+selected check on the right. Use attached, dense rows only for genuinely long
+lists such as chain selectors, and reserve tall rows for meaningful supporting
+detail.
+
+Settings rows use a quiet semantic icon on the left when the row represents a
+recognizable object or category. Icons support scanning; they do not replace a
+label whose meaning would otherwise be ambiguous.
+
+Keep development tooling out of production Settings. Debug and regression
+builds place a Diagnostics group after About; production builds omit the group
+and its sheets entirely. Diagnostics owns both Build & Matrix and the compact
+Playground launcher. That launcher lists design labs and component showcase
+routes, then leaves the Sheet for the selected dedicated screen; it never
+embeds a second copy of a specimen.
+
+Primary tab content may use one short, centered page title to anchor the
+layout. Do not turn it into a breadcrumb, add a brand prefix, or pair it with a
+subtitle. Keep page-level actions in the top-right as prominent semantic icons
+with accessible labels and a usable touch target.
+
+The primary tab bar is icon-only. Keep route names as accessibility labels,
+and express selection through semantic foreground and background colors rather
+than repeating visible text below each icon.
+
 ## Semantic SVG icons
 
 Theme-aware icon assets use a `-cc.svg` suffix and express their primary

@@ -138,10 +138,14 @@ GitHub Releases、内部发行和 TestFlight 发放。
 
 1. **Home**：直接展示 Ruban 支持的组件目录、状态和入口，不铺品牌说明文案。
 2. **Playground**：集中承载设计样本、组件状态与确定性测试场景。
-3. **Settings**：使用 Item Group 卡片组织 Appearance、单一 Build & Matrix 入口与 About。
+3. **Settings**：使用 Item Group 卡片组织 Appearance 与 About，并在其后放置仅非生产包可见的 Diagnostics 分组。
+
+底部一级 Tab 只显示语义图标。路由名称保留为无障碍标签，选中状态通过图标色和语义底色
+表达，不在图标下重复显示文字。
 
 About 不是一级 Tab。品牌、来源、版本、许可证、赞助与解决方案入口都归入 Settings
-中的 About 分组。兼容矩阵归入 Build & Matrix Modal，避免把低频信息抬成一级导航或
+中的 About 分组。Debug 与 Regression 包在 About 之后显示 Diagnostics 分组；生产包
+完全隐藏该分组。兼容矩阵归入 Build & Matrix Modal，避免把低频信息抬成一级导航或
 在页面上平铺。
 
 ### 顶部安全区归属
@@ -186,26 +190,34 @@ Android 提供的 Window Insets 是唯一事实来源，导航模式变化后直
 
 ### Settings 选择面与 Bottom Sheet
 
-- Settings 中的多选偏好统一使用项目自有的 Bottom Sheet primitive，不把选择器交给
-  Expo、设计系统 runtime 或不透明的第三方基础层。
+- App 选择面统一通过项目自有适配层使用 `@gorhom/bottom-sheet`。适配层负责 Ruban
+  样式、默认关闭行为，以及每个 RN 时代的依赖版本。独立的
+  `@ruban-labs/react-native-ui-sheet` 继续保留给轻量场景，但当前 App 不以它作为运行时。
 - 列表行只展示名称、当前值和进入符号；Sheet 只展示标题、紧凑 meta、选中状态和关闭
   操作，不增加解释段落。
 - Appearance 提供 `system` / `light` / `dark`，控制整个 App 的语义主题。Playground
   theme 是 Playground 页面自己的局部状态，只由顶部 Switch 与显式路由参数控制，
   不进入 Settings 或全局偏好上下文。
-- Build 与 Support Matrix 不在 Settings 平铺。Settings 只保留一个 `Build & matrix`
-  入口，点击后用可滚动的信息型 Bottom Sheet 展示 CURRENT BUILD 和 SUPPORT MATRIX。
-- `ruban://settings?sheet=appearance` 与 `ruban://settings?sheet=build` 必须能在冷启动后
-  直接复现对应 Sheet；`ruban://lab/design?theme=dark` 负责复现 Playground 局部主题。
+- Build 与 Support Matrix 不在 Settings 平铺。Debug 与 Regression 包在 About 下方的
+  Diagnostics 分组中保留一个 `Build & matrix` 入口；生产包同时隐藏入口与对应 Sheet。
+  点击入口后，用可滚动的信息型 Bottom Sheet 展示 CURRENT BUILD 和 SUPPORT MATRIX。
+- Debug 与 Regression 包还在 Diagnostics 中提供一个 `Playground` 入口。点击后用紧凑的
+  Bottom Sheet 汇总设计台、Progress 实验页与所有组件展示页。这个 Sheet 只负责导航，
+  不重复承载组件样本；每个组件仍由独立 Root Stack 页面负责。生产包隐藏入口与 Sheet。
+- `ruban://settings?sheet=appearance`、`ruban-debug://settings?sheet=build` 与
+  `ruban-debug://settings?sheet=playground` 必须能在冷启动后直接复现当前包允许的 Sheet；
+  `ruban://lab/design?theme=dark` 负责复现 Playground 局部主题。
 - Sheet 支持遮罩点击、顶部 CLOSE 和 Android 系统返回关闭；底部只消费一次 safe-area
   inset。Appearance 当前是会话级状态，在引入持久化前不得向用户暗示“已保存”。
 - 同一选择面必须在三个 Gongshu 时代分别通过类型检查、原生编译和真机截图；旧时代不
   使用 RN 0.66 尚未支持的布局属性来伪造一致性。
+- Bottom Sheet 使用直角顶部、1 像素结构边框和矩形拖拽指示条，不直接暴露第三方库
+  默认的悬浮圆角卡片外观。
 
 ### 钱包选择面
 
-- latest App 的链选择器与地址选择器都使用项目自有 Bottom Sheet，保持一个活动选择面，
-  不叠加平台 Modal。
+- latest App 的链选择器与地址选择器都使用同一 App 适配层，保持一个活动选择面，不叠加
+  平台 Modal。
 - 链选择器只展示钱包 RPC 层已经真实支持的网络。名称、链 ID 与图标来自固定版本的
   `@ruban-labs/web-assets` 本地资产；PNG 通过 Metro 静态映射进入 App 包，禁止运行时
   URL fallback。
@@ -271,7 +283,17 @@ Ruban 应该像一张现代而精确的工作台：
 
 - 不在页面上铺说明文案。界面应先用层级、位置、标签、状态和控件自身说明用途。
 - 标题下方不默认追加副标题，卡片下方不默认追加解释句，列表项不默认追加营销描述。
+- 一级 Tab 页面可以使用一个简短的居中标题稳定视觉重心，但不组成面包屑，不增加品牌
+  前缀或副标题。右上角页面操作使用醒目、带无障碍名称和有效点击热区的语义图标。
 - 文案只有在帮助用户做决定、完成操作、理解风险或恢复错误时才有存在理由。
+- 动作或状态能够由熟悉的语义图标无歧义表达时，优先使用图标，不再用可见文字重复同一
+  含义；图标仍需提供无障碍名称，图标本身不够明确时保留文字。
+- Bottom Sheet 内只有少量简单选项时，使用与页面水平边距对齐、彼此留有明确间隔的紧凑
+  独立卡片。卡片不默认描边：未选项使用弱化的抬升背景，选中项使用导航激活背景；左侧用
+  熟悉的语义图标区分选项，右侧只保留选中勾。只有链选择器等长列表使用相连的密集列表行；
+  选项确实包含有效补充信息时才增加行高。
+- 设置页列表项在对象或类别足够明确时使用低干扰的左侧语义图标，帮助快速扫读；图标辅助
+  可见标签，不替代含义不明确的文字。
 - 能用名称、数值、状态或示例表达的内容，不改写成完整说明段落。
 - 每个页面在实现前必须明确文案预算；删掉一句不影响理解，就应该删掉。
 - Playground 可以使用样本文字展示字形与排版，但样本文字不承担产品说明职责。

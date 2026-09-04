@@ -173,13 +173,19 @@ The shared product model has three bottom-level destinations:
    entry points without marketing narration.
 2. **Playground** — design specimens, component states, and deterministic test
    scenarios.
-3. **Settings** — item-group cards for Appearance, one Build & Matrix entry,
-   and About.
+3. **Settings** — item-group cards for Appearance and About, followed by a
+   non-production Diagnostics group.
+
+The primary tab bar shows semantic icons only. Route names remain available as
+accessibility labels, while selection is expressed through semantic icon and
+background colors rather than repeated visible labels.
 
 About is not a primary tab. Brand, provenance, version, licence, sponsorship,
-and solution links belong to its Settings group. Compatibility belongs in the
-Build & Matrix Modal; low-frequency metadata must not consume primary
-navigation or remain expanded on the page.
+and solution links belong to its Settings group. Debug and regression builds
+place their tooling below About in Diagnostics; production builds omit that
+group entirely. Compatibility belongs in the Build & Matrix Modal;
+low-frequency metadata must not consume primary navigation or remain expanded
+on the page.
 
 ### Top Inset Ownership
 
@@ -233,20 +239,31 @@ handled by consuming the new `insets.bottom`.
 
 ### Settings Choice Surfaces
 
-- Multi-choice settings use a source-owned Bottom Sheet primitive. They do not
-  require Expo, a design-system runtime, or an opaque platform foundation.
+- App choice surfaces use an app-owned adapter around `@gorhom/bottom-sheet`.
+  The adapter owns Ruban styling, dismissal defaults, and the dependency pin
+  for each RN era. The independent `@ruban-labs/react-native-ui-sheet` package
+  remains available for lightweight scenarios but is not the current App
+  runtime.
 - A settings row shows only its name, current value, and entry affordance. The
   sheet contains a title, compact metadata, selection state, and close action;
   it does not add explanatory paragraphs.
 - Appearance exposes `system`, `light`, and `dark` and controls the complete
   app theme. Playground theme is page-local state owned by its top switch and
   explicit route parameter; it does not belong in Settings or app preferences.
-- Build and Support Matrix are not expanded on the Settings page. One
-  `Build & matrix` entry opens a scrollable information Bottom Sheet with
-  CURRENT BUILD and SUPPORT MATRIX sections.
+- Build and Support Matrix are not expanded on the Settings page. Debug and
+  regression builds expose one `Build & matrix` entry in a Diagnostics group
+  below About. Production builds expose neither the entry nor its Bottom
+  Sheet. The entry opens a scrollable information Bottom Sheet with CURRENT
+  BUILD and SUPPORT MATRIX sections.
+- Debug and regression builds also expose one `Playground` entry in
+  Diagnostics. It opens a compact launcher for the design lab, Progress lab,
+  and every component showcase screen. The launcher is navigation, not a
+  second specimen surface; each component remains owned by its dedicated
+  Root Stack screen. Production builds omit both the entry and its Sheet.
 - `ruban://settings?sheet=appearance` and
-  `ruban://settings?sheet=build` reproduce those sheets from a cold launch;
-  `ruban://lab/design?theme=dark` reproduces the local Playground theme.
+  `ruban-debug://settings?sheet=build` or `sheet=playground` reproduce the
+  available sheets from a cold launch; `ruban://lab/design?theme=dark`
+  reproduces the local Playground theme.
 - Backdrop press, the top CLOSE action, and Android system back dismiss the
   sheet. Its bottom safe-area inset is consumed exactly once. Appearance is
   session-scoped until persistence is deliberately introduced; the UI must not
@@ -254,11 +271,15 @@ handled by consuming the new `insets.bottom`.
 - The same choice surface passes typecheck, native compilation, and real-device
   screenshot review in every Gongshu era. Do not use layout properties absent
   from RN 0.66 to fake parity.
+- Bottom Sheets use square top corners, a one-pixel structural border, and a
+  rectangular drag indicator. Do not expose the dependency's default floating,
+  rounded-card appearance.
 
 ### Wallet Choice Surfaces
 
-- The latest App uses source-owned Bottom Sheets for both network and address
-  selection, with only one active choice surface and no stacked platform Modal.
+- The latest App uses the same app-owned Bottom Sheet adapter for both network
+  and address selection, with only one active choice surface and no stacked
+  platform Modal.
 - The network selector lists only networks that the wallet RPC layer actually
   supports. Names, chain IDs, and logos come from a pinned
   `@ruban-labs/web-assets` package; Metro statically bundles the PNGs and must
@@ -341,8 +362,24 @@ Ruban should feel like a precise modern workbench:
   states, and controls should explain the interface first.
 - Do not automatically add a subtitle below every title, an explanation below
   every card, or marketing copy below every list item.
+- Primary tab screens may use one short, centered title as a visual anchor, but
+  not a breadcrumb, brand prefix, or subtitle. Top-right page actions use
+  prominent semantic icons with accessible labels and practical touch targets.
 - Copy earns its place only when it helps someone decide, act, understand risk,
   or recover from an error.
+- Prefer a familiar semantic icon when it communicates an action or state
+  without ambiguity. Do not repeat its meaning as visible text; keep an
+  accessible label, and retain text when the icon alone is unclear.
+- A Bottom Sheet containing a few simple options uses separate compact cards,
+  aligned with the page's horizontal margins and visibly spaced apart. These
+  cards use borderless semantic fills: a muted raised surface when unselected
+  and the active navigation surface when selected. A familiar icon identifies
+  the choice on the left, while the selected check remains on the right.
+  Attached dense rows belong to long lists such as chain selectors; tall rows
+  require meaningful supporting detail.
+- Settings rows use quiet semantic icons to make distinct entries easier to
+  scan. The icon supports the visible label rather than repeating or replacing
+  an ambiguous concept.
 - Prefer a name, value, state, or concrete example over a paragraph that
   narrates the same information.
 - Set a copy budget before implementing each screen. If removing a sentence

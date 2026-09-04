@@ -92,9 +92,7 @@ export default function HomeScreen(): React.ReactElement {
       scrollProps={{ refreshControl: undefined }}
     >
       <View style={styles.header}>
-        <Text style={[styles.wordmark, { color: colors.ink }]}>
-          RUBAN / PORTFOLIO
-        </Text>
+        <Text style={[styles.headerTitle, { color: colors.ink }]}>Portfolio</Text>
         <TouchableOpacity
           disabled={portfolio.refreshing}
           onPress={portfolio.refresh}
@@ -103,7 +101,7 @@ export default function HomeScreen(): React.ReactElement {
           accessibilityLabel={portfolio.refreshing ? 'Syncing' : 'Refresh'}
           style={styles.refreshButton}
         >
-          <RefreshIcon size={22} color={colors.accent} />
+          <RefreshIcon size={28} color={colors.accent} />
         </TouchableOpacity>
       </View>
 
@@ -349,21 +347,25 @@ function Action({
 const styles = StyleSheet.create({
   screen: { paddingBottom: spacing.xxl },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  wordmark: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: '900',
-    letterSpacing: 1.7,
-  },
-  refreshButton: {
-    width: 36,
-    height: 36,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  headerTitle: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: '800',
+    letterSpacing: -0.45,
+  },
+  refreshButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    top: 0,
+    right: 0,
   },
   networkSelector: {
     marginTop: 22,

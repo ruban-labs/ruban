@@ -1,4 +1,4 @@
-import type {NavigatorScreenParams} from '@react-navigation/native';
+import type { NavigatorScreenParams } from '@react-navigation/native';
 
 export type PlaygroundRouteParams = {
   tool?: string;
@@ -22,7 +22,7 @@ export type ComponentDetailRouteParams = {
 };
 
 export type SettingsRouteParams = {
-  sheet?: 'appearance' | 'build';
+  sheet?: 'appearance' | 'build' | 'playground';
 };
 
 export type DAppTestRouteParams = {
@@ -42,7 +42,7 @@ export type TabParamList = {
 export type RootStackParamList = {
   Main: NavigatorScreenParams<TabParamList> | undefined;
   DeveloperLab: PlaygroundRouteParams | undefined;
-  DAppBrowser: {url: string; title?: string};
+  DAppBrowser: { url: string; title?: string };
   DAppTest: DAppTestRouteParams;
   ComponentDetail: ComponentDetailRouteParams;
 };

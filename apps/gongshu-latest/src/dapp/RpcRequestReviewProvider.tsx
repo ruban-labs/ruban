@@ -1,7 +1,7 @@
-import {BottomSheetModal} from '@ruban-labs/react-native-ui-sheet';
 import * as React from 'react';
 import {Platform, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {Button} from '../components/ui/Button';
+import {BottomSheetModal} from '../components/ui/BottomSheetModal';
 import {spacing, useRubanColors} from '../design/tokens';
 import {
   RpcReviewQueue,
@@ -47,7 +47,6 @@ export function RpcRequestReviewProvider({
         title={active?.title || 'Review request'}
         onDismiss={() => queue.reject()}
         overlayId="dapp-rpc-review"
-        strategy="queue"
         testID="dapp-rpc-review-sheet">
         {active ? (
           <View style={styles.content}>

@@ -1,5 +1,6 @@
 import {Dialog} from '@ruban-labs/react-native-ui-dialog';
 import {Input} from '@ruban-labs/react-native-ui-form/input';
+import {GlobeIcon} from '@ruban-labs/react-native-ui-icons';
 import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import * as React from 'react';
@@ -39,9 +40,14 @@ export default function DAppsScreen({navigation}: Props): React.ReactElement {
   return (
     <RubanScreen testID="screen-dapps">
       <View style={styles.header}>
-        <Text style={[styles.wordmark, {color: colors.ink}]}>RUBAN / DAPPS</Text>
-        <TouchableOpacity onPress={() => setCustomOpen(true)}>
-          <Text style={[styles.openUrl, {color: colors.accent}]}>OPEN URL</Text>
+        <Text style={[styles.headerTitle, {color: colors.ink}]}>DApps</Text>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Open DApp URL"
+          activeOpacity={0.7}
+          onPress={() => setCustomOpen(true)}
+          style={styles.iconButton}>
+          <GlobeIcon size={28} color={colors.accent} />
         </TouchableOpacity>
       </View>
 
@@ -85,9 +91,17 @@ export default function DAppsScreen({navigation}: Props): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  header: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
-  wordmark: {fontSize: 11, lineHeight: 15, fontWeight: '900', letterSpacing: 1.7},
-  openUrl: {fontSize: 9, lineHeight: 13, fontWeight: '900', letterSpacing: 1.1},
+  header: {minHeight: 44, alignItems: 'center', justifyContent: 'center', position: 'relative'},
+  headerTitle: {fontSize: 22, lineHeight: 28, fontWeight: '800', letterSpacing: -0.45},
+  iconButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    top: 0,
+    right: 0,
+  },
   grid: {marginTop: 28, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between'},
   card: {width: '48.5%', height: 168, marginBottom: 12, padding: 14, borderWidth: 1, justifyContent: 'space-between'},
   index: {fontSize: 10, fontWeight: '900', letterSpacing: 1},
