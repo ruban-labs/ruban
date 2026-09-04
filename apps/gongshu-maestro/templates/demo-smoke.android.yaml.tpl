@@ -112,6 +112,22 @@ appId: {{appId}}
     timeout: 20000
 - assertVisible:
     text: "Appearance"
+- tapOn:
+    text: "Appearance.*"
+- extendedWaitUntil:
+    visible:
+      text: "System"
+    timeout: 20000
+- assertVisible:
+    text: "Light"
+- assertVisible:
+    text: "Dark"
+- tapOn:
+    text: "Light"
+- extendedWaitUntil:
+    visible:
+      text: "Settings"
+    timeout: 20000
 - scrollUntilVisible:
     element:
       text: "{{settingsBuildEntry}}.*"

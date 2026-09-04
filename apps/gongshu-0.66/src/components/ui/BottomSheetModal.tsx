@@ -17,7 +17,7 @@ import {
   View,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {spacing, useRubanColors} from '../../design/tokens';
+import {radius, spacing, useRubanColors} from '../../design/tokens';
 
 export type BottomSheetModalRootProps = {
   visible: boolean;
@@ -205,7 +205,7 @@ export function SelectionBottomSheet<Value extends string>({
                 styles.option,
                 {
                   backgroundColor: selected
-                    ? colors.navigationActive
+                    ? colors.accentSoft
                     : colors.choiceSurface,
                 },
                 index < options.length - 1 ? styles.optionSpacing : undefined,
@@ -278,6 +278,7 @@ const styles = StyleSheet.create({
   option: {
     minHeight: 56,
     paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
