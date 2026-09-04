@@ -46,14 +46,14 @@ for (const packageDirectory of packageDirectories) {
   if (manifest.peerDependencies?.['react-native'] !== '>=0.66.0') fail(`${label}: React Native peer floor must be >=0.66.0`);
   if (manifest.ruban?.reactNativeFloor !== '0.66.0') fail(`${label}: ruban.reactNativeFloor must be 0.66.0`);
   if (typeof manifest.ruban?.nativeCode !== 'boolean') fail(`${label}: ruban.nativeCode must be boolean`);
-  if (!['zero-dependency', 'bare-react-native', 'native-contained'].includes(manifest.ruban?.runtimePolicy)) {
+  if (!['zero-dependency', 'peer-only', 'bare-react-native', 'native-contained'].includes(manifest.ruban?.runtimePolicy)) {
     fail(`${label}: unsupported ruban.runtimePolicy`);
   }
   if (manifest.ruban?.runtimePolicy === 'zero-dependency' && Object.keys(manifest.dependencies ?? {}).length > 0) {
     fail(`${label}: zero-dependency packages cannot declare runtime dependencies`);
   }
-  if (manifest.ruban?.runtimePolicy === 'bare-react-native' && Object.keys(manifest.dependencies ?? {}).length > 0) {
-    fail(`${label}: bare-react-native packages cannot declare runtime dependencies`);
+  if (['peer-only', 'bare-react-native'].includes(manifest.ruban?.runtimePolicy) && Object.keys(manifest.dependencies ?? {}).length > 0) {
+    fail(`${label}: peer-only and bare-react-native packages cannot declare runtime dependencies`);
   }
   for (const entry of ['src', 'lib', 'NOTICE']) {
     if (!hasFileEntry(manifest, entry)) fail(`${label}: files must include ${entry}`);
