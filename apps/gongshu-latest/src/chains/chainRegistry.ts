@@ -16,13 +16,15 @@ type BundledChainMetadata = {
   is_disabled: boolean;
 };
 
-export type PortfolioChainCatalogEntry = {
+export type ChainRegistryEntry = {
   chain: EvmChain;
   assetId: string;
   displayName: string;
   nativeSymbol: string;
   logo: ImageSourcePropType;
   whiteLogo: ImageSourcePropType;
+  primaryRpcUrl: string;
+  fallbackRpcUrls: readonly string[];
 };
 
 const logoSources: Record<
@@ -58,12 +60,15 @@ const metadataByCommunityId = new Map(
   ]),
 );
 
-export const portfolioChainCatalog: readonly PortfolioChainCatalogEntry[] =
+export const chainRegistry: readonly ChainRegistryEntry[] =
   defaultEvmChains.map(chain => {
     const metadata = metadataByCommunityId.get(chain.id);
     const sources = logoSources[chain.id];
-    if (!metadata || !sources || metadata.is_disabled) {
-      throw new Error(`Missing bundled assets for supported chain ${chain.id}`);
+    const [primaryRpcUrl, ...fallbackRpcUrls] = chain.rpcUrls;
+    if (!metadata || !sources || metadata.is_disabled || !primaryRpcUrl) {
+      throw new Error(
+        `Incomplete registry entry for supported chain ${chain.id}`,
+      );
     }
 
     return {
@@ -71,14 +76,14 @@ export const portfolioChainCatalog: readonly PortfolioChainCatalogEntry[] =
       assetId: metadata.id,
       displayName: metadata.name,
       nativeSymbol: metadata.native_token.symbol,
+      primaryRpcUrl,
+      fallbackRpcUrls,
       ...sources,
     };
   });
 
-export function getPortfolioChain(chainId: number): PortfolioChainCatalogEntry {
-  const entry = portfolioChainCatalog.find(
-    candidate => candidate.chain.id === chainId,
-  );
-  if (!entry) throw new Error(`Unsupported portfolio chain ${chainId}`);
+export function getChainRegistryEntry(chainId: number): ChainRegistryEntry {
+  const entry = chainRegistry.find(candidate => candidate.chain.id === chainId);
+  if (!entry) throw new Error(`Unsupported chain ${chainId}`);
   return entry;
 }

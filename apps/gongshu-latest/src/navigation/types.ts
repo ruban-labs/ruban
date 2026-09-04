@@ -44,5 +44,6 @@ export type RootStackParamList = {
   DeveloperLab: PlaygroundRouteParams | undefined;
   DAppBrowser: { url: string; title?: string };
   DAppTest: DAppTestRouteParams;
+  NetworkSettings: undefined;
   ComponentDetail: ComponentDetailRouteParams;
 };

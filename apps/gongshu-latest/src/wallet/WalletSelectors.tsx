@@ -1,114 +1,12 @@
-import { CheckIcon } from '@ruban-labs/react-native-ui-icons';
 import type { WalletAccount } from '@ruban-labs/react-native-wallet-core';
 import * as React from 'react';
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BottomSheetModal } from '../components/ui/BottomSheetModal';
+import { SelectionMark } from '../components/ui/SelectionMark';
 import { spacing, useRubanColors } from '../design/tokens';
-import type { PortfolioChainCatalogEntry } from '../portfolio/chainCatalog';
 
 function shortAddress(address: string): string {
   return `${address.slice(0, 8)}…${address.slice(-6)}`;
-}
-
-function SelectionMark({
-  selected,
-}: {
-  selected: boolean;
-}): React.ReactElement {
-  const colors = useRubanColors();
-
-  return (
-    <View
-      style={[
-        styles.selectionMark,
-        {
-          borderColor: selected ? colors.accent : colors.borderStrong,
-          backgroundColor: selected ? colors.accent : 'transparent',
-        },
-      ]}
-    >
-      {selected ? <CheckIcon size={12} color={colors.canvas} /> : null}
-    </View>
-  );
-}
-
-export function ChainSelectorSheet({
-  visible,
-  chains,
-  selectedChainId,
-  onSelect,
-  onDismiss,
-}: {
-  visible: boolean;
-  chains: readonly PortfolioChainCatalogEntry[];
-  selectedChainId: number;
-  onSelect: (chainId: number) => void;
-  onDismiss: () => void;
-}): React.ReactElement {
-  const colors = useRubanColors();
-
-  return (
-    <BottomSheetModal
-      visible={visible}
-      title="Select network"
-      onDismiss={onDismiss}
-      overlayId="wallet-chain-selector"
-      testID="chain-selector-sheet"
-    >
-      <ScrollView contentContainerStyle={styles.list}>
-        {chains.map(entry => {
-          const selected = entry.chain.id === selectedChainId;
-          const logo = colors.mode === 'dark' ? entry.whiteLogo : entry.logo;
-
-          return (
-            <Pressable
-              key={entry.chain.id}
-              testID={`chain-option-${entry.chain.id}`}
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
-              accessibilityLabel={entry.displayName}
-              onPress={() => {
-                onSelect(entry.chain.id);
-                onDismiss();
-              }}
-              style={({ pressed }) => [
-                styles.row,
-                { borderBottomColor: colors.border },
-                selected
-                  ? { backgroundColor: colors.navigationActive }
-                  : undefined,
-                pressed ? styles.pressed : undefined,
-              ]}
-            >
-              <View style={styles.chainLogoFrame}>
-                <Image
-                  source={logo}
-                  resizeMode="contain"
-                  style={styles.chainLogo}
-                />
-              </View>
-              <View style={styles.identity}>
-                <Text style={[styles.label, { color: colors.ink }]}>
-                  {entry.displayName}
-                </Text>
-                <Text style={[styles.meta, { color: colors.faint }]}>
-                  {entry.nativeSymbol} · CHAIN {entry.chain.id}
-                </Text>
-              </View>
-              <SelectionMark selected={selected} />
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-    </BottomSheetModal>
-  );
 }
 
 export function AddressSelectorSheet({
@@ -130,6 +28,7 @@ export function AddressSelectorSheet({
     <BottomSheetModal
       visible={visible}
       title="Select address"
+      showHeader={false}
       onDismiss={onDismiss}
       overlayId="wallet-address-selector"
       testID="address-selector-sheet"
@@ -152,9 +51,7 @@ export function AddressSelectorSheet({
               style={({ pressed }) => [
                 styles.row,
                 { borderBottomColor: colors.border },
-                selected
-                  ? { backgroundColor: colors.navigationActive }
-                  : undefined,
+                selected ? { backgroundColor: colors.accentSoft } : undefined,
                 pressed ? styles.pressed : undefined,
               ]}
             >
@@ -196,16 +93,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  chainLogoFrame: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'transparent',
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chainLogo: { width: 42, height: 42, borderRadius: 21 },
   addressMark: {
     width: 42,
     height: 42,
@@ -221,20 +108,6 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     fontWeight: '700',
     letterSpacing: 0.2,
-  },
-  meta: {
-    marginTop: 3,
-    fontSize: 8,
-    lineHeight: 11,
-    fontWeight: '800',
-    letterSpacing: 0.75,
-  },
-  selectionMark: {
-    width: 18,
-    height: 18,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   pressed: { opacity: 0.62 },
 });

@@ -32,6 +32,9 @@ importers:
       '@ruban-labs/react-native-dapp-bridge':
         specifier: file:ruban-dapp-bridge-local.tgz
         version: file:ruban-dapp-bridge-local.tgz(react-native@0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
+      '@ruban-labs/react-native-data-engine':
+        specifier: file:ruban-data-engine-local.tgz
+        version: file:ruban-data-engine-local.tgz(react-native@0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
       '@ruban-labs/react-native-evm-client':
         specifier: file:ruban-evm-client-local.tgz
         version: file:ruban-evm-client-local.tgz(react-native@0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
@@ -1415,8 +1418,15 @@ packages:
       react: '>=17.0.0'
       react-native: '>=0.66.0'
 
+  '@ruban-labs/react-native-data-engine@file:ruban-data-engine-local.tgz':
+    resolution: {integrity: sha512-H9fK5/BDuG0L8vSHYQxHvMIT53FrKC/er0F+dhswT4ZwlglNM8YiBSF7c4nuKhCIlImDBhl2R32mcJVKTEL0Hw==, tarball: file:ruban-data-engine-local.tgz}
+    version: 0.1.0
+    peerDependencies:
+      react: '>=17.0.0'
+      react-native: '>=0.66.0'
+
   '@ruban-labs/react-native-evm-client@file:ruban-evm-client-local.tgz':
-    resolution: {integrity: sha512-he25icVv3lUVcgjHuCRPxN1UeqN4aa9wRktGTwzHsmC4E+ZusDrDk6ccsUcANVc+Qto1vokRA6z7TZ76/WPeOQ==, tarball: file:ruban-evm-client-local.tgz}
+    resolution: {integrity: sha512-fVjw3uWuO0fzF5ug32FcIlFE7ZcKrm2LO98quN9DuU/sWoIHhVY1OzOqspFdg33FtvCM69HWdRGo287OLxfTkQ==, tarball: file:ruban-evm-client-local.tgz}
     version: 0.1.0
     peerDependencies:
       react: '>=17.0.0'
@@ -1479,7 +1489,7 @@ packages:
       react-native: '>=0.66.0'
 
   '@ruban-labs/react-native-wallet-core@file:ruban-wallet-core-local.tgz':
-    resolution: {integrity: sha512-dmiLBEm4KO9pyt0PSMoGB1SVSizsMow+njZQd98+aV7P2Zwg5pCK6UOQFWNNuvP1hK5J6aU1YlN36VGivpgd1w==, tarball: file:ruban-wallet-core-local.tgz}
+    resolution: {integrity: sha512-K0GJDh798yoYu/o1UUDs0M1rvk91qGOHSk8FJirmG8XgMUeWG5V+EUBFEGCSUSNgb89A9wk50d/BVzcYRS71hw==, tarball: file:ruban-wallet-core-local.tgz}
     version: 0.1.0
     peerDependencies:
       react: '>=17.0.0'
@@ -6234,6 +6244,11 @@ snapshots:
       react-native: 0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3)
 
   '@ruban-labs/react-native-dapp-bridge@file:ruban-dapp-bridge-local.tgz(react-native@0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      react: 19.2.3
+      react-native: 0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3)
+
+  '@ruban-labs/react-native-data-engine@file:ruban-data-engine-local.tgz(react-native@0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)':
     dependencies:
       react: 19.2.3
       react-native: 0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3)

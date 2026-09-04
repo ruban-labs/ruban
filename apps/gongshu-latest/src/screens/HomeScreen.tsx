@@ -11,18 +11,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { ChainSelectorSheet } from '../chains/ChainSelectorSheet';
+import { chainRegistry, getChainRegistryEntry } from '../chains/chainRegistry';
 import { RubanScreen } from '../components/RubanPrimitives';
 import { spacing, useRubanColors } from '../design/tokens';
 import { usePortfolio } from '../portfolio/usePortfolio';
-import {
-  getPortfolioChain,
-  portfolioChainCatalog,
-} from '../portfolio/chainCatalog';
 import { useWallet } from '../wallet/WalletContext';
-import {
-  AddressSelectorSheet,
-  ChainSelectorSheet,
-} from '../wallet/WalletSelectors';
+import { AddressSelectorSheet } from '../wallet/WalletSelectors';
 
 function shortAddress(address: string): string {
   return `${address.slice(0, 7)}…${address.slice(-5)}`;
@@ -68,7 +63,7 @@ export default function HomeScreen(): React.ReactElement {
     });
   }, [run, wallet, watchAddress, watchLabel]);
 
-  const selectedChain = getPortfolioChain(wallet.selectedChainId);
+  const selectedChain = getChainRegistryEntry(wallet.selectedChainId);
   const selectedChainPortfolio = portfolio.snapshot?.chains.find(
     chain => chain.chain.id === wallet.selectedChainId,
   );
@@ -92,28 +87,14 @@ export default function HomeScreen(): React.ReactElement {
       scrollProps={{ refreshControl: undefined }}
     >
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.ink }]}>Portfolio</Text>
         <TouchableOpacity
-          disabled={portfolio.refreshing}
-          onPress={portfolio.refresh}
-          activeOpacity={0.7}
+          testID="open-chain-selector"
           accessibilityRole="button"
-          accessibilityLabel={portfolio.refreshing ? 'Syncing' : 'Refresh'}
-          style={styles.refreshButton}
+          accessibilityLabel={`Network, ${selectedChain.displayName}`}
+          onPress={() => setActiveSelector('chain')}
+          activeOpacity={0.68}
+          style={styles.chainButton}
         >
-          <RefreshIcon size={28} color={colors.accent} />
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        testID="open-chain-selector"
-        accessibilityRole="button"
-        accessibilityLabel={`Network, ${selectedChain.displayName}`}
-        onPress={() => setActiveSelector('chain')}
-        activeOpacity={0.68}
-        style={[styles.networkSelector, { borderColor: colors.borderStrong }]}
-      >
-        <View style={styles.networkLogoFrame}>
           <Image
             source={
               colors.mode === 'dark'
@@ -121,16 +102,25 @@ export default function HomeScreen(): React.ReactElement {
                 : selectedChain.logo
             }
             resizeMode="contain"
-            style={styles.networkLogo}
+            style={styles.chainLogo}
           />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.ink }]}>
+          Portfolio
+        </Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            disabled={portfolio.refreshing}
+            onPress={portfolio.refresh}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={portfolio.refreshing ? 'Syncing' : 'Refresh'}
+            style={styles.refreshButton}
+          >
+            <RefreshIcon size={28} color={colors.accent} />
+          </TouchableOpacity>
         </View>
-        <View style={styles.networkIdentity}>
-          <Text style={[styles.networkName, { color: colors.ink }]}>
-            {selectedChain.displayName}
-          </Text>
-        </View>
-        <CaretDownIcon size={12} color={colors.faint} />
-      </TouchableOpacity>
+      </View>
 
       {wallet.selectedAccount ? (
         <>
@@ -198,7 +188,7 @@ export default function HomeScreen(): React.ReactElement {
           <ActivityIndicator size="small" color={colors.accent} />
         ) : (
           <Text style={[styles.syncMeta, { color: colors.faint }]}>
-            {portfolio.completedChains}/{portfolioChainCatalog.length}
+            {portfolio.completedChains}/{chainRegistry.length}
             {maxLatency ? ` · ${maxLatency} MS` : ''}
           </Text>
         )}
@@ -261,7 +251,7 @@ export default function HomeScreen(): React.ReactElement {
 
       <ChainSelectorSheet
         visible={activeSelector === 'chain'}
-        chains={portfolioChainCatalog}
+        chains={chainRegistry}
         selectedChainId={wallet.selectedChainId}
         onSelect={wallet.selectChain}
         onDismiss={() => setActiveSelector(null)}
@@ -358,38 +348,32 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.45,
   },
-  refreshButton: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    top: 0,
+    right: 0,
+  },
+  chainButton: {
     width: 44,
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
     top: 0,
-    right: 0,
+    left: 0,
   },
-  networkSelector: {
-    marginTop: 22,
-    minHeight: 58,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+  chainLogo: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
   },
-  networkLogoFrame: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'transparent',
-    overflow: 'hidden',
+  refreshButton: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  networkLogo: { width: 38, height: 38, borderRadius: 19 },
-  networkIdentity: { flex: 1, marginLeft: 11 },
-  networkName: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: '800',
   },
   balance: {
     marginTop: 30,

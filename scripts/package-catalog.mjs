@@ -10,6 +10,7 @@ export const RUBAN_PACKAGE_DEFINITIONS = [
   ['@ruban-labs/react-native-ui-form', 'react-native-ui-form', 'ruban-ui-form-local.tgz'],
   ['@ruban-labs/react-native-ui-icons', 'react-native-ui-icons', 'ruban-ui-icons-local.tgz'],
   ['@ruban-labs/react-native-wallet-core', 'react-native-wallet-core', 'ruban-wallet-core-local.tgz'],
+  ['@ruban-labs/react-native-data-engine', 'react-native-data-engine', 'ruban-data-engine-local.tgz'],
   ['@ruban-labs/react-native-evm-client', 'react-native-evm-client', 'ruban-evm-client-local.tgz'],
   ['@ruban-labs/react-native-dapp-bridge', 'react-native-dapp-bridge', 'ruban-dapp-bridge-local.tgz'],
 ];

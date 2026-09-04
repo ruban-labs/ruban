@@ -35,7 +35,8 @@
     "@ruban-labs/react-native-ui-icons": "file:ruban-ui-icons-local.tgz",
     "@ruban-labs/react-native-wallet-core": "file:ruban-wallet-core-local.tgz",
     "@ruban-labs/react-native-evm-client": "file:ruban-evm-client-local.tgz",
-    "@ruban-labs/react-native-dapp-bridge": "file:ruban-dapp-bridge-local.tgz"
+    "@ruban-labs/react-native-dapp-bridge": "file:ruban-dapp-bridge-local.tgz",
+    "@ruban-labs/react-native-data-engine": "file:ruban-data-engine-local.tgz"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",

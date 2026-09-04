@@ -61,7 +61,7 @@ function ensureLibraryBuilt(library, nativePlatform) {
     console.log(`sync-gongshu: ${library.name} lib/ missing or stale, building first`);
     run('pnpm', ['--filter', library.name, 'build'], { cwd: repoRoot });
   }
-  if (nativePlatform && manifest.ruban?.nativeCode) {
+  if (nativePlatform && manifest.ruban?.nativeArtifacts) {
     console.log(`sync-gongshu: building ${library.name} native artifacts for ${nativePlatform}`);
     run('pnpm', ['--filter', library.name, `build:native:${nativePlatform}`], {cwd: repoRoot});
   }
