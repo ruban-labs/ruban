@@ -53,6 +53,13 @@ function openPrompt(platform) {
     : '';
 }
 
+function beforeExternalLink(app, platform) {
+  // The iOS 18 simulator confirms custom-scheme URLs most reliably when the
+  // target starts cold. Exercise each latest iOS link through its launch-URL
+  // path so this smoke test does not depend on a foreground confirmation.
+  return app.era === 'latest' && platform === 'ios' ? '- stopApp\n' : '';
+}
+
 function initialAssertions(app, platform) {
   if (app.era === 'latest') {
     return `- extendedWaitUntil:
@@ -77,7 +84,7 @@ function initialAssertions(app, platform) {
 
 function openButtonShowcase(app, platform) {
   if (app.era === 'latest') {
-    return `- openLink: "${app.scheme}://components/button?theme=light&variant=primary&size=md&state=default"
+    return `${beforeExternalLink(app, platform)}- openLink: "${app.scheme}://components/button?theme=light&variant=primary&size=md&state=default"
 ${openPrompt(platform)}`.trimEnd();
   }
 
@@ -98,7 +105,7 @@ function afterButtonShowcase(app) {
 
 function openPlayground(app, platform) {
   if (app.era === 'latest') {
-    return `- openLink: "${app.scheme}://lab/design?theme=light"
+    return `${beforeExternalLink(app, platform)}- openLink: "${app.scheme}://lab/design?theme=light"
 ${openPrompt(platform)}`.trimEnd();
   }
 
@@ -113,7 +120,7 @@ ${openPrompt(platform)}- extendedWaitUntil:
 
 function openSettings(app, platform) {
   if (app.era === 'latest') {
-    return `- openLink: "${app.scheme}://settings"
+    return `${beforeExternalLink(app, platform)}- openLink: "${app.scheme}://settings"
 ${openPrompt(platform)}`.trimEnd();
   }
 
@@ -136,6 +143,7 @@ for (const platform of TEMPLATES) {
       .replaceAll('{{afterButtonShowcase}}', afterButtonShowcase(app))
       .replaceAll('{{openPlayground}}', openPlayground(app, platform))
       .replaceAll('{{openSettings}}', openSettings(app, platform))
+      .replaceAll('{{beforeExternalLink}}', beforeExternalLink(app, platform))
       .replaceAll('{{buttonShowcaseReady}}', 'Button')
       .replaceAll('{{badgeShowcaseReady}}', 'LIVE')
       .replaceAll('{{buttonSelector}}', platform === 'ios' ? '01.*Button.*' : 'Button');

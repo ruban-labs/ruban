@@ -15,6 +15,7 @@ appId: com.rubanlabs.mobile.debug
     text: "Create a wallet"
 - assertVisible:
     text: "Network, Ethereum"
+- stopApp
 - openLink: "ruban-debug://components/button?theme=light&variant=primary&size=md&state=default"
 - tapOn:
     text: "^(Open|打开)$"
@@ -28,6 +29,7 @@ appId: com.rubanlabs.mobile.debug
 - assertNotVisible:
     text: "Settings"
 
+- stopApp
 - openLink: "ruban-debug://components/badge?theme=light&variant=live&size=md"
 - tapOn:
     text: "^(Open|打开)$"
@@ -38,6 +40,7 @@ appId: com.rubanlabs.mobile.debug
     timeout: 120000
 - assertVisible:
     text: "LIVE"
+- stopApp
 - openLink: "ruban-debug://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
 - tapOn:
     text: "^(Open|打开)$"
@@ -50,6 +53,7 @@ appId: com.rubanlabs.mobile.debug
     text: "VERTICAL"
 - assertVisible:
     text: "Live separator vertical accent bold"
+- stopApp
 - openLink: "ruban-debug://components/switch?theme=light&state=on&size=md"
 - tapOn:
     text: "^(Open|打开)$"
@@ -66,6 +70,7 @@ appId: com.rubanlabs.mobile.debug
     text: "Live switch"
 - assertVisible:
     text: "Live switch state OFF"
+- stopApp
 - openLink: "ruban-debug://components/dialog?theme=light&scenario=sequential"
 - tapOn:
     text: "^(Open|打开)$"
@@ -84,6 +89,7 @@ appId: com.rubanlabs.mobile.debug
     text: "FIRST DIALOG"
 - tapOn:
     text: "DONE"
+- stopApp
 - openLink: "ruban-debug://components/dialog?theme=dark&scenario=nested"
 - tapOn:
     text: "^(Open|打开)$"
@@ -106,6 +112,7 @@ appId: com.rubanlabs.mobile.debug
     timeout: 60000
 - tapOn:
     text: "CLOSE"
+- stopApp
 - openLink: "ruban-debug://components/dialog?theme=light&scenario=external"
 - tapOn:
     text: "^(Open|打开)$"
@@ -124,6 +131,7 @@ appId: com.rubanlabs.mobile.debug
     timeout: 60000
 - tapOn:
     text: "DONE"
+- stopApp
 - openLink: "ruban-debug://lab/design?theme=light"
 - tapOn:
     text: "^(Open|打开)$"
@@ -136,6 +144,7 @@ appId: com.rubanlabs.mobile.debug
     text: "LIGHT"
 - assertVisible:
     text: "TYPE"
+- stopApp
 - openLink: "ruban-debug://settings"
 - tapOn:
     text: "^(Open|打开)$"
