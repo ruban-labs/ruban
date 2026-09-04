@@ -227,6 +227,7 @@ jobs:
             -sdk iphonesimulator \
             -destination "generic/platform=iOS Simulator" \
             -derivedDataPath build \
+            -quiet \
             build
       - name: Boot simulator and install app
         run: |
@@ -248,7 +249,7 @@ jobs:
           echo "Bundle prewarmed"
       - name: Install Maestro
         run: |
-          export MAESTRO_VERSION=2.5.1
+          export MAESTRO_VERSION=2.10.0
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
           "$HOME/.maestro/bin/maestro" --version
@@ -256,9 +257,10 @@ jobs:
         working-directory: apps/gongshu-maestro
         env:
           MAESTRO_CLI_NO_ANALYTICS: "1"
+          MAESTRO_DRIVER_STARTUP_TIMEOUT: "180000"
         run: |
           set +e
-          maestro test flows/ios-${{ matrix.era }}-demo-smoke.yaml
+          maestro test --reinstall-driver flows/ios-${{ matrix.era }}-demo-smoke.yaml
           status=$?
           set -e
 
@@ -274,7 +276,7 @@ jobs:
           xcrun simctl shutdown "${{ steps.sim.outputs.udid }}" || true
           xcrun simctl boot "${{ steps.sim.outputs.udid }}"
           xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
-          maestro test flows/ios-${{ matrix.era }}-demo-smoke.yaml
+          maestro test --reinstall-driver flows/ios-${{ matrix.era }}-demo-smoke.yaml
       - name: Metro log on failure
         if: failure()
         run: tail -80 /tmp/metro.log || true
@@ -286,6 +288,7 @@ jobs:
           path: |
             /tmp/metro.log
             /Users/runner/.maestro/tests
+            /Users/runner/Library/Logs/maestro/xctest_runner_logs
           if-no-files-found: ignore
           include-hidden-files: true
 
