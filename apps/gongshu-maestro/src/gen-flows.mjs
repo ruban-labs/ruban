@@ -62,7 +62,7 @@ function initialAssertions(app, platform) {
 - assertVisible:
     text: "Create a wallet"
 - assertVisible:
-    text: "Ethereum"`;
+    text: "Network, Ethereum"`;
   }
 
   return `- extendedWaitUntil:

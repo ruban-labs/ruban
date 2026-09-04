@@ -14,7 +14,7 @@ appId: com.rubanlabs.mobile.debug
 - assertVisible:
     text: "Create a wallet"
 - assertVisible:
-    text: "Ethereum"
+    text: "Network, Ethereum"
 - openLink: "ruban-debug://components/button?theme=light&variant=primary&size=md&state=default"
 - tapOn:
     text: "^(Open|打开)$"
