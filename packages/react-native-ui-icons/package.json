@@ -1,0 +1,81 @@
+{
+  "name": "@ruban-labs/react-native-ui-icons",
+  "version": "0.1.0",
+  "description": "Theme-aware currentColor icons for bare React Native.",
+  "keywords": [
+    "react-native",
+    "ui",
+    "icons",
+    "svg",
+    "currentcolor"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/ruban-labs/ruban/tree/main/packages/react-native-ui-icons",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruban-labs/ruban.git",
+    "directory": "packages/react-native-ui-icons"
+  },
+  "source": "src/index",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index",
+  "exports": {
+    ".": {
+      "types": "./lib/typescript/index.d.ts",
+      "react-native": "./src/index.tsx",
+      "default": "./lib/commonjs/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "lib",
+    "NOTICE",
+    ".svgrrc",
+    "!**/__tests__"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "bob build && node scripts/copy-icons.mjs",
+    "test": "node --test scripts/check-icons.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-native": ">=0.66.0",
+    "react-native-svg": ">=12.1.0"
+  },
+  "ruban": {
+    "reactNativeFloor": "0.66.0",
+    "runtimePolicy": "peer-only",
+    "nativeCode": false
+  },
+  "devDependencies": {
+    "@react-native/babel-preset": "0.87.0",
+    "@types/react": "^19.1.0",
+    "react": "19.2.8",
+    "react-native": "0.87.0",
+    "react-native-builder-bob": "^0.43.0",
+    "react-native-svg": "15.12.1",
+    "typescript": "^5.8.0"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
+    ]
+  }
+}

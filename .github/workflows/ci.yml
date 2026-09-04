@@ -51,6 +51,19 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: Install Rust toolchain
+        if: needs.changes.outputs.verify == 'true'
+        run: rustup toolchain install 1.96.0 --profile minimal --no-self-update
+      - name: Restore Rust cache
+        if: needs.changes.outputs.verify == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            .cache/rust-target
+          key: rust-${{ runner.os }}-${{ hashFiles('packages/react-native-wallet-core/rust/Cargo.lock') }}
+          restore-keys: rust-${{ runner.os }}-
       - if: needs.changes.outputs.verify == 'true' || (needs.changes.outputs.site == 'true' && github.event_name != 'push')
         run: pnpm install --frozen-lockfile
       - if: needs.changes.outputs.verify == 'true'
@@ -62,6 +75,9 @@ jobs:
       - name: Source registry drift
         if: needs.changes.outputs.verify == 'true'
         run: pnpm registry:check
+      - name: UI dependency graph
+        if: needs.changes.outputs.verify == 'true'
+        run: pnpm design:ui-graph:check
       - name: Published package contract
         if: needs.changes.outputs.verify == 'true'
         run: pnpm check:packages
@@ -151,6 +167,17 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: Install Rust toolchain
+        run: rustup toolchain install 1.96.0 --profile minimal --no-self-update
+      - name: Restore Rust cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            .cache/rust-target
+          key: rust-${{ runner.os }}-${{ hashFiles('packages/react-native-wallet-core/rust/Cargo.lock') }}
+          restore-keys: rust-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r build
       - name: Switch to era Node ${{ matrix.era-node }}
@@ -158,7 +185,7 @@ jobs:
         with:
           node-version: ${{ matrix.era-node }}
       - name: Sync app (demo + tarball + deps)
-        run: node scripts/dev/sync-gongshu.mjs --app ${{ matrix.app }}
+        run: node scripts/dev/sync-gongshu.mjs --app ${{ matrix.app }} --native-platform ios
       - name: Patch 0.66 era compat (boost mirror + yoga bool-bitwise)
         if: matrix.era == '0.66'
         working-directory: apps/${{ matrix.app }}
@@ -171,6 +198,8 @@ jobs:
           grep -c 'hadOverflow() ||' node_modules/react-native/ReactCommon/yoga/yoga/Yoga.cpp
       - name: Pod install
         working-directory: apps/${{ matrix.app }}/ios
+        env:
+          NO_FLIPPER: ${{ matrix.era == '0.66' && '1' || '0' }}
         run: pod install
       - name: Patch 0.66 boost hash for C++17 (Xcode 15 libc++)
         if: matrix.era == '0.66'

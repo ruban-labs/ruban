@@ -18,10 +18,11 @@ export type ComponentDetailRouteParams = {
   tone?: string;
   orientation?: string;
   weight?: string;
+  scenario?: string;
 };
 
 export type SettingsRouteParams = {
-  sheet?: 'appearance' | 'build';
+  sheet?: 'appearance' | 'build' | 'playground';
 };
 
 export type TabParamList = {

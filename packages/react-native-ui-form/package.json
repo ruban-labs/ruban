@@ -1,0 +1,112 @@
+{
+  "name": "@ruban-labs/react-native-ui-form",
+  "version": "0.1.0",
+  "description": "Composable form fields and controls for bare React Native.",
+  "keywords": ["react-native", "ui", "form", "input", "checkbox", "radio", "select"],
+  "license": "MIT",
+  "homepage": "https://github.com/ruban-labs/ruban/tree/main/packages/react-native-ui-form",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruban-labs/ruban.git",
+    "directory": "packages/react-native-ui-form"
+  },
+  "source": "src/index",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index",
+  "exports": {
+    ".": {
+      "types": "./lib/typescript/index.d.ts",
+      "react-native": "./src/index.ts",
+      "default": "./lib/commonjs/index.js"
+    },
+    "./field": {
+      "types": "./lib/typescript/Field.d.ts",
+      "react-native": "./src/Field.tsx",
+      "default": "./lib/commonjs/Field.js"
+    },
+    "./input": {
+      "types": "./lib/typescript/Input.d.ts",
+      "react-native": "./src/Input.tsx",
+      "default": "./lib/commonjs/Input.js"
+    },
+    "./textarea": {
+      "types": "./lib/typescript/Textarea.d.ts",
+      "react-native": "./src/Textarea.tsx",
+      "default": "./lib/commonjs/Textarea.js"
+    },
+    "./checkbox": {
+      "types": "./lib/typescript/Checkbox.d.ts",
+      "react-native": "./src/Checkbox.tsx",
+      "default": "./lib/commonjs/Checkbox.js"
+    },
+    "./radio-group": {
+      "types": "./lib/typescript/RadioGroup.d.ts",
+      "react-native": "./src/RadioGroup.tsx",
+      "default": "./lib/commonjs/RadioGroup.js"
+    },
+    "./select": {
+      "types": "./lib/typescript/Select.d.ts",
+      "react-native": "./src/Select.tsx",
+      "default": "./lib/commonjs/Select.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "lib",
+    "field.js",
+    "field.d.ts",
+    "input.js",
+    "input.d.ts",
+    "textarea.js",
+    "textarea.d.ts",
+    "checkbox.js",
+    "checkbox.d.ts",
+    "radio-group.js",
+    "radio-group.d.ts",
+    "select.js",
+    "select.d.ts",
+    "NOTICE",
+    "!**/__tests__"
+  ],
+  "publishConfig": {"access": "public"},
+  "sideEffects": false,
+  "scripts": {
+    "build": "bob build",
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@ruban-labs/react-native-ui-theme": "^0.1.0",
+    "react": ">=17.0.0",
+    "react-native": ">=0.66.0"
+  },
+  "ruban": {
+    "reactNativeFloor": "0.66.0",
+    "runtimePolicy": "zero-dependency",
+    "nativeCode": false
+  },
+  "devDependencies": {
+    "@react-native/babel-preset": "0.87.0",
+    "@react-native/jest-preset": "0.87.0",
+    "@ruban-labs/react-native-ui-theme": "workspace:*",
+    "@types/jest": "^29.5.14",
+    "@types/react": "^19.1.0",
+    "jest": "^29.7.0",
+    "react": "19.2.8",
+    "react-native": "0.87.0",
+    "react-native-builder-bob": "^0.43.0",
+    "typescript": "^5.8.0"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      ["typescript", {"project": "tsconfig.build.json"}]
+    ]
+  }
+}

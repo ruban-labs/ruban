@@ -159,6 +159,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode = (project.findProperty("RUBAN_VERSION_CODE") ?: "1").toInteger()
         versionName = project.findProperty("RUBAN_VERSION_NAME") ?: "1.0"
+        buildConfigField "String", "RUBAN_APP_CHANNEL", '"production"'
         manifestPlaceholders = [rubanLinkScheme: "ruban-rn066"]
     }
     sourceSets {
@@ -198,6 +199,7 @@ android {
             applicationIdSuffix ".debug"
             manifestPlaceholders.rubanLinkScheme = "ruban-rn066-debug"
             resValue "string", "app_name", "Gongshu 0.66 Dev"
+            buildConfigField "String", "RUBAN_APP_CHANNEL", '"debug"'
             if (nativeArchitectures) {
                 ndk {
                     abiFilters nativeArchitectures.split(',')
@@ -218,6 +220,7 @@ android {
             matchingFallbacks = ["release"]
             if (rubanSigningTarget == "internal") signingConfig signingConfigs.rubanUpload
             resValue "string", "app_name", "Gongshu 0.66 Regression"
+            buildConfigField "String", "RUBAN_APP_CHANNEL", '"regression"'
         }
     }
 

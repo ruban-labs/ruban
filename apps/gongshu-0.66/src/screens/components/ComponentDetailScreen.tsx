@@ -9,6 +9,7 @@ import BadgeShowcaseScreen from './BadgeShowcaseScreen';
 import ButtonShowcaseScreen from './ButtonShowcaseScreen';
 import CardShowcaseScreen from './CardShowcaseScreen';
 import CollapsibleShowcaseScreen from './CollapsibleShowcaseScreen';
+import DialogShowcaseScreen from './DialogShowcaseScreen';
 import FormKitShowcaseScreen, {
   isFormComponentId,
 } from './FormKitShowcaseScreen';
@@ -68,6 +69,10 @@ export default function ComponentDetailScreen(
 
   if (props.route.params.component === 'collapsible') {
     return <CollapsibleShowcaseScreen {...props} onBack={onBack} />;
+  }
+
+  if (props.route.params.component === 'dialog') {
+    return <DialogShowcaseScreen {...props} onBack={onBack} />;
   }
 
   if (isFormComponentId(props.route.params.component)) {

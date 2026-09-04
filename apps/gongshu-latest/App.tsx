@@ -1,7 +1,11 @@
 import * as React from 'react';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { StyleSheet, useColorScheme, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { enableScreens } from 'react-native-screens';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { OverlayProvider } from '@ruban-labs/react-native-ui-overlay';
+import { RpcRequestReviewProvider } from './src/dapp/RpcRequestReviewProvider';
 import { RubanThemeProvider, useRubanColors } from './src/design/tokens';
 import AppNavigator from './src/navigation/AppNavigator';
 import { useReleaseRuntimeHealth } from './src/releaseRuntime';
@@ -11,6 +15,7 @@ import {
 } from './src/settings/AppPreferences';
 import { useBootSplashExit } from './src/startup/useBootSplashExit';
 import { RubanSystemBars } from './src/system/RubanSystemBars';
+import { WalletProvider } from './src/wallet/WalletContext';
 
 enableScreens(true);
 
@@ -38,7 +43,11 @@ function ThemedApp(): React.ReactElement {
 
   return (
     <RubanThemeProvider mode={mode}>
-      <AppSurface onReady={hideBootSplash} />
+      <OverlayProvider>
+        <RpcRequestReviewProvider>
+          <AppSurface onReady={hideBootSplash} />
+        </RpcRequestReviewProvider>
+      </OverlayProvider>
     </RubanThemeProvider>
   );
 }
@@ -47,11 +56,17 @@ function App(): React.ReactElement {
   useReleaseRuntimeHealth();
 
   return (
-    <SafeAreaProvider>
-      <AppPreferencesProvider>
-        <ThemedApp />
-      </AppPreferencesProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <BottomSheetModalProvider>
+          <AppPreferencesProvider>
+            <WalletProvider>
+              <ThemedApp />
+            </WalletProvider>
+          </AppPreferencesProvider>
+        </BottomSheetModalProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

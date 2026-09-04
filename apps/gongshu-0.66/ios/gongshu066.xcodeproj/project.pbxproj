@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* gongshu066Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* gongshu066Tests.m */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.m */; };
+		B06600000000000000000011 /* RubanBuildInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = B06600000000000000000010 /* RubanBuildInfo.m */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
@@ -36,6 +37,7 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = gongshu066/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = gongshu066/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = gongshu066/main.m; sourceTree = "<group>"; };
+		B06600000000000000000010 /* RubanBuildInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = RubanBuildInfo.m; path = gongshu066/RubanBuildInfo.m; sourceTree = "<group>"; };
 		4589BB137A1A3728D5DF4993 /* Pods-gongshu066.regression.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gongshu066.regression.xcconfig"; path = "Target Support Files/Pods-gongshu066/Pods-gongshu066.regression.xcconfig"; sourceTree = "<group>"; };
 		5260C2E1E7FA27D305BA88E7 /* Pods-gongshu066-gongshu066Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gongshu066-gongshu066Tests.debug.xcconfig"; path = "Target Support Files/Pods-gongshu066-gongshu066Tests/Pods-gongshu066-gongshu066Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		69E533DF34D9F1DE9B8B4E9C /* Pods-gongshu066.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gongshu066.debug.xcconfig"; path = "Target Support Files/Pods-gongshu066/Pods-gongshu066.debug.xcconfig"; sourceTree = "<group>"; };
@@ -90,6 +92,7 @@
 			children = (
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.m */,
+				B06600000000000000000010 /* RubanBuildInfo.m */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
@@ -416,6 +419,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */,
+				B06600000000000000000011 /* RubanBuildInfo.m in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -17,15 +17,62 @@ Ruban 由三个互相支撑的部分组成：
 App 可以使用 React Navigation 等应用基础设施。“零运行时依赖”约束的是对外发布的
 Ruban 库，不是用于验证这些库的 App。
 
+## 长期产品方向
+
+Ruban 将从组件工场逐步发展为真正可用的、自托管 EVM DApp 工作台。latest Gongshu
+App 是主要产品载体；较早的 Gongshu 版本继续作为兼容版本，用来证明发布包在历史 React
+Native 环境中的真实可用性。
+
+钱包第一版刻意收窄边界：
+
+- 只支持 EVM 外部账户（EOA）；
+- 支持创建或导入助记词、导入私钥，以及添加观察地址；
+- 提供本地加密 Vault 与 Native 签名，同时把 WalletConnect 作为额外的外部签名方式；
+- 提供 DApp 发现、浏览会话、按来源隔离的权限、交易确认、提交和本地活动记录；
+- 第一阶段采用直接发行和受控内测。是否公开上架应用商店，是后续产品与合规决策，
+  不是 V1 的前置条件。
+
+账户来源不是一种产品模式。观察地址、私钥账户和助记词派生账户共用完全一致的
+Portfolio、DApp 发现、浏览器、只读 RPC、权限、交易准备、模拟、确认与活动记录流程。
+普通使用中不提前分叉，也不反复标记账户来源。只有最后一步必须真正产生签名时，能力才
+分开：可签名账户进入 Native 签名边界；观察地址需要改选其它签名方式或停止。只有签名
+成功后，交易才能进入广播。
+
+私钥、助记词和派生种子不得进入 React Native JavaScript 运行时。独立 Rust Core
+通过经过审查的密码学依赖负责派生、解析与签名；平台包装层负责安全存储与用户在场验证；
+React Native 只能获得不透明的 Vault/账户标识和公开结果。同一个 Core 同时服务 Legacy
+Native Module 与 TurboModule 适配层。
+
+Ruban 不自行实现密码学原语，也不把“第三方依赖经过审查”宣传成“Ruban 已通过安全审计”。
+依赖来源、许可证、测试向量、差分测试、模糊测试、可复现构建和独立审计，都是明确的发行门槛。
+
+Ruban 对外强调的是**源码公开与 Native Speed**。安全仍是不可退让的工程底线，但不作为
+营销口号。V1 包含一个 cache-first Portfolio，用来展示配置网络中的原生资产和经过明确
+选择的 ERC-20 资产。链上读取、价格/Indexer 请求、数据新鲜度、取消、批处理和 Provider
+延迟都是可观察的产品契约，不藏在实现细节里。
+
+速度拆成三条独立衡量的轴：
+
+- **构建快**：按受影响目录运行 CI，Native 产物使用内容寻址，并复用 Cargo、Gradle、
+  Xcode、CocoaPods 与 Metro 缓存；
+- **运行快**：衡量冷启动、可交互时间、帧稳定性、内存压力、DApp Ready 与确认耗时；
+- **同步快**：缓存首屏、增量补水、批量链上读取、自适应 Provider 选择和可替换 Indexer。
+
+快不能牺牲数据新鲜度和来源解释。节点竞速与缓存渲染只有在网络、观察时间、来源和过期
+状态都明确时才算有效。
+
+完整的能力门槛路线见
+[EVM 钱包 V1 路线图](./docs/wallet-v1-roadmap.zh-CN.md)。
+
 ## 近期库路线
 
 下一批翻新候选：
 
-| 包 | 产品作用 | 在 Gongshu 中的第一处真实用法 |
-| --- | --- | --- |
-| `@ruban-labs/react-native-collapsible` | 专注的展开、收起能力 | 库目录分组与详情渐进展示 |
-| `@ruban-labs/react-native-animatable` | 小而清晰的声明式动画语言 | 页面切换、操作反馈与组件状态 |
-| `@ruban-labs/react-native-keyboard-aware-scroll-view` | 稳定处理键盘与表单布局 | 搜索、表单和 Playground 控件 |
+| 包                                                    | 产品作用                 | 在 Gongshu 中的第一处真实用法 |
+| ----------------------------------------------------- | ------------------------ | ----------------------------- |
+| `@ruban-labs/react-native-collapsible`                | 专注的展开、收起能力     | 库目录分组与详情渐进展示      |
+| `@ruban-labs/react-native-animatable`                 | 小而清晰的声明式动画语言 | 页面切换、操作反馈与组件状态  |
+| `@ruban-labs/react-native-keyboard-aware-scroll-view` | 稳定处理键盘与表单布局   | 搜索、表单和 Playground 控件  |
 
 做这些库和做 Ruban App 是同一件事：每个库都要解决 App 里的真实需求，每次 App
 集成都要沉淀成这个库的兼容性场景。
@@ -34,10 +81,10 @@ Ruban 库，不是用于验证这些库的 App。
 
 在 `apps/` 下保留三个彼此独立的 bare React Native App：
 
-| App | React Native 时代 | 导航 | 架构能力 |
-| --- | --- | --- | --- |
-| `gongshu-0.66` | 0.66.x | React Navigation 6 | 只支持旧架构 |
-| `gongshu-0.77` | 0.77.x | React Navigation 7 | 同时支持旧架构与 New Architecture |
+| App              | React Native 时代  | 导航               | 架构能力                                 |
+| ---------------- | ------------------ | ------------------ | ---------------------------------------- |
+| `gongshu-0.66`   | 0.66.x             | React Navigation 6 | 只支持旧架构                             |
+| `gongshu-0.77`   | 0.77.x             | React Navigation 7 | 同时支持旧架构与 New Architecture        |
 | `gongshu-latest` | 当前固定的最新版本 | React Navigation 7 | 跟随上游；0.82 起只支持 New Architecture |
 
 每个 App 独立管理依赖、锁文件、原生工程、签名配置、Bundle ID 和发布产物。它们共享
@@ -63,11 +110,11 @@ Ruban 库，不是用于验证这些库的 App。
 
 最低编译矩阵：
 
-| RN 时代 | 旧架构 | New Architecture |
-| --- | --- | --- |
-| RN 0.66 | 必须 | 上游不支持 |
-| RN 0.77 | 必须 | 必须 |
-| RN latest（当前固定为 0.87） | 上游不支持 | 必须 |
+| RN 时代                      | 旧架构     | New Architecture |
+| ---------------------------- | ---------- | ---------------- |
+| RN 0.66                      | 必须       | 上游不支持       |
+| RN 0.77                      | 必须       | 必须             |
+| RN latest（当前固定为 0.87） | 上游不支持 | 必须             |
 
 如果未来仍需要一个较新的双架构对照组，就新增第四个 App，固定在上游最后一个双架构
 版本 RN 0.81。不要把 `latest` 改造成上游不支持的状态。
@@ -91,11 +138,28 @@ GitHub Releases、内部发行和 TestFlight 发放。
 
 1. **Home**：直接展示 Ruban 支持的组件目录、状态和入口，不铺品牌说明文案。
 2. **Playground**：集中承载设计样本、组件状态与确定性测试场景。
-3. **Settings**：使用 Item Group 卡片组织 Appearance、单一 Build & Matrix 入口与 About。
+3. **Settings**：使用 Item Group 卡片组织 Appearance 与 About，并在其后放置仅非生产包可见的 Diagnostics 分组。
+
+底部一级 Tab 只显示语义图标。路由名称保留为无障碍标签，选中状态通过图标色和语义底色
+表达，不在图标下重复显示文字。
 
 About 不是一级 Tab。品牌、来源、版本、许可证、赞助与解决方案入口都归入 Settings
-中的 About 分组。兼容矩阵归入 Build & Matrix Modal，避免把低频信息抬成一级导航或
+中的 About 分组。Debug 与 Regression 包在 About 之后显示 Diagnostics 分组；生产包
+完全隐藏该分组。兼容矩阵归入 Build & Matrix Modal，避免把低频信息抬成一级导航或
 在页面上平铺。
+
+### 顶部安全区归属
+
+每个 Screen 都必须且只能消费一次状态栏区域。新页面默认使用 `RubanScreen`，或使用
+`react-native-safe-area-context` 并包含 top edge。React Navigation 自带 Header
+可以成为安全区 owner；显式采用沉浸式设计的页面可以把背景绘制到状态栏后方，但工具栏、
+交互控件与主体内容仍必须根据 `insets.top` 定位。
+
+- 每条路由必须明确一个顶部安全区 owner：Navigation Header、路由 Frame 或沉浸式布局。
+- 隐藏 Navigation Header 不代表页面内容可以从物理屏幕坐标零开始。
+- 禁止使用 React Native 自带的 `SafeAreaView`；它不能提供这里需要的 Android
+  edge-to-edge 契约，统一使用 `react-native-safe-area-context`。
+- Header 已经消费顶部安全区时，页面不得再次增加 top inset。
 
 ### 底部安全区归属
 
@@ -126,30 +190,51 @@ Android 提供的 Window Insets 是唯一事实来源，导航模式变化后直
 
 ### Settings 选择面与 Bottom Sheet
 
-- Settings 中的多选偏好统一使用项目自有的 Bottom Sheet primitive，不把选择器交给
-  Expo、设计系统 runtime 或不透明的第三方基础层。
+- App 选择面统一通过项目自有适配层使用 `@gorhom/bottom-sheet`。适配层负责 Ruban
+  样式、默认关闭行为，以及每个 RN 时代的依赖版本。独立的
+  `@ruban-labs/react-native-ui-sheet` 继续保留给轻量场景，但当前 App 不以它作为运行时。
 - 列表行只展示名称、当前值和进入符号；Sheet 只展示标题、紧凑 meta、选中状态和关闭
   操作，不增加解释段落。
 - Appearance 提供 `system` / `light` / `dark`，控制整个 App 的语义主题。Playground
   theme 是 Playground 页面自己的局部状态，只由顶部 Switch 与显式路由参数控制，
   不进入 Settings 或全局偏好上下文。
-- Build 与 Support Matrix 不在 Settings 平铺。Settings 只保留一个 `Build & matrix`
-  入口，点击后用可滚动的信息型 Bottom Sheet 展示 CURRENT BUILD 和 SUPPORT MATRIX。
-- `ruban://settings?sheet=appearance` 与 `ruban://settings?sheet=build` 必须能在冷启动后
-  直接复现对应 Sheet；`ruban://lab/design?theme=dark` 负责复现 Playground 局部主题。
+- Build 与 Support Matrix 不在 Settings 平铺。Debug 与 Regression 包在 About 下方的
+  Diagnostics 分组中保留一个 `Build & matrix` 入口；生产包同时隐藏入口与对应 Sheet。
+  点击入口后，用可滚动的信息型 Bottom Sheet 展示 CURRENT BUILD 和 SUPPORT MATRIX。
+- Debug 与 Regression 包还在 Diagnostics 中提供一个 `Playground` 入口。点击后用紧凑的
+  Bottom Sheet 汇总设计台、Progress 实验页与所有组件展示页。这个 Sheet 只负责导航，
+  不重复承载组件样本；每个组件仍由独立 Root Stack 页面负责。生产包隐藏入口与 Sheet。
+- `ruban://settings?sheet=appearance`、`ruban-debug://settings?sheet=build` 与
+  `ruban-debug://settings?sheet=playground` 必须能在冷启动后直接复现当前包允许的 Sheet；
+  `ruban://lab/design?theme=dark` 负责复现 Playground 局部主题。
 - Sheet 支持遮罩点击、顶部 CLOSE 和 Android 系统返回关闭；底部只消费一次 safe-area
   inset。Appearance 当前是会话级状态，在引入持久化前不得向用户暗示“已保存”。
 - 同一选择面必须在三个 Gongshu 时代分别通过类型检查、原生编译和真机截图；旧时代不
   使用 RN 0.66 尚未支持的布局属性来伪造一致性。
+- Bottom Sheet 使用直角顶部、1 像素结构边框和矩形拖拽指示条，不直接暴露第三方库
+  默认的悬浮圆角卡片外观。
+
+### 钱包选择面
+
+- latest App 的链选择器与地址选择器都使用同一 App 适配层，保持一个活动选择面，不叠加
+  平台 Modal。
+- 链选择器只展示钱包 RPC 层已经真实支持的网络。名称、链 ID 与图标来自固定版本的
+  `@ruban-labs/web-assets` 本地资产；PNG 通过 Metro 静态映射进入 App 包，禁止运行时
+  URL fallback。
+- 地址选择器只展示公开账户字段：标签、缩略地址与选择状态。账户来源只在账户管理、
+  恢复或最终选择签名方式时出现。私钥、助记词、派生种子和 Native Vault 内部标识不得
+  进入展示模型。
+- 当前链和当前地址都写入全局 SQLite `app_state`，作为 Portfolio、DApp Provider 与签名
+  上下文共享的唯一选择状态；预发布阶段继续直接维护基线 schema，不新增迁移。
 
 ### Deep Link 安装身份
 
 每个可同时安装的 App 只拥有一个 URL scheme。环境和 RN 时代都进入 scheme，因为
 iOS 自定义 URL Scheme 注册后，系统不能再根据路径把链接分发给不同 App。
 
-| 时代 | Production | Regression | Debug |
-| --- | --- | --- | --- |
-| latest | `ruban://` | `ruban-regression://` | `ruban-debug://` |
+| 时代    | Production       | Regression                  | Debug                  |
+| ------- | ---------------- | --------------------------- | ---------------------- |
+| latest  | `ruban://`       | `ruban-regression://`       | `ruban-debug://`       |
 | RN 0.77 | `ruban-rn077://` | `ruban-rn077-regression://` | `ruban-rn077-debug://` |
 | RN 0.66 | `ruban-rn066://` | `ruban-rn066-regression://` | `ruban-rn066-debug://` |
 
@@ -198,7 +283,17 @@ Ruban 应该像一张现代而精确的工作台：
 
 - 不在页面上铺说明文案。界面应先用层级、位置、标签、状态和控件自身说明用途。
 - 标题下方不默认追加副标题，卡片下方不默认追加解释句，列表项不默认追加营销描述。
+- 一级 Tab 页面可以使用一个简短的居中标题稳定视觉重心，但不组成面包屑，不增加品牌
+  前缀或副标题。右上角页面操作使用醒目、带无障碍名称和有效点击热区的语义图标。
 - 文案只有在帮助用户做决定、完成操作、理解风险或恢复错误时才有存在理由。
+- 动作或状态能够由熟悉的语义图标无歧义表达时，优先使用图标，不再用可见文字重复同一
+  含义；图标仍需提供无障碍名称，图标本身不够明确时保留文字。
+- Bottom Sheet 内只有少量简单选项时，使用与页面水平边距对齐、彼此留有明确间隔的紧凑
+  独立卡片。卡片不默认描边：未选项使用弱化的抬升背景，选中项使用导航激活背景；左侧用
+  熟悉的语义图标区分选项，右侧只保留选中勾。只有链选择器等长列表使用相连的密集列表行；
+  选项确实包含有效补充信息时才增加行高。
+- 设置页列表项在对象或类别足够明确时使用低干扰的左侧语义图标，帮助快速扫读；图标辅助
+  可见标签，不替代含义不明确的文字。
 - 能用名称、数值、状态或示例表达的内容，不改写成完整说明段落。
 - 每个页面在实现前必须明确文案预算；删掉一句不影响理解，就应该删掉。
 - Playground 可以使用样本文字展示字形与排版，但样本文字不承担产品说明职责。

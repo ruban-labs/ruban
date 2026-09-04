@@ -1,408 +1,516 @@
-import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { Dialog } from '@ruban-labs/react-native-ui-dialog';
+import { Input } from '@ruban-labs/react-native-ui-form/input';
+import { CaretDownIcon, RefreshIcon } from '@ruban-labs/react-native-ui-icons';
 import * as React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import Collapsible from '@ruban-labs/react-native-collapsible';
-import {Bar} from '@ruban-labs/react-native-progress';
-import {RubanScreen} from '../components/RubanPrimitives';
-import {spacing, useRubanColors, type RubanColors} from '../design/tokens';
-import type {RootStackParamList, TabParamList} from '../navigation/types';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { RubanScreen } from '../components/RubanPrimitives';
+import { spacing, useRubanColors } from '../design/tokens';
+import { usePortfolio } from '../portfolio/usePortfolio';
+import {
+  getPortfolioChain,
+  portfolioChainCatalog,
+} from '../portfolio/chainCatalog';
+import { useWallet } from '../wallet/WalletContext';
+import {
+  AddressSelectorSheet,
+  ChainSelectorSheet,
+} from '../wallet/WalletSelectors';
 
-type Props = BottomTabScreenProps<TabParamList, 'Home'>;
-type ComponentName =
-  | 'Button'
-  | 'Card'
-  | 'Badge'
-  | 'Separator'
-  | 'Switch'
-  | 'Field'
-  | 'Input'
-  | 'Textarea'
-  | 'Checkbox'
-  | 'Radio Group'
-  | 'Select'
-  | 'Progress'
-  | 'Collapsible';
-type ComponentTarget =
-  | 'button'
-  | 'card'
-  | 'badge'
-  | 'separator'
-  | 'switch'
-  | 'field'
-  | 'input'
-  | 'textarea'
-  | 'checkbox'
-  | 'radio-group'
-  | 'select'
-  | 'progress'
-  | 'collapsible';
-type ComponentItem = {
-  index: string;
-  name: ComponentName;
-  category: string;
-  distribution: 'source' | 'package';
-  state: 'ready';
-  target: ComponentTarget;
-};
-type GroupKey = 'source' | 'packages';
-
-const componentInventory: readonly ComponentItem[] = [
-  {index: '01', name: 'Button', category: 'ACTION', distribution: 'source', state: 'ready', target: 'button'},
-  {index: '02', name: 'Card', category: 'SURFACE', distribution: 'source', state: 'ready', target: 'card'},
-  {index: '03', name: 'Badge', category: 'STATUS', distribution: 'source', state: 'ready', target: 'badge'},
-  {index: '04', name: 'Separator', category: 'STRUCTURE', distribution: 'source', state: 'ready', target: 'separator'},
-  {index: '05', name: 'Switch', category: 'CONTROL', distribution: 'source', state: 'ready', target: 'switch'},
-  {index: '06', name: 'Field', category: 'FORM', distribution: 'source', state: 'ready', target: 'field'},
-  {index: '07', name: 'Input', category: 'FORM', distribution: 'source', state: 'ready', target: 'input'},
-  {index: '08', name: 'Textarea', category: 'FORM', distribution: 'source', state: 'ready', target: 'textarea'},
-  {index: '09', name: 'Checkbox', category: 'CONTROL', distribution: 'source', state: 'ready', target: 'checkbox'},
-  {index: '10', name: 'Radio Group', category: 'CONTROL', distribution: 'source', state: 'ready', target: 'radio-group'},
-  {index: '11', name: 'Select', category: 'CONTROL', distribution: 'source', state: 'ready', target: 'select'},
-  {index: '12', name: 'Progress', category: 'FEEDBACK', distribution: 'package', state: 'ready', target: 'progress'},
-  {index: '13', name: 'Collapsible', category: 'STRUCTURE', distribution: 'package', state: 'ready', target: 'collapsible'},
-];
-
-const groups: ReadonlyArray<{
-  key: GroupKey;
-  label: string;
-  items: readonly ComponentItem[];
-}> = [
-  {key: 'source', label: 'CORE COMPONENTS', items: componentInventory.filter(item => item.distribution === 'source')},
-  {key: 'packages', label: 'RUBAN PACKAGES', items: componentInventory.filter(item => item.distribution === 'package')},
-];
-
-const componentCount = String(componentInventory.length).padStart(2, '0');
-
-function ComponentPreview({name, colors}: {name: ComponentName; colors: RubanColors}): React.ReactElement {
-  if (name === 'Button') {
-    return (
-      <View style={[styles.previewButton, {backgroundColor: colors.ink}]}>
-        <Text style={[styles.previewButtonText, {color: colors.inverse}]}>ACTION</Text>
-      </View>
-    );
-  }
-
-  if (name === 'Card') {
-    return <View style={[styles.previewCard, {backgroundColor: colors.surface, borderColor: colors.border}]} />;
-  }
-
-  if (name === 'Badge') {
-    return (
-      <View style={[styles.previewBadge, {backgroundColor: colors.successSoft}]}>
-        <Text style={[styles.previewBadgeText, {color: colors.success}]}>LIVE</Text>
-      </View>
-    );
-  }
-
-  if (name === 'Separator') {
-    return <View style={[styles.previewSeparator, {backgroundColor: colors.ink}]} />;
-  }
-
-  if (name === 'Switch') {
-    return (
-      <View style={[styles.previewSwitch, {backgroundColor: colors.accentSoft}]}>
-        <View style={[styles.previewSwitchThumb, {backgroundColor: colors.accent}]} />
-      </View>
-    );
-  }
-
-  if (name === 'Field') {
-    return (
-      <View style={styles.previewField}>
-        <View style={[styles.previewLabel, {backgroundColor: colors.ink}]} />
-        <View style={[styles.previewInput, {borderColor: colors.borderStrong}]} />
-      </View>
-    );
-  }
-
-  if (name === 'Input') {
-    return <View style={[styles.previewInput, {borderColor: colors.borderStrong}]} />;
-  }
-
-  if (name === 'Textarea') {
-    return <View style={[styles.previewTextarea, {borderColor: colors.borderStrong}]} />;
-  }
-
-  if (name === 'Checkbox') {
-    return (
-      <View style={[styles.previewCheckbox, {backgroundColor: colors.accent, borderColor: colors.accent}]}>
-        <Text style={[styles.previewCheckmark, {color: colors.inverse}]}>✓</Text>
-      </View>
-    );
-  }
-
-  if (name === 'Radio Group') {
-    return (
-      <View style={styles.previewRadioGroup}>
-        <View style={[styles.previewRadio, {borderColor: colors.accent}]}>
-          <View style={[styles.previewRadioDot, {backgroundColor: colors.accent}]} />
-        </View>
-        <View style={[styles.previewRadio, {borderColor: colors.borderStrong}]} />
-      </View>
-    );
-  }
-
-  if (name === 'Select') {
-    return (
-      <View style={[styles.previewSelect, {borderColor: colors.borderStrong}]}>
-        <View style={[styles.previewSelectLine, {backgroundColor: colors.ink}]} />
-        <Text style={[styles.previewSelectArrow, {color: colors.accent}]}>↓</Text>
-      </View>
-    );
-  }
-
-  if (name === 'Collapsible') {
-    return (
-      <View style={[styles.previewDisclosure, {borderColor: colors.borderStrong}]}>
-        <View style={[styles.previewDisclosureHeader, {backgroundColor: colors.accentSoft}]} />
-        <View style={[styles.previewDisclosureLine, {backgroundColor: colors.ink}]} />
-        <View style={[styles.previewDisclosureLineShort, {backgroundColor: colors.faint}]} />
-      </View>
-    );
-  }
-
-  return (
-    <Bar
-      progress={0.64}
-      width={86}
-      height={5}
-      borderWidth={0}
-      color={colors.accent}
-      unfilledColor={colors.accentSoft}
-    />
-  );
+function shortAddress(address: string): string {
+  return `${address.slice(0, 7)}…${address.slice(-5)}`;
 }
 
-function InventoryGroup({
-  groupKey,
-  label,
-  items,
-  expanded,
-  colors,
-  onToggle,
-  onOpenComponent,
-}: {
-  groupKey: GroupKey;
-  label: string;
-  items: readonly ComponentItem[];
-  expanded: boolean;
-  colors: RubanColors;
-  onToggle: () => void;
-  onOpenComponent: (target: ComponentTarget) => void;
-}): React.ReactElement {
-  const first = items[0]?.index ?? '00';
-  const last = items[items.length - 1]?.index ?? first;
+function money(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+export default function HomeScreen(): React.ReactElement {
+  const colors = useRubanColors();
+  const wallet = useWallet();
+  const portfolio = usePortfolio(wallet.selectedAccount?.address);
+  const [watchOpen, setWatchOpen] = React.useState(false);
+  const [watchAddress, setWatchAddress] = React.useState('');
+  const [watchLabel, setWatchLabel] = React.useState('Watch account');
+  const [busy, setBusy] = React.useState(false);
+  const [activeSelector, setActiveSelector] = React.useState<
+    'chain' | 'address' | null
+  >(null);
+
+  const run = React.useCallback(async (action: () => Promise<void>) => {
+    setBusy(true);
+    try {
+      await action();
+    } catch (error) {
+      if (error instanceof Error && !/cancel/i.test(error.message))
+        Alert.alert('Wallet', error.message);
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  const addWatch = React.useCallback(() => {
+    run(async () => {
+      await wallet.addWatchAccount(watchLabel, watchAddress);
+      setWatchAddress('');
+      setWatchOpen(false);
+    });
+  }, [run, wallet, watchAddress, watchLabel]);
+
+  const selectedChain = getPortfolioChain(wallet.selectedChainId);
+  const selectedChainPortfolio = portfolio.snapshot?.chains.find(
+    chain => chain.chain.id === wallet.selectedChainId,
+  );
+  const visibleAssets =
+    portfolio.snapshot?.assets.filter(
+      asset =>
+        asset.chainId === wallet.selectedChainId &&
+        Number(asset.displayBalance) > 0,
+    ) || [];
+  const selectedValue =
+    selectedChainPortfolio?.assets.reduce(
+      (total, asset) => total + (asset.valueUsd || 0),
+      0,
+    ) || 0;
+  const maxLatency = selectedChainPortfolio?.latencyMs || 0;
 
   return (
-    <View style={styles.inventoryGroup}>
+    <RubanScreen
+      testID="screen-home"
+      contentStyle={styles.screen}
+      scrollProps={{ refreshControl: undefined }}
+    >
+      <View style={styles.header}>
+        <Text style={[styles.headerTitle, { color: colors.ink }]}>Portfolio</Text>
+        <TouchableOpacity
+          disabled={portfolio.refreshing}
+          onPress={portfolio.refresh}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={portfolio.refreshing ? 'Syncing' : 'Refresh'}
+          style={styles.refreshButton}
+        >
+          <RefreshIcon size={28} color={colors.accent} />
+        </TouchableOpacity>
+      </View>
+
       <TouchableOpacity
-        testID={`home-group-${groupKey}`}
+        testID="open-chain-selector"
         accessibilityRole="button"
-        accessibilityState={{expanded}}
-        activeOpacity={0.72}
-        onPress={onToggle}
-        style={[styles.groupHeader, {borderColor: colors.ink}]}>
-        <View>
-          <Text style={[styles.groupLabel, {color: colors.ink}]}>{label}</Text>
-          <Text style={[styles.groupRange, {color: colors.faint}]}>{first}—{last}</Text>
+        accessibilityLabel={`Network, ${selectedChain.displayName}`}
+        onPress={() => setActiveSelector('chain')}
+        activeOpacity={0.68}
+        style={[styles.networkSelector, { borderColor: colors.borderStrong }]}
+      >
+        <View style={styles.networkLogoFrame}>
+          <Image
+            source={
+              colors.mode === 'dark'
+                ? selectedChain.whiteLogo
+                : selectedChain.logo
+            }
+            resizeMode="contain"
+            style={styles.networkLogo}
+          />
         </View>
-        <View style={[styles.groupCount, {backgroundColor: expanded ? colors.ink : colors.surfaceRaised}]}>
-          <Text style={[styles.groupCountText, {color: expanded ? colors.inverse : colors.faint}]}>
-            {String(items.length).padStart(2, '0')} {expanded ? '−' : '+'}
+        <View style={styles.networkIdentity}>
+          <Text style={[styles.networkName, { color: colors.ink }]}>
+            {selectedChain.displayName}
           </Text>
         </View>
+        <CaretDownIcon size={12} color={colors.faint} />
       </TouchableOpacity>
-      <Collapsible
-        testID={`home-group-${groupKey}-content`}
-        collapsed={!expanded}
-        duration={220}
-        easing="easeOutCubic">
-        <View>
-          {items.map(component => (
-            <TouchableOpacity
-              key={component.name}
-              accessibilityRole="button"
-              activeOpacity={0.72}
-              onPress={() => onOpenComponent(component.target)}
-              style={[styles.componentRow, {borderBottomColor: colors.border}]}>
-              <Text style={[styles.componentIndex, {color: colors.accent}]}>{component.index}</Text>
-              <View style={styles.componentIdentity}>
-                <Text style={[styles.componentName, {color: colors.ink}]}>{component.name}</Text>
-                <Text style={[styles.componentMeta, {color: colors.faint}]}>
-                  {component.category} · {component.distribution.toUpperCase()}
-                </Text>
-                <Text style={[styles.componentState, {color: colors.accent}]}>
-                  {component.state.toUpperCase()}
+
+      {wallet.selectedAccount ? (
+        <>
+          <Text style={[styles.balance, { color: colors.ink }]}>
+            {money(selectedValue)}
+          </Text>
+          <TouchableOpacity
+            testID="open-address-selector"
+            accessibilityRole="button"
+            accessibilityLabel={`Address, ${wallet.selectedAccount.label}`}
+            onPress={() => setActiveSelector('address')}
+            activeOpacity={0.68}
+            style={styles.accountRow}
+          >
+            <View>
+              <Text style={[styles.accountName, { color: colors.ink }]}>
+                {wallet.selectedAccount.label}
+              </Text>
+              <Text style={[styles.address, { color: colors.faint }]}>
+                {shortAddress(wallet.selectedAccount.address)}
+              </Text>
+            </View>
+            <CaretDownIcon size={12} color={colors.faint} />
+          </TouchableOpacity>
+        </>
+      ) : (
+        <View style={[styles.emptyHero, { backgroundColor: colors.contrast }]}>
+          <Text style={[styles.emptyMark, { color: colors.contrastAccent }]}>
+            01
+          </Text>
+          <Text style={[styles.emptyTitle, { color: colors.inverse }]}>
+            Create a wallet
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.actions}>
+        <Action
+          label="CREATE"
+          onPress={() => run(wallet.createMnemonic)}
+          disabled={busy || !wallet.available}
+        />
+        <Action
+          label="PHRASE"
+          onPress={() => run(wallet.importMnemonic)}
+          disabled={busy || !wallet.available}
+        />
+        <Action
+          label="KEY"
+          onPress={() => run(wallet.importPrivateKey)}
+          disabled={busy || !wallet.available}
+        />
+        <Action
+          label="WATCH"
+          onPress={() => setWatchOpen(true)}
+          disabled={busy || !wallet.available}
+        />
+      </View>
+
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionLabel, { color: colors.faint }]}>
+          ASSETS
+        </Text>
+        {portfolio.refreshing ? (
+          <ActivityIndicator size="small" color={colors.accent} />
+        ) : (
+          <Text style={[styles.syncMeta, { color: colors.faint }]}>
+            {portfolio.completedChains}/{portfolioChainCatalog.length}
+            {maxLatency ? ` · ${maxLatency} MS` : ''}
+          </Text>
+        )}
+      </View>
+
+      <View style={[styles.assetList, { borderColor: colors.border }]}>
+        {visibleAssets.length > 0 ? (
+          visibleAssets.map((asset, index) => (
+            <View
+              key={`${asset.chainId}:${asset.contractAddress || 'native'}`}
+              style={[
+                styles.assetRow,
+                index > 0 && {
+                  borderTopColor: colors.border,
+                  borderTopWidth: StyleSheet.hairlineWidth,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.assetMark,
+                  { backgroundColor: colors.accentSoft },
+                ]}
+              >
+                <Text style={[styles.assetMarkText, { color: colors.accent }]}>
+                  {asset.symbol.slice(0, 1)}
                 </Text>
               </View>
-              <View style={styles.preview}>
-                <ComponentPreview name={component.name} colors={colors} />
+              <View style={styles.assetIdentity}>
+                <Text style={[styles.assetSymbol, { color: colors.ink }]}>
+                  {asset.symbol}
+                </Text>
+                <Text style={[styles.assetChain, { color: colors.faint }]}>
+                  {asset.chainName.toUpperCase()}
+                </Text>
               </View>
-              <Text style={[styles.rowArrow, {color: colors.faint}]}>→</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </Collapsible>
-    </View>
-  );
-}
-
-export default function HomeScreen({navigation}: Props): React.ReactElement {
-  const colors = useRubanColors();
-  const rootNavigation = navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
-  const [expandedGroups, setExpandedGroups] = React.useState<Record<GroupKey, boolean>>({
-    source: true,
-    packages: true,
-  });
-
-  const openComponent = (target: ComponentTarget) => {
-    if (target === 'progress') {
-      navigation.navigate('Playground', {
-        tool: 'progress',
-        bar: '0.64',
-        circle: '0.42',
-        pie: '0.76',
-      });
-      return;
-    }
-
-    rootNavigation?.navigate('ComponentDetail', {component: target, theme: 'light'});
-  };
-
-  const toggleGroup = (group: GroupKey) => {
-    setExpandedGroups(current => ({...current, [group]: !current[group]}));
-  };
-
-  return (
-    <RubanScreen testID="screen-home">
-      <View style={styles.header}>
-        <Text style={[styles.wordmark, {color: colors.ink}]}>RUBAN / UI WORKBENCH</Text>
-        <Text style={[styles.buildTag, {color: colors.faint}]}>MOBILE</Text>
+              <View>
+                <Text style={[styles.assetValue, { color: colors.ink }]}>
+                  {asset.valueUsd == null ? '—' : money(asset.valueUsd)}
+                </Text>
+                <Text style={[styles.assetBalance, { color: colors.faint }]}>
+                  {asset.displayBalance}
+                </Text>
+              </View>
+            </View>
+          ))
+        ) : (
+          <View style={styles.noAssets}>
+            <Text style={[styles.noAssetsValue, { color: colors.ink }]}>
+              {portfolio.refreshing ? 'SYNCING' : 'NO BALANCES'}
+            </Text>
+            {portfolio.error ? (
+              <Text style={[styles.noAssetsMeta, { color: colors.alert }]}>
+                {portfolio.error}
+              </Text>
+            ) : null}
+          </View>
+        )}
       </View>
 
-      <View style={styles.titleRow}>
-        <Text style={[styles.title, {color: colors.ink}]}>Library</Text>
-        <View style={[styles.countBlock, {backgroundColor: colors.accent}]}>
-          <Text style={[styles.count, {color: colors.inverse}]}>{componentCount}</Text>
-        </View>
-      </View>
+      <ChainSelectorSheet
+        visible={activeSelector === 'chain'}
+        chains={portfolioChainCatalog}
+        selectedChainId={wallet.selectedChainId}
+        onSelect={wallet.selectChain}
+        onDismiss={() => setActiveSelector(null)}
+      />
+      <AddressSelectorSheet
+        visible={activeSelector === 'address'}
+        accounts={wallet.accounts}
+        selectedAccountId={wallet.selectedAccount?.id || null}
+        onSelect={wallet.selectAccount}
+        onDismiss={() => setActiveSelector(null)}
+      />
 
-      <View style={[styles.buildStrip, {borderColor: colors.border}]}>
-        <View style={styles.buildCell}>
-          <Text style={[styles.buildLabel, {color: colors.faint}]}>CORE</Text>
-          <Text style={[styles.buildValue, {color: colors.ink}]}>11</Text>
-        </View>
-        <View style={[styles.buildCell, styles.buildCellBorder, {borderColor: colors.border}]}>
-          <Text style={[styles.buildLabel, {color: colors.faint}]}>PACKAGES</Text>
-          <Text style={[styles.buildValue, {color: colors.ink}]}>02</Text>
-        </View>
-        <View style={[styles.buildCell, styles.buildCellBorder, {borderColor: colors.border}]}>
-          <Text style={[styles.buildLabel, {color: colors.faint}]}>THEMES</Text>
-          <Text style={[styles.buildValue, {color: colors.ink}]}>02</Text>
-        </View>
-      </View>
-
-      <View style={styles.inventory}>
-        {groups.map(group => (
-          <InventoryGroup
-            key={group.key}
-            groupKey={group.key}
-            label={group.label}
-            items={group.items}
-            expanded={expandedGroups[group.key]}
-            colors={colors}
-            onToggle={() => toggleGroup(group.key)}
-            onOpenComponent={openComponent}
+      <Dialog.Root open={watchOpen} onOpenChange={setWatchOpen}>
+        <Dialog.Content accessibilityLabel="Add watch account">
+          <Dialog.Header>
+            <Dialog.Title>Watch account</Dialog.Title>
+          </Dialog.Header>
+          <Input
+            value={watchLabel}
+            onChangeText={setWatchLabel}
+            placeholder="Label"
           />
-        ))}
-      </View>
-
-      <TouchableOpacity
-        testID="home-open-form-workbench"
-        accessibilityRole="button"
-        activeOpacity={0.78}
-        onPress={() => rootNavigation?.navigate('ComponentDetail', {component: 'form', theme: 'light'})}
-        style={[styles.formLink, {backgroundColor: colors.accent}]}>
-        <Text style={[styles.playgroundLabel, {color: colors.inverse}]}>OPEN FORM WORKBENCH</Text>
-        <Text style={[styles.playgroundArrow, {color: colors.inverse}]}>→</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        testID="home-open-playground"
-        accessibilityRole="button"
-        activeOpacity={0.78}
-        onPress={() => navigation.navigate('Playground', {tool: 'design'})}
-        style={[styles.playgroundLink, {backgroundColor: colors.ink}]}>
-        <Text style={[styles.playgroundLabel, {color: colors.inverse}]}>EXPLORE DESIGN SYSTEM</Text>
-        <Text style={[styles.playgroundArrow, {color: colors.accent}]}>→</Text>
-      </TouchableOpacity>
+          <Input
+            value={watchAddress}
+            onChangeText={setWatchAddress}
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholder="0x…"
+            style={styles.watchAddress}
+          />
+          <Dialog.Footer>
+            <TouchableOpacity
+              onPress={() => setWatchOpen(false)}
+              style={styles.dialogButton}
+            >
+              <Text style={[styles.dialogButtonText, { color: colors.faint }]}>
+                CANCEL
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={addWatch}
+              style={[styles.dialogButton, { backgroundColor: colors.ink }]}
+            >
+              <Text
+                style={[styles.dialogButtonText, { color: colors.inverse }]}
+              >
+                ADD
+              </Text>
+            </TouchableOpacity>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog.Root>
     </RubanScreen>
   );
 }
 
+function Action({
+  label,
+  onPress,
+  disabled,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled: boolean;
+}): React.ReactElement {
+  const colors = useRubanColors();
+  return (
+    <TouchableOpacity
+      disabled={disabled}
+      onPress={onPress}
+      activeOpacity={0.72}
+      style={[
+        styles.action,
+        { borderColor: colors.borderStrong },
+        disabled && styles.disabled,
+      ]}
+    >
+      <Text style={[styles.actionText, { color: colors.ink }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  header: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
-  wordmark: {fontSize: 11, lineHeight: 15, fontWeight: '900', letterSpacing: 1.7},
-  buildTag: {fontSize: 9, lineHeight: 13, fontWeight: '700', letterSpacing: 0.8},
-  titleRow: {marginTop: 28, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between'},
-  title: {flexShrink: 1, fontSize: 44, lineHeight: 48, fontWeight: '800', letterSpacing: -2.2},
-  countBlock: {width: 54, height: 54, alignItems: 'center', justifyContent: 'center'},
-  count: {fontSize: 18, lineHeight: 22, fontWeight: '900'},
-  buildStrip: {marginTop: spacing.lg, borderWidth: 1, flexDirection: 'row'},
-  buildCell: {flex: 1, minHeight: 70, padding: 12, justifyContent: 'space-between'},
-  buildCellBorder: {borderLeftWidth: 1},
-  buildLabel: {fontSize: 8, lineHeight: 11, fontWeight: '800', letterSpacing: 1},
-  buildValue: {fontSize: 13, lineHeight: 17, fontWeight: '900'},
-  inventory: {marginTop: 30},
-  inventoryGroup: {marginBottom: 18},
-  groupHeader: {
-    minHeight: 50,
-    paddingLeft: 12,
-    borderTopWidth: 2,
-    borderBottomWidth: 1,
+  screen: { paddingBottom: spacing.xxl },
+  header: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  headerTitle: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: '800',
+    letterSpacing: -0.45,
+  },
+  refreshButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    top: 0,
+    right: 0,
+  },
+  networkSelector: {
+    marginTop: 22,
+    minHeight: 58,
+    paddingHorizontal: 10,
+    borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  networkLogoFrame: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  networkLogo: { width: 38, height: 38, borderRadius: 19 },
+  networkIdentity: { flex: 1, marginLeft: 11 },
+  networkName: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: '800',
+  },
+  balance: {
+    marginTop: 30,
+    fontSize: 48,
+    lineHeight: 54,
+    fontWeight: '800',
+    letterSpacing: -2.4,
+  },
+  accountRow: {
+    marginTop: 6,
+    minHeight: 42,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  accountName: { fontSize: 14, lineHeight: 20, fontWeight: '800' },
+  address: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  emptyHero: {
+    marginTop: 28,
+    height: 174,
+    padding: 18,
     justifyContent: 'space-between',
   },
-  groupLabel: {fontSize: 10, lineHeight: 14, fontWeight: '900', letterSpacing: 1.25},
-  groupRange: {marginTop: 3, fontSize: 8, lineHeight: 11, fontWeight: '700', letterSpacing: 0.7},
-  groupCount: {alignSelf: 'stretch', minWidth: 68, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center'},
-  groupCountText: {fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7},
-  componentRow: {minHeight: 84, borderBottomWidth: 1, flexDirection: 'row', alignItems: 'center'},
-  componentIndex: {width: 34, fontSize: 10, lineHeight: 14, fontWeight: '800'},
-  componentIdentity: {width: 116},
-  componentName: {fontSize: 17, lineHeight: 22, fontWeight: '800', letterSpacing: -0.25},
-  componentMeta: {marginTop: 4, fontSize: 7, lineHeight: 10, fontWeight: '800', letterSpacing: 0.7},
-  componentState: {marginTop: 2, fontSize: 7, lineHeight: 10, fontWeight: '900', letterSpacing: 0.8},
-  preview: {flex: 1, alignItems: 'flex-end', paddingRight: 12},
-  rowArrow: {width: 18, fontSize: 17},
-  previewButton: {minWidth: 70, height: 30, alignItems: 'center', justifyContent: 'center'},
-  previewButtonText: {fontSize: 7, lineHeight: 10, fontWeight: '900', letterSpacing: 0.8},
-  previewCard: {width: 62, height: 38, borderWidth: 1},
-  previewBadge: {height: 26, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center'},
-  previewBadgeText: {fontSize: 8, lineHeight: 11, fontWeight: '900', letterSpacing: 0.8},
-  previewSeparator: {width: 76, height: 2},
-  previewSwitch: {width: 48, height: 26, padding: 3, alignItems: 'flex-end', justifyContent: 'center'},
-  previewSwitchThumb: {width: 20, height: 20},
-  previewField: {width: 76},
-  previewLabel: {width: 34, height: 3, marginBottom: 5},
-  previewInput: {width: 76, height: 28, borderWidth: 1},
-  previewTextarea: {width: 76, height: 40, borderWidth: 1},
-  previewCheckbox: {width: 22, height: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center'},
-  previewCheckmark: {fontSize: 13, lineHeight: 16, fontWeight: '900'},
-  previewRadioGroup: {flexDirection: 'row'},
-  previewRadio: {width: 22, height: 22, marginLeft: 7, borderWidth: 1, borderRadius: 11, alignItems: 'center', justifyContent: 'center'},
-  previewRadioDot: {width: 10, height: 10, borderRadius: 5},
-  previewSelect: {width: 76, height: 30, paddingHorizontal: 8, borderWidth: 1, flexDirection: 'row', alignItems: 'center'},
-  previewSelectLine: {flex: 1, height: 2},
-  previewSelectArrow: {marginLeft: 7, fontSize: 13, lineHeight: 16, fontWeight: '900'},
-  previewDisclosure: {width: 76, height: 42, padding: 6, borderWidth: 1},
-  previewDisclosureHeader: {height: 7},
-  previewDisclosureLine: {width: 52, height: 2, marginTop: 7},
-  previewDisclosureLineShort: {width: 34, height: 2, marginTop: 5},
-  formLink: {minHeight: 56, marginTop: 2, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
-  playgroundLink: {minHeight: 56, marginTop: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
-  playgroundLabel: {fontSize: 11, lineHeight: 15, fontWeight: '900', letterSpacing: 1.3},
-  playgroundArrow: {fontSize: 22},
+  emptyMark: { fontSize: 12, fontWeight: '900', letterSpacing: 1.2 },
+  emptyTitle: {
+    fontSize: 38,
+    lineHeight: 42,
+    fontWeight: '800',
+    letterSpacing: -1.8,
+  },
+  actions: { marginTop: 16, flexDirection: 'row' },
+  action: {
+    flex: 1,
+    minHeight: 46,
+    marginRight: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionText: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  disabled: { opacity: 0.4 },
+  sectionHeader: {
+    marginTop: 30,
+    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionLabel: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '900',
+    letterSpacing: 1.4,
+  },
+  syncMeta: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '800',
+    letterSpacing: 0.55,
+  },
+  assetList: { borderWidth: 1 },
+  assetRow: {
+    minHeight: 72,
+    paddingHorizontal: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  assetMark: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  assetMarkText: { fontSize: 15, fontWeight: '900' },
+  assetIdentity: { flex: 1, marginLeft: 12 },
+  assetSymbol: { fontSize: 14, lineHeight: 18, fontWeight: '900' },
+  assetChain: {
+    marginTop: 2,
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: '800',
+    letterSpacing: 0.7,
+  },
+  assetValue: {
+    textAlign: 'right',
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '800',
+  },
+  assetBalance: {
+    textAlign: 'right',
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '700',
+  },
+  noAssets: { minHeight: 82, padding: 16, justifyContent: 'center' },
+  noAssetsValue: { fontSize: 18, lineHeight: 24, fontWeight: '800' },
+  noAssetsMeta: {
+    marginTop: 8,
+    fontSize: 8,
+    lineHeight: 12,
+    fontWeight: '800',
+    letterSpacing: 0.55,
+  },
+  watchAddress: { marginTop: 10 },
+  dialogButton: {
+    minWidth: 82,
+    minHeight: 42,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dialogButtonText: { fontSize: 10, fontWeight: '900', letterSpacing: 1 },
 });

@@ -85,6 +85,10 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+    buildFeatures {
+        buildConfig true
+    }
+
     namespace "com.gongshu.latest"
     defaultConfig {
         applicationId "com.rubanlabs.mobile"
@@ -92,6 +96,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode = (project.findProperty("RUBAN_VERSION_CODE") ?: "1").toInteger()
         versionName = project.findProperty("RUBAN_VERSION_NAME") ?: "1.0"
+        buildConfigField "String", "RUBAN_APP_CHANNEL", '"production"'
         manifestPlaceholders = [
             usesCleartextTraffic: "false",
             rubanLinkScheme: "ruban",
@@ -121,6 +126,7 @@ android {
             applicationIdSuffix ".debug"
             manifestPlaceholders.rubanLinkScheme = "ruban-debug"
             resValue "string", "app_name", "Ruban Dev"
+            buildConfigField "String", "RUBAN_APP_CHANNEL", '"debug"'
         }
         release {
             if (rubanSigningTarget == "website") signingConfig signingConfigs.rubanWebsite
@@ -137,6 +143,7 @@ android {
             matchingFallbacks = ["release"]
             if (rubanSigningTarget == "internal") signingConfig signingConfigs.rubanUpload
             resValue "string", "app_name", "Ruban Regression"
+            buildConfigField "String", "RUBAN_APP_CHANNEL", '"regression"'
         }
     }
 }

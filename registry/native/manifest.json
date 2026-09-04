@@ -3,31 +3,56 @@
   "targetDirectory": "src/components/ui",
   "items": [
     {
+      "name": "overlay",
+      "package": "react-native-ui-overlay",
+      "files": ["OverlayCoordinator.ts", "OverlayHost.tsx"]
+    },
+    {
+      "name": "dialog",
+      "package": "react-native-ui-dialog",
+      "files": ["Dialog.tsx"]
+    },
+    {
+      "name": "bottom-sheet",
+      "package": "react-native-ui-sheet",
+      "files": ["BottomSheetModal.tsx"]
+    },
+    {
       "name": "field",
+      "package": "react-native-ui-form",
       "files": ["Field.tsx"]
     },
     {
       "name": "input",
+      "package": "react-native-ui-form",
       "files": ["Input.tsx"]
     },
     {
       "name": "textarea",
+      "package": "react-native-ui-form",
       "files": ["Textarea.tsx"]
     },
     {
       "name": "checkbox",
+      "package": "react-native-ui-form",
       "files": ["Checkbox.tsx"]
     },
     {
       "name": "radio-group",
+      "package": "react-native-ui-form",
       "files": ["RadioGroup.tsx"]
     },
     {
       "name": "select",
+      "package": "react-native-ui-form",
       "files": ["Select.tsx"]
     }
   ],
   "verificationFiles": [
+    {
+      "source": "examples/DialogShowcaseScreen.tsx",
+      "target": "src/screens/components/DialogShowcaseScreen.tsx"
+    },
     {
       "source": "examples/FormKitShowcaseScreen.tsx",
       "target": "src/screens/components/FormKitShowcaseScreen.tsx"
@@ -35,6 +60,12 @@
     {
       "source": "examples/FormWorkbenchScreen.tsx",
       "target": "src/screens/components/FormWorkbenchScreen.tsx"
+    }
+  ],
+  "testFiles": [
+    {
+      "source": "tests/OverlayCoordinator.test.js",
+      "target": "__tests__/OverlayCoordinator.test.js"
     }
   ]
 }

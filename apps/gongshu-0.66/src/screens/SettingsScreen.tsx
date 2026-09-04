@@ -1,4 +1,20 @@
 import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {BottomSheetScrollView} from '@gorhom/bottom-sheet';
+import {
+  ArrowRightIcon,
+  CodeIcon,
+  DocumentIcon,
+  ExternalLinkIcon,
+  GlobeIcon,
+  LicenseIcon,
+  TagIcon,
+  ThemeDarkIcon,
+  ThemeLightIcon,
+  ThemeModeIcon,
+  TabsIcon,
+  type RubanIconProps,
+} from '@ruban-labs/react-native-ui-icons';
 import * as React from 'react';
 import {
   Linking,
@@ -8,22 +24,31 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {architectureLabel, buildInfo} from '../buildInfo';
 import {RubanScreen} from '../components/RubanPrimitives';
 import {
   BottomSheetModal,
+  BottomSheetModalRoot,
   SelectionBottomSheet,
   type SelectionOption,
 } from '../components/ui/BottomSheetModal';
 import {spacing, useRubanColors} from '../design/tokens';
-import type {TabParamList} from '../navigation/types';
+import type {RootStackParamList, TabParamList} from '../navigation/types';
 import {
   useAppPreferences,
   type AppearancePreference,
 } from '../settings/AppPreferences';
 
 type Props = BottomTabScreenProps<TabParamList, 'Settings'>;
-type SettingsAction = 'select' | 'external';
+type SettingsAction = 'select' | 'external' | 'navigate';
+
+type PlaygroundItem = {
+  label: string;
+  meta: string;
+  destination: 'lab' | 'component';
+  target: string;
+};
 
 type SettingsRowProps = {
   label: string;
@@ -31,6 +56,7 @@ type SettingsRowProps = {
   onPress?: () => void;
   action?: SettingsAction;
   testID?: string;
+  icon?: React.ComponentType<RubanIconProps>;
 };
 
 function SettingsRow({
@@ -39,11 +65,22 @@ function SettingsRow({
   onPress,
   action = 'select',
   testID,
+  icon: Icon,
 }: SettingsRowProps): React.ReactElement {
   const colors = useRubanColors();
   const content = (
     <>
-      <Text style={[styles.rowLabel, {color: colors.ink}]}>{label}</Text>
+      <View style={styles.rowIdentity}>
+        {Icon ? <Icon size={21} color={colors.muted} /> : null}
+        <Text
+          style={[
+            styles.rowLabel,
+            Icon ? styles.rowLabelWithIcon : undefined,
+            {color: colors.ink},
+          ]}>
+          {label}
+        </Text>
+      </View>
       <View style={styles.rowValueWrap}>
         <Text
           numberOfLines={1}
@@ -51,9 +88,19 @@ function SettingsRow({
           {value}
         </Text>
         {onPress ? (
-          <Text style={[styles.rowArrow, {color: colors.accent}]}>
-            {action === 'external' ? '↗' : '↓'}
-          </Text>
+          action === 'external' ? (
+            <ExternalLinkIcon
+              size={18}
+              color={colors.accent}
+              style={styles.rowActionIcon}
+            />
+          ) : action === 'navigate' ? (
+            <ArrowRightIcon
+              size={18}
+              color={colors.accent}
+              style={styles.rowActionIcon}
+            />
+          ) : null
         ) : null}
       </View>
     </>
@@ -81,10 +128,79 @@ function SettingsRow({
 
 const appearanceOptions: ReadonlyArray<SelectionOption<AppearancePreference>> =
   [
-    {value: 'system', label: 'System', meta: 'FOLLOW DEVICE'},
-    {value: 'light', label: 'Light', meta: 'RUBAN LIGHT'},
-    {value: 'dark', label: 'Dark', meta: 'RUBAN DARK'},
+    {value: 'system', label: 'System', icon: ThemeModeIcon},
+    {value: 'light', label: 'Light', icon: ThemeLightIcon},
+    {value: 'dark', label: 'Dark', icon: ThemeDarkIcon},
   ];
+
+const playgroundItems: readonly PlaygroundItem[] = [
+  {
+    label: 'Design playground',
+    meta: 'DESIGN',
+    destination: 'lab',
+    target: 'design',
+  },
+  {label: 'Progress', meta: 'FEEDBACK', destination: 'lab', target: 'progress'},
+  {label: 'Button', meta: 'ACTION', destination: 'component', target: 'button'},
+  {label: 'Card', meta: 'SURFACE', destination: 'component', target: 'card'},
+  {label: 'Badge', meta: 'STATUS', destination: 'component', target: 'badge'},
+  {
+    label: 'Separator',
+    meta: 'STRUCTURE',
+    destination: 'component',
+    target: 'separator',
+  },
+  {
+    label: 'Switch',
+    meta: 'CONTROL',
+    destination: 'component',
+    target: 'switch',
+  },
+  {label: 'Field', meta: 'FORM', destination: 'component', target: 'field'},
+  {label: 'Input', meta: 'FORM', destination: 'component', target: 'input'},
+  {
+    label: 'Textarea',
+    meta: 'FORM',
+    destination: 'component',
+    target: 'textarea',
+  },
+  {
+    label: 'Checkbox',
+    meta: 'CONTROL',
+    destination: 'component',
+    target: 'checkbox',
+  },
+  {
+    label: 'Radio group',
+    meta: 'CONTROL',
+    destination: 'component',
+    target: 'radio-group',
+  },
+  {
+    label: 'Select',
+    meta: 'CONTROL',
+    destination: 'component',
+    target: 'select',
+  },
+  {
+    label: 'Dialog',
+    meta: 'OVERLAY',
+    destination: 'component',
+    target: 'dialog',
+  },
+  {
+    label: 'Collapsible',
+    meta: 'STRUCTURE',
+    destination: 'component',
+    target: 'collapsible',
+  },
+  {
+    label: 'Form workbench',
+    meta: 'RECIPE',
+    destination: 'component',
+    target: 'form',
+  },
+];
 
 function SettingsGroup({
   label,
@@ -127,6 +243,10 @@ function BuildInfoBottomSheet({
       onDismiss={onDismiss}>
       <ScrollView bounces={false} contentContainerStyle={styles.sheetContent}>
         <SettingsGroup label="CURRENT BUILD" inSheet>
+          <SettingsRow
+            label="Environment"
+            value={buildInfo.environment.toUpperCase()}
+          />
           <SettingsRow label="React Native" value={buildInfo.reactNative} />
           <SettingsRow label="React" value={buildInfo.react} />
           <SettingsRow label="Architecture" value={architectureLabel} />
@@ -148,6 +268,56 @@ function BuildInfoBottomSheet({
   );
 }
 
+function PlaygroundBottomSheet({
+  visible,
+  onDismiss,
+  onOpen,
+}: {
+  visible: boolean;
+  onDismiss: () => void;
+  onOpen: (item: PlaygroundItem) => void;
+}): React.ReactElement {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <BottomSheetModalRoot visible={visible} onDismiss={onDismiss}>
+      <BottomSheetScrollView
+        testID="settings-sheet-playground"
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.sheetContent,
+          {paddingBottom: Math.max(insets.bottom, spacing.lg)},
+        ]}>
+        <SettingsGroup label="LABS" inSheet>
+          {playgroundItems.slice(0, 2).map(item => (
+            <SettingsRow
+              key={item.target}
+              testID={`playground-open-${item.target}`}
+              label={item.label}
+              value={item.meta}
+              action="navigate"
+              onPress={() => onOpen(item)}
+            />
+          ))}
+        </SettingsGroup>
+        <SettingsGroup label="COMPONENTS" inSheet>
+          {playgroundItems.slice(2).map(item => (
+            <SettingsRow
+              key={item.target}
+              testID={`playground-open-${item.target}`}
+              label={item.label}
+              value={item.meta}
+              action="navigate"
+              onPress={() => onOpen(item)}
+            />
+          ))}
+        </SettingsGroup>
+      </BottomSheetScrollView>
+    </BottomSheetModalRoot>
+  );
+}
+
 export default function SettingsScreen({
   route,
   navigation,
@@ -155,7 +325,22 @@ export default function SettingsScreen({
   const colors = useRubanColors();
   const {appearance, setAppearance} = useAppPreferences();
   const activeSheet = route.params?.sheet;
+  const showsDiagnostics = buildInfo.environment !== 'production';
+  const rootNavigation =
+    navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
   const dismissSheet = () => navigation.setParams({sheet: undefined});
+  const openPlaygroundItem = (item: PlaygroundItem) => {
+    dismissSheet();
+    if (item.destination === 'lab') {
+      navigation.navigate('Playground', {tool: item.target});
+      return;
+    }
+
+    rootNavigation?.navigate('ComponentDetail', {
+      component: item.target,
+      theme: colors.mode,
+    });
+  };
 
   return (
     <RubanScreen testID="screen-settings">
@@ -174,16 +359,8 @@ export default function SettingsScreen({
           testID="settings-appearance"
           label="Appearance"
           value={appearance.toUpperCase()}
+          icon={ThemeModeIcon}
           onPress={() => navigation.setParams({sheet: 'appearance'})}
-        />
-      </SettingsGroup>
-
-      <SettingsGroup label="BUILD">
-        <SettingsRow
-          testID="settings-build"
-          label="Build & matrix"
-          value={`RN ${buildInfo.reactNative}`}
-          onPress={() => navigation.setParams({sheet: 'build'})}
         />
       </SettingsGroup>
 
@@ -191,12 +368,14 @@ export default function SettingsScreen({
         <SettingsRow
           label="Ruban Labs"
           value="GITHUB"
+          icon={GlobeIcon}
           action="external"
           onPress={() => Linking.openURL('https://github.com/ruban-labs/ruban')}
         />
         <SettingsRow
           label="Ecosystem ruler"
           value="AWESOME"
+          icon={DocumentIcon}
           action="external"
           onPress={() =>
             Linking.openURL(
@@ -204,9 +383,28 @@ export default function SettingsScreen({
             )
           }
         />
-        <SettingsRow label="Version" value="0.0.1" />
-        <SettingsRow label="License" value="MIT" />
+        <SettingsRow label="Version" value="0.0.1" icon={TagIcon} />
+        <SettingsRow label="License" value="MIT" icon={LicenseIcon} />
       </SettingsGroup>
+
+      {showsDiagnostics ? (
+        <SettingsGroup label="DIAGNOSTICS">
+          <SettingsRow
+            testID="settings-playground"
+            label="Playground"
+            value={`${playgroundItems.length} SCREENS`}
+            icon={TabsIcon}
+            onPress={() => navigation.setParams({sheet: 'playground'})}
+          />
+          <SettingsRow
+            testID="settings-build"
+            label="Build & matrix"
+            value={`RN ${buildInfo.reactNative}`}
+            icon={CodeIcon}
+            onPress={() => navigation.setParams({sheet: 'build'})}
+          />
+        </SettingsGroup>
+      ) : null}
 
       <SelectionBottomSheet
         testID="settings-sheet-appearance"
@@ -217,10 +415,19 @@ export default function SettingsScreen({
         onChange={setAppearance}
         onDismiss={dismissSheet}
       />
-      <BuildInfoBottomSheet
-        visible={activeSheet === 'build'}
-        onDismiss={dismissSheet}
-      />
+      {showsDiagnostics ? (
+        <>
+          <PlaygroundBottomSheet
+            visible={activeSheet === 'playground'}
+            onDismiss={dismissSheet}
+            onOpen={openPlaygroundItem}
+          />
+          <BuildInfoBottomSheet
+            visible={activeSheet === 'build'}
+            onDismiss={dismissSheet}
+          />
+        </>
+      ) : null}
     </RubanScreen>
   );
 }
@@ -271,11 +478,12 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     flex: 1,
-    paddingRight: 12,
     fontSize: 14,
     lineHeight: 19,
     fontWeight: '700',
   },
+  rowIdentity: {flex: 1, flexDirection: 'row', alignItems: 'center'},
+  rowLabelWithIcon: {marginLeft: 12},
   rowValueWrap: {flexShrink: 0, flexDirection: 'row', alignItems: 'center'},
   rowValue: {
     minWidth: 56,
@@ -285,5 +493,5 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.8,
   },
-  rowArrow: {marginLeft: 8, fontSize: 16, lineHeight: 18},
+  rowActionIcon: {marginLeft: 8},
 });

@@ -1,5 +1,6 @@
 import * as React from 'react';
-import {Platform} from 'react-native';
+import { Platform } from 'react-native';
+import { appEnvironment } from './runtime/appEnvironment';
 
 type RuntimeGlobals = typeof globalThis & {
   HermesInternal?: unknown;
@@ -16,7 +17,9 @@ export const buildInfo = {
   engine: runtimeGlobals.HermesInternal ? 'Hermes' : 'JSC',
   platform: Platform.OS,
   platformVersion: String(Platform.Version),
+  environment: appEnvironment,
   channel: __DEV__ ? 'dev' : 'release',
 } as const;
 
-export const architectureLabel = buildInfo.architecture === 'newArch' ? 'NEW ARCH' : 'OLD ARCH';
+export const architectureLabel =
+  buildInfo.architecture === 'newArch' ? 'NEW ARCH' : 'OLD ARCH';

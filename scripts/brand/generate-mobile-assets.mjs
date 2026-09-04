@@ -82,6 +82,20 @@ function recolorAppIcon(channel) {
   return replaceColor(svg, '#4c8dff', channel.accent);
 }
 
+function providerIconsSource() {
+  const entries = Object.entries(config.channels).map(
+    ([channelName, channel]) => {
+      const dataUri = `data:image/svg+xml;base64,${Buffer.from(
+        recolorAppIcon(channel),
+      ).toString('base64')}`;
+      return `  ${channelName}:\n    '${dataUri}',`;
+    },
+  );
+  return `export const rubanProviderIcons = {\n${entries.join(
+    '\n',
+  )}\n} as const;\n`;
+}
+
 function recolorCore(mark, accent) {
   return replaceColor(
     replaceColor(coreSource, '#d9ff45', mark),
@@ -413,6 +427,14 @@ async function flushExpectedFiles() {
 }
 
 const launchSvg = recolorCore(config.launch.mark, config.launch.accent);
+const latestApp = config.apps.find(app => app.name === 'gongshu-latest');
+if (!latestApp) {
+  throw new Error('gongshu-latest is required for DApp provider assets');
+}
+queueText(
+  `${latestApp.root}/src/dapp/generatedProviderIcons.ts`,
+  providerIconsSource(),
+);
 for (const app of config.apps) {
   await generateSharedAppAssets(app, launchSvg);
   for (const [channelName, channel] of Object.entries(config.channels)) {

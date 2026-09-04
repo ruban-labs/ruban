@@ -21,14 +21,77 @@ The apps may depend on application infrastructure such as React Navigation.
 The zero-runtime-dependency charter applies to published Ruban libraries, not
 to the apps that exercise them.
 
+## Long-term Product Direction
+
+Ruban will evolve from a component workbench into a real, self-custodial EVM
+DApp workbench. Its primary product surface is the latest Gongshu application;
+the older Gongshu eras remain compatibility editions that prove the published
+packages against historical React Native environments.
+
+The first wallet release has a deliberately narrow boundary:
+
+- EVM externally owned accounts only;
+- create or import a mnemonic, import a private key, and add watch-only
+  addresses;
+- local encrypted vault and native signing, with WalletConnect as an
+  additional external signer;
+- DApp discovery, browser sessions, origin-scoped permissions, transaction
+  review, submission, and local activity;
+- direct and controlled distribution first. Public store distribution is a
+  later product and compliance decision, not a V1 dependency.
+
+Account origin is not a product mode. Watch-only, private-key, and
+mnemonic-derived accounts use the same Portfolio, DApp discovery, browser,
+read-only RPC, permission, transaction preparation, simulation, review, and
+activity flows. The interface does not branch early or badge account origin in
+ordinary use. Capability diverges only at the final operation that must produce
+a signature: a signer-backed account enters the Native signing boundary, while
+a watch-only account must choose another signer or stop. Transaction broadcast
+can begin only after that boundary succeeds.
+
+Private keys, mnemonics, and derived seeds never enter the React Native
+JavaScript runtime. A standalone Rust core owns derivation, parsing, and
+signing through audited cryptographic dependencies. Platform wrappers own
+secure storage and user-presence policy, while React Native receives only
+opaque vault/account identifiers and public results. The same core serves the
+Legacy Native Module and TurboModule adapters.
+
+Ruban does not implement cryptographic primitives itself and does not describe
+third-party dependency review as a Ruban security audit. Dependency provenance,
+licensing, test vectors, differential tests, fuzzing, reproducible builds, and
+an independent audit are explicit release gates.
+
+Ruban's public position is **open source and native speed**. Security remains a
+non-negotiable engineering baseline rather than the slogan. V1 includes a
+cache-first portfolio for native assets and deliberately selected ERC-20
+assets across configured EVM networks. Chain reads, price/indexer requests,
+freshness, cancellation, batching, and provider latency are visible parts of
+the product contract rather than hidden implementation details.
+
+Speed is measured on three independent axes:
+
+- **build speed** — affected-path CI, content-addressed native artifacts, and
+  reusable Cargo, Gradle, Xcode, CocoaPods, and Metro caches;
+- **runtime speed** — cold start, interaction readiness, frame stability,
+  memory pressure, DApp readiness, and confirmation latency;
+- **sync speed** — cached first paint, incremental hydration, batched chain
+  reads, adaptive provider selection, and replaceable indexer inputs.
+
+A fast result must remain fresh and attributable. Racing providers or rendering
+cache is valid only when chain, observation time, source, and stale state remain
+explicit.
+
+The complete capability-gated plan is documented in the
+[EVM Wallet V1 roadmap](./docs/wallet-v1-roadmap.md).
+
 ## Near-term Library Roadmap
 
 The next refurbishment candidates are:
 
-| Package | Product role | Initial proof in Gongshu |
-| --- | --- | --- |
-| `@ruban-labs/react-native-collapsible` | Focused expand/collapse primitives | Library catalogue sections and detail disclosure |
-| `@ruban-labs/react-native-animatable` | Small declarative animation vocabulary | Page transitions, feedback, and component states |
+| Package                                               | Product role                               | Initial proof in Gongshu                           |
+| ----------------------------------------------------- | ------------------------------------------ | -------------------------------------------------- |
+| `@ruban-labs/react-native-collapsible`                | Focused expand/collapse primitives         | Library catalogue sections and detail disclosure   |
+| `@ruban-labs/react-native-animatable`                 | Small declarative animation vocabulary     | Page transitions, feedback, and component states   |
 | `@ruban-labs/react-native-keyboard-aware-scroll-view` | Reliable keyboard and form layout behavior | Search, forms, and interactive playground controls |
 
 Building these packages and building the Ruban app are the same program: every
@@ -39,10 +102,10 @@ compatibility scenario for the package.
 
 Keep three independent bare React Native apps under `apps/`:
 
-| App | React Native era | Navigation | Architecture capability |
-| --- | --- | --- | --- |
-| `gongshu-0.66` | 0.66.x | React Navigation 6 | Legacy Architecture only |
-| `gongshu-0.77` | 0.77.x | React Navigation 7 | Legacy and New Architecture |
+| App              | React Native era       | Navigation         | Architecture capability                         |
+| ---------------- | ---------------------- | ------------------ | ----------------------------------------------- |
+| `gongshu-0.66`   | 0.66.x                 | React Navigation 6 | Legacy Architecture only                        |
+| `gongshu-0.77`   | 0.77.x                 | React Navigation 7 | Legacy and New Architecture                     |
 | `gongshu-latest` | current pinned release | React Navigation 7 | Follow upstream; 0.82+ is New Architecture only |
 
 Each app owns its dependencies, package manager lockfile, native projects,
@@ -76,11 +139,11 @@ Architecture is a **build axis**, not a source fork.
 
 The minimum compile matrix is:
 
-| Era | Legacy Architecture | New Architecture |
-| --- | --- | --- |
-| RN 0.66 | Required | Unsupported |
-| RN 0.77 | Required | Required |
-| RN latest (currently 0.87) | Unsupported upstream | Required |
+| Era                        | Legacy Architecture  | New Architecture |
+| -------------------------- | -------------------- | ---------------- |
+| RN 0.66                    | Required             | Unsupported      |
+| RN 0.77                    | Required             | Required         |
+| RN latest (currently 0.87) | Unsupported upstream | Required         |
 
 If Ruban needs a recent dual-architecture comparison after the latest line has
 become New-Architecture-only, add a fourth pinned app at the last upstream
@@ -110,13 +173,35 @@ The shared product model has three bottom-level destinations:
    entry points without marketing narration.
 2. **Playground** — design specimens, component states, and deterministic test
    scenarios.
-3. **Settings** — item-group cards for Appearance, one Build & Matrix entry,
-   and About.
+3. **Settings** — item-group cards for Appearance and About, followed by a
+   non-production Diagnostics group.
+
+The primary tab bar shows semantic icons only. Route names remain available as
+accessibility labels, while selection is expressed through semantic icon and
+background colors rather than repeated visible labels.
 
 About is not a primary tab. Brand, provenance, version, licence, sponsorship,
-and solution links belong to its Settings group. Compatibility belongs in the
-Build & Matrix Modal; low-frequency metadata must not consume primary
-navigation or remain expanded on the page.
+and solution links belong to its Settings group. Debug and regression builds
+place their tooling below About in Diagnostics; production builds omit that
+group entirely. Compatibility belongs in the Build & Matrix Modal;
+low-frequency metadata must not consume primary navigation or remain expanded
+on the page.
+
+### Top Inset Ownership
+
+Every screen must reserve the status-bar region exactly once. New screens use
+`RubanScreen` or `react-native-safe-area-context` with the top edge by default.
+A React Navigation header may own that inset instead; a deliberately immersive
+route may paint behind the status bar, but its toolbar, controls, and primary
+content still position themselves from `insets.top`.
+
+- A route must declare one top inset owner: its navigation header, its route
+  frame, or its immersive layout.
+- Hiding a navigation header never implies that content may begin at physical
+  screen coordinate zero.
+- Do not use React Native core `SafeAreaView`; it does not provide the required
+  Android edge-to-edge contract. Use `react-native-safe-area-context`.
+- Do not combine a header-owned inset with page-level top padding.
 
 ### Bottom Inset Ownership
 
@@ -154,20 +239,31 @@ handled by consuming the new `insets.bottom`.
 
 ### Settings Choice Surfaces
 
-- Multi-choice settings use a source-owned Bottom Sheet primitive. They do not
-  require Expo, a design-system runtime, or an opaque platform foundation.
+- App choice surfaces use an app-owned adapter around `@gorhom/bottom-sheet`.
+  The adapter owns Ruban styling, dismissal defaults, and the dependency pin
+  for each RN era. The independent `@ruban-labs/react-native-ui-sheet` package
+  remains available for lightweight scenarios but is not the current App
+  runtime.
 - A settings row shows only its name, current value, and entry affordance. The
   sheet contains a title, compact metadata, selection state, and close action;
   it does not add explanatory paragraphs.
 - Appearance exposes `system`, `light`, and `dark` and controls the complete
   app theme. Playground theme is page-local state owned by its top switch and
   explicit route parameter; it does not belong in Settings or app preferences.
-- Build and Support Matrix are not expanded on the Settings page. One
-  `Build & matrix` entry opens a scrollable information Bottom Sheet with
-  CURRENT BUILD and SUPPORT MATRIX sections.
+- Build and Support Matrix are not expanded on the Settings page. Debug and
+  regression builds expose one `Build & matrix` entry in a Diagnostics group
+  below About. Production builds expose neither the entry nor its Bottom
+  Sheet. The entry opens a scrollable information Bottom Sheet with CURRENT
+  BUILD and SUPPORT MATRIX sections.
+- Debug and regression builds also expose one `Playground` entry in
+  Diagnostics. It opens a compact launcher for the design lab, Progress lab,
+  and every component showcase screen. The launcher is navigation, not a
+  second specimen surface; each component remains owned by its dedicated
+  Root Stack screen. Production builds omit both the entry and its Sheet.
 - `ruban://settings?sheet=appearance` and
-  `ruban://settings?sheet=build` reproduce those sheets from a cold launch;
-  `ruban://lab/design?theme=dark` reproduces the local Playground theme.
+  `ruban-debug://settings?sheet=build` or `sheet=playground` reproduce the
+  available sheets from a cold launch; `ruban://lab/design?theme=dark`
+  reproduces the local Playground theme.
 - Backdrop press, the top CLOSE action, and Android system back dismiss the
   sheet. Its bottom safe-area inset is consumed exactly once. Appearance is
   session-scoped until persistence is deliberately introduced; the UI must not
@@ -175,6 +271,26 @@ handled by consuming the new `insets.bottom`.
 - The same choice surface passes typecheck, native compilation, and real-device
   screenshot review in every Gongshu era. Do not use layout properties absent
   from RN 0.66 to fake parity.
+- Bottom Sheets use square top corners, a one-pixel structural border, and a
+  rectangular drag indicator. Do not expose the dependency's default floating,
+  rounded-card appearance.
+
+### Wallet Choice Surfaces
+
+- The latest App uses the same app-owned Bottom Sheet adapter for both network
+  and address selection, with only one active choice surface and no stacked
+  platform Modal.
+- The network selector lists only networks that the wallet RPC layer actually
+  supports. Names, chain IDs, and logos come from a pinned
+  `@ruban-labs/web-assets` package; Metro statically bundles the PNGs and must
+  never fall back to a runtime URL.
+- The address selector exposes only public account fields: label, shortened
+  address, and selection state. Account origin belongs only in account
+  management, recovery, or final signer selection. Private keys, mnemonics,
+  derived seeds, and Native Vault internals never enter its view model.
+- The selected network and address live in the global SQLite `app_state` table
+  as the shared choice for Portfolio, DApp Provider, and signing context. Before
+  the first release, update the baseline schema directly and add no migration.
 
 ### Deep Link Identity
 
@@ -182,9 +298,9 @@ Every simultaneously installable app owns exactly one URL scheme. Environment
 and RN era are both part of that scheme because iOS custom URL schemes cannot
 dispatch between apps by path after the scheme has been registered.
 
-| Era | Production | Regression | Debug |
-| --- | --- | --- | --- |
-| latest | `ruban://` | `ruban-regression://` | `ruban-debug://` |
+| Era     | Production       | Regression                  | Debug                  |
+| ------- | ---------------- | --------------------------- | ---------------------- |
+| latest  | `ruban://`       | `ruban-regression://`       | `ruban-debug://`       |
 | RN 0.77 | `ruban-rn077://` | `ruban-rn077-regression://` | `ruban-rn077-debug://` |
 | RN 0.66 | `ruban-rn066://` | `ruban-rn066-regression://` | `ruban-rn066-debug://` |
 
@@ -246,8 +362,24 @@ Ruban should feel like a precise modern workbench:
   states, and controls should explain the interface first.
 - Do not automatically add a subtitle below every title, an explanation below
   every card, or marketing copy below every list item.
+- Primary tab screens may use one short, centered title as a visual anchor, but
+  not a breadcrumb, brand prefix, or subtitle. Top-right page actions use
+  prominent semantic icons with accessible labels and practical touch targets.
 - Copy earns its place only when it helps someone decide, act, understand risk,
   or recover from an error.
+- Prefer a familiar semantic icon when it communicates an action or state
+  without ambiguity. Do not repeat its meaning as visible text; keep an
+  accessible label, and retain text when the icon alone is unclear.
+- A Bottom Sheet containing a few simple options uses separate compact cards,
+  aligned with the page's horizontal margins and visibly spaced apart. These
+  cards use borderless semantic fills: a muted raised surface when unselected
+  and the active navigation surface when selected. A familiar icon identifies
+  the choice on the left, while the selected check remains on the right.
+  Attached dense rows belong to long lists such as chain selectors; tall rows
+  require meaningful supporting detail.
+- Settings rows use quiet semantic icons to make distinct entries easier to
+  scan. The icon supports the visible label rather than repeating or replacing
+  an ambiguous concept.
 - Prefer a name, value, state, or concrete example over a paragraph that
   narrates the same information.
 - Set a copy budget before implementing each screen. If removing a sentence

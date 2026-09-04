@@ -9,14 +9,16 @@ appId: com.rubanlabs.mobile.debug
 - setOrientation: portrait
 - extendedWaitUntil:
     visible:
-      text: "Library"
+      text: "Portfolio"
     timeout: 120000
 - assertVisible:
-    text: "01.*Button.*"
+    text: "Create a wallet"
 - assertVisible:
-    text: "Playground"
+    text: "Network, Ethereum"
+- openLink: "ruban-debug://components/button?theme=light&variant=primary&size=md&state=default"
 - tapOn:
-    text: "01.*Button.*"
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Back to components"
@@ -25,19 +27,11 @@ appId: com.rubanlabs.mobile.debug
     text: "Playground"
 - assertNotVisible:
     text: "Settings"
-- tapOn:
-    text: "Back to components"
-- extendedWaitUntil:
-    visible:
-      text: "Library"
-    timeout: 20000
+
 - openLink: "ruban-debug://components/badge?theme=light&variant=live&size=md"
-- extendedWaitUntil:
-    visible:
-      text: "Open"
-    timeout: 180000
 - tapOn:
-    text: "Open"
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Back to components"
@@ -45,6 +39,9 @@ appId: com.rubanlabs.mobile.debug
 - assertVisible:
     text: "LIVE"
 - openLink: "ruban-debug://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Live separator vertical accent bold"
@@ -54,6 +51,9 @@ appId: com.rubanlabs.mobile.debug
 - assertVisible:
     text: "Live separator vertical accent bold"
 - openLink: "ruban-debug://components/switch?theme=light&state=on&size=md"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Live switch state ON"
@@ -66,13 +66,68 @@ appId: com.rubanlabs.mobile.debug
     text: "Live switch"
 - assertVisible:
     text: "Live switch state OFF"
-- openLink: "ruban-debug://home"
+- openLink: "ruban-debug://components/dialog?theme=light&scenario=sequential"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
-      text: "Library"
-    timeout: 20000
+      text: "FIRST DIALOG"
+    timeout: 60000
 - tapOn:
-    text: "Playground"
+    text: "NEXT DIALOG"
+- extendedWaitUntil:
+    visible:
+      text: "SECOND DIALOG"
+    timeout: 60000
+- assertNotVisible:
+    text: "FIRST DIALOG"
+- tapOn:
+    text: "DONE"
+- openLink: "ruban-debug://components/dialog?theme=dark&scenario=nested"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      text: "PARENT DIALOG"
+    timeout: 60000
+- tapOn:
+    text: "OPEN CONFIRMATION"
+- extendedWaitUntil:
+    visible:
+      text: "CONFIRM ACTION"
+    timeout: 60000
+- tapOn:
+    text: "RETURN TO PARENT"
+- extendedWaitUntil:
+    visible:
+      text: "PARENT DIALOG"
+    timeout: 60000
+- tapOn:
+    text: "CLOSE"
+- openLink: "ruban-debug://components/dialog?theme=light&scenario=external"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      text: "RELEASE GATE"
+    timeout: 60000
+- assertNotVisible:
+    text: "GATED DIALOG"
+- tapOn:
+    text: "RELEASE GATE"
+- extendedWaitUntil:
+    visible:
+      text: "GATED DIALOG"
+    timeout: 60000
+- tapOn:
+    text: "DONE"
+- openLink: "ruban-debug://lab/design?theme=light"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "PLAYGROUND"
@@ -81,24 +136,42 @@ appId: com.rubanlabs.mobile.debug
     text: "LIGHT"
 - assertVisible:
     text: "TYPE"
+- openLink: "ruban-debug://settings"
 - tapOn:
-    text: "Settings"
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Settings"
     timeout: 20000
 - assertVisible:
     text: "Appearance.*"
+- tapOn:
+    text: "Appearance.*"
+- extendedWaitUntil:
+    visible:
+      text: "System"
+    timeout: 20000
+- assertVisible:
+    text: "Light"
+- assertVisible:
+    text: "Dark"
+- tapOn:
+    text: "Light"
+- extendedWaitUntil:
+    visible:
+      text: "Settings"
+    timeout: 20000
 - scrollUntilVisible:
     element:
-      text: "Runtime & compatibility.*"
+      text: "Build & matrix.*"
     direction: DOWN
     timeout: 20000
 - tapOn:
-    text: "Runtime & compatibility.*"
+    text: "Build & matrix.*"
 - extendedWaitUntil:
     visible:
-      text: "Runtime & Compatibility"
+      text: "Build & matrix"
     timeout: 20000
 - assertVisible:
     text: "HERMES"

@@ -38,15 +38,16 @@ allprojects {
 }
 
 subprojects { subproject ->
-    if (subproject.name == "react-native-bootsplash") {
-        subproject.plugins.withId("com.android.library") {
-            subproject.android.buildFeatures.buildConfig = true
-        }
-    }
-
-    if (subproject.name == "react-native-screens") {
-        subproject.plugins.withId("com.android.library") {
-            subproject.android.buildFeatures.buildConfig = true
+    subproject.plugins.withId("com.android.library") {
+        subproject.android.buildFeatures.buildConfig = true
+        if (!subproject.android.namespace) {
+            def manifestFile = subproject.file("src/main/AndroidManifest.xml")
+            if (manifestFile.exists()) {
+                def manifestPackage = new XmlSlurper().parse(manifestFile).@package.text()
+                if (manifestPackage) {
+                    subproject.android.namespace = manifestPackage
+                }
+            }
         }
     }
 

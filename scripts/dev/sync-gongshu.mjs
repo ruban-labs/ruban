@@ -9,30 +9,20 @@
 //
 // Usage:
 //   node scripts/dev/sync-gongshu.mjs --app <gongshu-0.66|gongshu-0.77|gongshu-latest>
-//   node scripts/dev/sync-gongshu.mjs --all [--skip-install]
+//   node scripts/dev/sync-gongshu.mjs --all [--skip-install] [--offline]
 
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import {resolveRubanPackages} from '../package-catalog.mjs';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 const appsRoot = path.join(repoRoot, 'apps');
 const demoSource = path.join(repoRoot, 'scripts', 'dev', 'gongshu-demo', 'GongshuBench.js');
 const sourceRegistryScript = path.join(repoRoot, 'scripts', 'design', 'sync-source-registry.mjs');
 const APPS = ['gongshu-0.66', 'gongshu-0.77', 'gongshu-latest'];
-const LIBRARIES = [
-  {
-    name: '@ruban-labs/react-native-progress',
-    directory: path.join(repoRoot, 'packages', 'react-native-progress'),
-    tarball: 'ruban-local.tgz',
-  },
-  {
-    name: '@ruban-labs/react-native-collapsible',
-    directory: path.join(repoRoot, 'packages', 'react-native-collapsible'),
-    tarball: 'ruban-collapsible-local.tgz',
-  },
-];
+const LIBRARIES = resolveRubanPackages(repoRoot);
 
 function fail(message) {
   console.error(`sync-gongshu: ${message}`);
@@ -57,7 +47,8 @@ function newestMtime(directory) {
   return newest;
 }
 
-function ensureLibraryBuilt(library) {
+function ensureLibraryBuilt(library, nativePlatform) {
+  const manifest = JSON.parse(fs.readFileSync(path.join(library.directory, 'package.json'), 'utf8'));
   const sourceMtime = newestMtime(path.join(library.directory, 'src'));
   const outputDirs = ['commonjs', 'module', 'typescript'].map((target) =>
     path.join(library.directory, 'lib', target),
@@ -70,17 +61,27 @@ function ensureLibraryBuilt(library) {
     console.log(`sync-gongshu: ${library.name} lib/ missing or stale, building first`);
     run('pnpm', ['--filter', library.name, 'build'], { cwd: repoRoot });
   }
+  if (nativePlatform && manifest.ruban?.nativeCode) {
+    console.log(`sync-gongshu: building ${library.name} native artifacts for ${nativePlatform}`);
+    run('pnpm', ['--filter', library.name, `build:native:${nativePlatform}`], {cwd: repoRoot});
+  }
 }
 
 function assertInstalledSources(appDir) {
   for (const library of LIBRARIES) {
     const installedSource = path.join(appDir, 'node_modules', ...library.name.split('/'), 'src');
-    for (const entry of fs.readdirSync(path.join(library.directory, 'src'), {withFileTypes: true})) {
-      if (!entry.isFile()) continue;
-      const expected = fs.readFileSync(path.join(library.directory, 'src', entry.name));
-      const actual = fs.readFileSync(path.join(installedSource, entry.name));
+    const sourceRoot = path.join(library.directory, 'src');
+    const sourceFiles = fs
+      .readdirSync(sourceRoot, {recursive: true, withFileTypes: true})
+      .filter(entry => entry.isFile())
+      .map(entry => path.join(entry.parentPath || entry.path, entry.name))
+      .filter(sourceFile => !path.relative(sourceRoot, sourceFile).split(path.sep).includes('__tests__'));
+    for (const sourceFile of sourceFiles) {
+      const relativePath = path.relative(sourceRoot, sourceFile);
+      const expected = fs.readFileSync(sourceFile);
+      const actual = fs.readFileSync(path.join(installedSource, relativePath));
       if (!expected.equals(actual)) {
-        fail(`${path.basename(appDir)} installed stale ${library.name}/src/${entry.name}`);
+        fail(`${path.basename(appDir)} installed stale ${library.name}/src/${relativePath}`);
       }
     }
   }
@@ -89,7 +90,7 @@ function assertInstalledSources(appDir) {
 function packLibrary(library, appDir) {
   const temporaryDirectory = fs.mkdtempSync(path.join(appDir, '.ruban-pack-'));
   try {
-    run('npm', ['pack', library.directory, '--pack-destination', temporaryDirectory]);
+    run('npm', ['pack', '--silent', library.directory, '--pack-destination', temporaryDirectory]);
     const packed = fs.readdirSync(temporaryDirectory).find(name => name.endsWith('.tgz'));
     if (!packed) fail(`no tarball produced for ${library.name}`);
     fs.copyFileSync(path.join(temporaryDirectory, packed), path.join(appDir, library.tarball));
@@ -143,7 +144,9 @@ function syncApp(app, options) {
     });
   }
   console.log(`sync-gongshu: ${app} installing with ${manifest.packageManager} (Node ${process.version})`);
-  run('corepack', ['pnpm', 'install', '--force', '--no-frozen-lockfile'], {
+  const installArgs = ['pnpm', 'install', '--force', '--no-frozen-lockfile'];
+  if (options.offline) installArgs.push('--offline');
+  run('corepack', installArgs, {
     cwd: appDir,
     env: { ...process.env, NODE_ENV: 'development' },
   });
@@ -153,6 +156,12 @@ function syncApp(app, options) {
 
 const argv = process.argv.slice(2);
 const skipInstall = argv.includes('--skip-install');
+const offline = argv.includes('--offline');
+const nativePlatformIndex = argv.indexOf('--native-platform');
+const nativePlatform = nativePlatformIndex >= 0 ? argv[nativePlatformIndex + 1] : null;
+if (nativePlatform && !['android', 'ios'].includes(nativePlatform)) {
+  fail('expected --native-platform <android|ios>');
+}
 let selected = [];
 if (argv.includes('--all')) {
   selected = APPS;
@@ -163,5 +172,5 @@ if (argv.includes('--all')) {
   selected = [app];
 }
 
-for (const library of LIBRARIES) ensureLibraryBuilt(library);
-for (const app of selected) syncApp(app, { skipInstall });
+for (const library of LIBRARIES) ensureLibraryBuilt(library, nativePlatform);
+for (const app of selected) syncApp(app, {skipInstall, offline});

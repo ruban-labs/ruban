@@ -3,6 +3,15 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@ruban-labs/react-native-ui-overlay": [
+        "packages/react-native-ui-overlay/src/index.ts"
+      ],
+      "@ruban-labs/react-native-ui-theme": [
+        "packages/react-native-ui-theme/src/index.ts"
+      ]
+    },
     "lib": ["esnext"],
     "jsx": "react-jsx",
     "strict": true,

@@ -297,9 +297,11 @@ PODS:
     - React-perflogger (= 0.66.4)
   - RNBootSplash (4.7.5):
     - React-Core
-  - RNScreens (3.29.0):
+  - RNScreens (3.23.0):
     - React-Core
     - React-RCTImage
+  - RubanWalletCore (0.1.0):
+    - React-Core
   - Yoga (1.14.0)
 
 DEPENDENCIES:
@@ -340,6 +342,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNBootSplash (from `../node_modules/react-native-bootsplash`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - "RubanWalletCore (from `../node_modules/@ruban-labs/react-native-wallet-core`)"
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -415,6 +418,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-bootsplash"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  RubanWalletCore:
+    :path: "../node_modules/@ruban-labs/react-native-wallet-core"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -454,7 +459,8 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: dec32ee6f2e2a26e13e58152271535fadff5455a
   ReactCommon: 57b69f6383eafcbd7da625bfa6003810332313c4
   RNBootSplash: 85f6b879c080e958afdb4c62ee04497b05fd7552
-  RNScreens: fa9b582d85ae5d62c91c66003b5278458fed7aaa
+  RNScreens: 6a8a3c6b808aa48dca1780df7b73ea524f602c63
+  RubanWalletCore: 98c374ed8890ef1f57715190fa23aa7dfbfa1139
   Yoga: e7dc4e71caba6472ff48ad7d234389b91dadc280
 
 PODFILE CHECKSUM: 9491cb047a367cbd2b709f0a9b1a30fbc57f7e3a

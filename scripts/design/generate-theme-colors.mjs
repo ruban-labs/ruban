@@ -6,10 +6,16 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDir, '../..');
 const sourcePath = path.join(repositoryRoot, 'design/theme-colors.json');
 const checkOnly = process.argv.includes('--check');
+const packageTarget = 'packages/react-native-ui-theme/src/theme-colors.ts';
 const appTargets = [
   'apps/gongshu-0.66/src/design/theme-colors.ts',
   'apps/gongshu-0.77/src/design/theme-colors.ts',
   'apps/gongshu-latest/src/design/theme-colors.ts',
+];
+const appTokenTargets = [
+  'apps/gongshu-0.66/src/design/tokens.ts',
+  'apps/gongshu-0.77/src/design/tokens.ts',
+  'apps/gongshu-latest/src/design/tokens.ts',
 ];
 const cssTarget = 'website/src/assets/theme.generated.css';
 
@@ -17,16 +23,24 @@ const source = JSON.parse(await readFile(sourcePath, 'utf8'));
 validateSource(source);
 
 const outputs = new Map([
-  ...appTargets.map(target => [target, renderTypeScript(source)]),
+  [packageTarget, renderTypeScript(source)],
+  ...appTargets.map(target => [
+    target,
+    "export * from '@ruban-labs/react-native-ui-theme/colors';\n",
+  ]),
+  ...appTokenTargets.map(target => [
+    target,
+    "export * from '@ruban-labs/react-native-ui-theme';\n",
+  ]),
   [cssTarget, renderCss(source)],
 ]);
 
 for (const [relativePath, expected] of outputs) {
   const target = path.join(repositoryRoot, relativePath);
+  const actual = await readFile(target, 'utf8').catch(() => '');
   if (checkOnly) {
-    const actual = await readFile(target, 'utf8').catch(() => '');
     if (actual !== expected) throw new Error(`${relativePath} is stale; run pnpm design:theme:generate`);
-  } else {
+  } else if (actual !== expected) {
     await writeFile(target, expected);
   }
 }

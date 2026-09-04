@@ -1,119 +1,164 @@
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal as GorhomBottomSheetModal,
+  BottomSheetView,
+  type BottomSheetBackdropProps,
+} from '@gorhom/bottom-sheet';
+import {
+  CheckIcon,
+  type RubanIconProps,
+} from '@ruban-labs/react-native-ui-icons';
 import * as React from 'react';
 import {
-  Animated,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {spacing, useRubanColors} from '../../design/tokens';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { radius, spacing, useRubanColors } from '../../design/tokens';
 
-type BottomSheetModalProps = {
+export type BottomSheetModalRootProps = {
   visible: boolean;
-  title: string;
   onDismiss: () => void;
   children: React.ReactNode;
+  overlayId?: string;
+  enablePanDownToClose?: boolean;
+};
+
+export function BottomSheetModalRoot({
+  visible,
+  onDismiss,
+  children,
+  overlayId,
+  enablePanDownToClose = true,
+}: BottomSheetModalRootProps): React.ReactElement {
+  const colors = useRubanColors();
+  const modalRef =
+    React.useRef<React.ElementRef<typeof GorhomBottomSheetModal>>(null);
+  const presentedRef = React.useRef(false);
+  const { height: windowHeight } = useWindowDimensions();
+
+  React.useEffect(() => {
+    let frame = 0;
+
+    if (visible) {
+      frame = requestAnimationFrame(() => {
+        presentedRef.current = true;
+        modalRef.current?.present();
+      });
+    } else if (presentedRef.current) {
+      modalRef.current?.dismiss();
+    }
+
+    return () => {
+      if (frame) {
+        cancelAnimationFrame(frame);
+      }
+    };
+  }, [visible]);
+
+  const handleDismiss = React.useCallback(() => {
+    presentedRef.current = false;
+    if (visible) {
+      onDismiss();
+    }
+  }, [onDismiss, visible]);
+
+  const renderBackdrop = React.useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        opacity={0.48}
+        pressBehavior="close"
+      />
+    ),
+    [],
+  );
+
+  return (
+    <GorhomBottomSheetModal
+      ref={modalRef}
+      name={overlayId}
+      accessible={false}
+      index={0}
+      animateOnMount
+      enableDynamicSizing
+      maxDynamicContentSize={Math.round(windowHeight * 0.82)}
+      enablePanDownToClose={enablePanDownToClose}
+      backdropComponent={renderBackdrop}
+      onDismiss={handleDismiss}
+      backgroundStyle={[
+        styles.background,
+        {
+          backgroundColor: colors.navigationSurface,
+          borderColor: colors.borderStrong,
+        },
+      ]}
+      handleIndicatorStyle={[
+        styles.handleIndicator,
+        { backgroundColor: colors.ink },
+      ]}
+      handleStyle={[
+        styles.handle,
+        {
+          backgroundColor: colors.navigationSurface,
+          borderBottomColor: colors.border,
+        },
+      ]}
+    >
+      {children}
+    </GorhomBottomSheetModal>
+  );
+}
+
+export type BottomSheetModalProps = BottomSheetModalRootProps & {
+  title: string;
+  showHeader?: boolean;
   testID?: string;
 };
 
 export function BottomSheetModal({
-  visible,
   title,
-  onDismiss,
-  children,
+  showHeader = true,
   testID,
-}: BottomSheetModalProps): React.ReactElement | null {
+  children,
+  onDismiss,
+  ...rootProps
+}: BottomSheetModalProps): React.ReactElement {
   const colors = useRubanColors();
-  const [mounted, setMounted] = React.useState(visible);
-  const progress = React.useRef(new Animated.Value(visible ? 1 : 0)).current;
-
-  React.useEffect(() => {
-    if (visible) {
-      setMounted(true);
-    }
-  }, [visible]);
-
-  React.useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
-    const animation = Animated.timing(progress, {
-      toValue: visible ? 1 : 0,
-      duration: visible ? 220 : 170,
-      useNativeDriver: true,
-    });
-
-    animation.start(({finished}) => {
-      if (finished && !visible) {
-        setMounted(false);
-      }
-    });
-
-    return () => animation.stop();
-  }, [mounted, progress, visible]);
-
-  if (!mounted) {
-    return null;
-  }
-
-  const translateY = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [520, 0],
-  });
 
   return (
-    <Modal
-      visible
-      transparent
-      hardwareAccelerated
-      statusBarTranslucent
-      navigationBarTranslucent
-      animationType="none"
-      onRequestClose={onDismiss}>
-      <View style={styles.overlay}>
-        <Animated.View style={[styles.backdrop, {opacity: progress}]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Close ${title}`}
-            onPress={onDismiss}
-            style={StyleSheet.absoluteFill}
-          />
-        </Animated.View>
-
-        <Animated.View
-          testID={testID}
-          accessibilityViewIsModal
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: colors.navigationSurface,
-              borderColor: colors.borderStrong,
-              transform: [{translateY}],
-            },
-          ]}>
-          <View style={[styles.handle, {backgroundColor: colors.borderStrong}]} />
-          <View style={[styles.header, {borderBottomColor: colors.border}]}>
-            <Text style={[styles.title, {color: colors.ink}]}>{title}</Text>
-            <Pressable accessibilityRole="button" onPress={onDismiss} hitSlop={8}>
-              <Text style={[styles.close, {color: colors.faint}]}>CLOSE</Text>
+    <BottomSheetModalRoot {...rootProps} onDismiss={onDismiss}>
+      <BottomSheetView testID={testID}>
+        {showHeader ? (
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={onDismiss}
+              hitSlop={8}
+            >
+              <Text style={[styles.close, { color: colors.faint }]}>CLOSE</Text>
             </Pressable>
           </View>
-          <SafeAreaView edges={['bottom']} style={styles.safeArea}>
-            {children}
-          </SafeAreaView>
-        </Animated.View>
-      </View>
-    </Modal>
+        ) : null}
+        <SafeAreaView edges={['bottom']} style={styles.safeArea}>
+          {children}
+        </SafeAreaView>
+      </BottomSheetView>
+    </BottomSheetModalRoot>
   );
 }
 
 export type SelectionOption<Value extends string> = {
   value: Value;
   label: string;
-  meta: string;
+  meta?: string;
+  icon?: React.ComponentType<RubanIconProps>;
 };
 
 export function SelectionBottomSheet<Value extends string>({
@@ -132,38 +177,64 @@ export function SelectionBottomSheet<Value extends string>({
   onChange: (value: Value) => void;
   onDismiss: () => void;
   testID?: string;
-}): React.ReactElement | null {
+}): React.ReactElement {
   const colors = useRubanColors();
+  const selectedIndicatorColor = colors.mode === 'dark' ? '#4ADE80' : '#15803D';
 
   return (
-    <BottomSheetModal visible={visible} title={title} onDismiss={onDismiss} testID={testID}>
+    <BottomSheetModal
+      visible={visible}
+      title={title}
+      showHeader={false}
+      onDismiss={onDismiss}
+      testID={testID}
+    >
       <View style={styles.options}>
-        {options.map(option => {
+        {options.map((option, index) => {
           const selected = option.value === value;
+          const OptionIcon = option.icon;
 
           return (
             <Pressable
               key={option.value}
               testID={`sheet-option-${option.value}`}
               accessibilityRole="radio"
-              accessibilityState={{selected}}
+              accessibilityState={{ selected }}
               onPress={() => {
                 onChange(option.value);
                 onDismiss();
               }}
-              style={({pressed}) => [
+              style={[
                 styles.option,
-                {borderBottomColor: colors.border},
-                selected ? {backgroundColor: colors.navigationActive} : undefined,
-                pressed ? styles.pressed : undefined,
-              ]}>
-              <View>
-                <Text style={[styles.optionLabel, {color: colors.ink}]}>{option.label}</Text>
-                <Text style={[styles.optionMeta, {color: colors.faint}]}>{option.meta}</Text>
+                {
+                  backgroundColor: selected
+                    ? colors.accentSoft
+                    : colors.choiceSurface,
+                },
+                index < options.length - 1 ? styles.optionSpacing : undefined,
+              ]}
+            >
+              <View style={styles.optionIdentity}>
+                {OptionIcon ? (
+                  <OptionIcon
+                    size={22}
+                    color={selected ? colors.accent : colors.muted}
+                  />
+                ) : null}
+                <View style={OptionIcon ? styles.optionCopy : undefined}>
+                  <Text style={[styles.optionLabel, { color: colors.ink }]}>
+                    {option.label}
+                  </Text>
+                  {option.meta ? (
+                    <Text style={[styles.optionMeta, { color: colors.faint }]}>
+                      {option.meta}
+                    </Text>
+                  ) : null}
+                </View>
               </View>
-              <Text style={[styles.optionState, {color: selected ? colors.accent : colors.faint}]}>
-                {selected ? 'SELECTED' : '—'}
-              </Text>
+              {selected ? (
+                <CheckIcon size={22} color={selectedIndicatorColor} />
+              ) : null}
             </Pressable>
           );
         })}
@@ -173,17 +244,14 @@ export function SelectionBottomSheet<Value extends string>({
 }
 
 const styles = StyleSheet.create({
-  overlay: {flex: 1, justifyContent: 'flex-end'},
-  backdrop: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.56)',
+  background: { borderWidth: 1, borderBottomWidth: 0, borderRadius: 0 },
+  handle: {
+    height: 28,
+    paddingTop: 10,
+    paddingBottom: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  sheet: {maxHeight: '82%', borderTopWidth: 1},
-  handle: {width: 42, height: 3, marginTop: 10, alignSelf: 'center'},
+  handleIndicator: { width: 44, height: 3, borderRadius: 0 },
   header: {
     minHeight: 66,
     paddingHorizontal: spacing.lg,
@@ -192,20 +260,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  title: {fontSize: 21, lineHeight: 27, fontWeight: '800', letterSpacing: -0.45},
-  close: {fontSize: 8, lineHeight: 11, fontWeight: '900', letterSpacing: 1.1},
-  safeArea: {flexShrink: 1},
-  options: {paddingBottom: spacing.sm},
+  title: {
+    fontSize: 21,
+    lineHeight: 27,
+    fontWeight: '800',
+    letterSpacing: -0.45,
+  },
+  close: {
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: '900',
+    letterSpacing: 1.1,
+  },
+  safeArea: { flexShrink: 1 },
+  options: {
+    marginTop: spacing.md,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  optionSpacing: { marginBottom: spacing.sm },
   option: {
-    minHeight: 76,
-    paddingHorizontal: spacing.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    minHeight: 56,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  optionLabel: {fontSize: 16, lineHeight: 21, fontWeight: '800'},
-  optionMeta: {marginTop: 4, fontSize: 8, lineHeight: 11, fontWeight: '800', letterSpacing: 0.8},
-  optionState: {fontSize: 8, lineHeight: 11, fontWeight: '900', letterSpacing: 0.8},
-  pressed: {opacity: 0.62},
+  optionIdentity: { flexDirection: 'row', alignItems: 'center' },
+  optionCopy: { marginLeft: 12 },
+  optionLabel: { fontSize: 16, lineHeight: 21, fontWeight: '800' },
+  optionMeta: {
+    marginTop: 4,
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
 });

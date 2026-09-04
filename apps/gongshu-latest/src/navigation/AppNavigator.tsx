@@ -6,20 +6,31 @@ import {
   type LinkingOptions,
   type Theme,
 } from '@react-navigation/native';
-import {createBottomTabNavigator, type BottomTabBarProps} from '@react-navigation/bottom-tabs';
+import {
+  createBottomTabNavigator,
+  type BottomTabBarProps,
+} from '@react-navigation/bottom-tabs';
 import {
   createNativeStackNavigator,
   type NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {useRubanColors} from '../design/tokens';
+import {
+  GlobeIcon,
+  HomeIcon,
+  SettingsIcon,
+} from '@ruban-labs/react-native-ui-icons';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRubanColors } from '../design/tokens';
 import ComponentDetailScreen from '../screens/components/ComponentDetailScreen';
+import DAppBrowserScreen from '../screens/DAppBrowserScreen';
+import DAppTestScreen from '../screens/DAppTestScreen';
+import DAppsScreen from '../screens/DAppsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LabScreen from '../screens/LabScreen';
 import SettingsScreen from '../screens/SettingsScreen';
-import {ScreenFrame} from './ScreenFrame';
-import type {RootStackParamList, TabParamList} from './types';
+import { ScreenFrame } from './ScreenFrame';
+import type { RootStackParamList, TabParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -36,10 +47,13 @@ const linking: LinkingOptions<RootStackParamList> = {
       Main: {
         screens: {
           Home: 'home',
-          Playground: 'lab/:tool?',
+          DApps: 'dapps',
           Settings: 'settings',
         },
       },
+      DeveloperLab: 'lab/:tool?',
+      DAppBrowser: 'dapp',
+      DAppTest: 'dapp-test',
       ComponentDetail: 'components/:component',
     },
   },
@@ -61,70 +75,85 @@ const RubanTabButton = React.memo(function RubanTabButtonView({
   onLongPress,
 }: RubanTabButtonProps): React.ReactElement {
   const colors = useRubanColors();
+  const color = focused ? colors.ink : colors.faint;
+  const TabIcon =
+    name === 'Home' ? HomeIcon : name === 'DApps' ? GlobeIcon : SettingsIcon;
 
   return (
     <Pressable
       collapsable={false}
       accessibilityRole="button"
-      accessibilityState={focused ? {selected: true} : {}}
+      accessibilityState={focused ? { selected: true } : {}}
       accessibilityLabel={label}
       testID={`tab-${name.toLowerCase()}`}
       onPress={onPress}
       onLongPress={onLongPress}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.tabButton,
-        focused ? {backgroundColor: colors.navigationActive} : undefined,
+        focused ? { backgroundColor: colors.navigationActive } : undefined,
         pressed ? styles.tabButtonPressed : undefined,
-      ]}>
-      <Text style={[styles.tabLabel, {color: focused ? colors.ink : colors.faint}]}>{label}</Text>
+      ]}
+    >
+      <TabIcon size={23} color={color} />
     </Pressable>
   );
 });
 
-function RubanTabBar({state, navigation}: BottomTabBarProps): React.ReactElement {
+function RubanTabBar({
+  state,
+  navigation,
+}: BottomTabBarProps): React.ReactElement {
   const colors = useRubanColors();
   const insets = useSafeAreaInsets();
   const activeRouteName = state.routes[state.index]?.name;
-  const homeKey = state.routes.find(route => route.name === 'Home')?.key ?? state.routes[0].key;
-  const playgroundKey =
-    state.routes.find(route => route.name === 'Playground')?.key ?? state.routes[0].key;
-  const settingsKey = state.routes.find(route => route.name === 'Settings')?.key ?? state.routes[0].key;
+  const homeKey =
+    state.routes.find(route => route.name === 'Home')?.key ??
+    state.routes[0].key;
+  const dappsKey =
+    state.routes.find(route => route.name === 'DApps')?.key ??
+    state.routes[0].key;
+  const settingsKey =
+    state.routes.find(route => route.name === 'Settings')?.key ??
+    state.routes[0].key;
   const openHome = React.useCallback(() => {
-    const event = navigation.emit({type: 'tabPress', target: homeKey, canPreventDefault: true});
+    const event = navigation.emit({
+      type: 'tabPress',
+      target: homeKey,
+      canPreventDefault: true,
+    });
     if (!event.defaultPrevented) {
       navigation.navigate('Home');
     }
   }, [homeKey, navigation]);
-  const openPlayground = React.useCallback(
-    () => {
-      const event = navigation.emit({
-        type: 'tabPress',
-        target: playgroundKey,
-        canPreventDefault: true,
-      });
-      if (!event.defaultPrevented) {
-        navigation.navigate('Playground', {tool: 'design'});
-      }
-    },
-    [navigation, playgroundKey]
-  );
+  const openDApps = React.useCallback(() => {
+    const event = navigation.emit({
+      type: 'tabPress',
+      target: dappsKey,
+      canPreventDefault: true,
+    });
+    if (!event.defaultPrevented) navigation.navigate('DApps');
+  }, [dappsKey, navigation]);
   const openSettings = React.useCallback(() => {
-    const event = navigation.emit({type: 'tabPress', target: settingsKey, canPreventDefault: true});
+    const event = navigation.emit({
+      type: 'tabPress',
+      target: settingsKey,
+      canPreventDefault: true,
+    });
     if (!event.defaultPrevented) {
       navigation.navigate('Settings');
     }
   }, [navigation, settingsKey]);
   const longPressHome = React.useCallback(
-    () => navigation.emit({type: 'tabLongPress', target: homeKey}),
-    [homeKey, navigation]
+    () => navigation.emit({ type: 'tabLongPress', target: homeKey }),
+    [homeKey, navigation],
   );
-  const longPressPlayground = React.useCallback(
-    () => navigation.emit({type: 'tabLongPress', target: playgroundKey}),
-    [navigation, playgroundKey]
+  const longPressDApps = React.useCallback(
+    () => navigation.emit({ type: 'tabLongPress', target: dappsKey }),
+    [dappsKey, navigation],
   );
   const longPressSettings = React.useCallback(
-    () => navigation.emit({type: 'tabLongPress', target: settingsKey}),
-    [navigation, settingsKey]
+    () => navigation.emit({ type: 'tabLongPress', target: settingsKey }),
+    [navigation, settingsKey],
   );
 
   return (
@@ -136,7 +165,8 @@ function RubanTabBar({state, navigation}: BottomTabBarProps): React.ReactElement
           borderTopColor: colors.borderStrong,
           paddingBottom: Math.max(insets.bottom, 10),
         },
-      ]}>
+      ]}
+    >
       <RubanTabButton
         name="Home"
         label="Home"
@@ -145,11 +175,11 @@ function RubanTabBar({state, navigation}: BottomTabBarProps): React.ReactElement
         onLongPress={longPressHome}
       />
       <RubanTabButton
-        name="Playground"
-        label="Playground"
-        focused={activeRouteName === 'Playground'}
-        onPress={openPlayground}
-        onLongPress={longPressPlayground}
+        name="DApps"
+        label="DApps"
+        focused={activeRouteName === 'DApps'}
+        onPress={openDApps}
+        onLongPress={longPressDApps}
       />
       <RubanTabButton
         name="Settings"
@@ -172,9 +202,10 @@ function MainTabs(): React.ReactElement {
       <Tab.Navigator
         initialRouteName="Home"
         tabBar={renderRubanTabBar}
-        screenOptions={{headerShown: false, lazy: false}}>
+        screenOptions={{ headerShown: false, lazy: false }}
+      >
         <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Playground" component={LabScreen} />
+        <Tab.Screen name="DApps" component={DAppsScreen} />
         <Tab.Screen name="Settings" component={SettingsScreen} />
       </Tab.Navigator>
     </ScreenFrame>
@@ -182,7 +213,7 @@ function MainTabs(): React.ReactElement {
 }
 
 function ComponentDetailRoute(
-  props: NativeStackScreenProps<RootStackParamList, 'ComponentDetail'>
+  props: NativeStackScreenProps<RootStackParamList, 'ComponentDetail'>,
 ): React.ReactElement {
   return (
     <ScreenFrame bottomInset="screen-owned">
@@ -191,7 +222,19 @@ function ComponentDetailRoute(
   );
 }
 
-export default function AppNavigator({onReady}: AppNavigatorProps): React.ReactElement {
+function DeveloperLabRoute(
+  props: NativeStackScreenProps<RootStackParamList, 'DeveloperLab'>,
+): React.ReactElement {
+  return (
+    <ScreenFrame bottomInset="screen-owned">
+      <LabScreen {...props} />
+    </ScreenFrame>
+  );
+}
+
+export default function AppNavigator({
+  onReady,
+}: AppNavigatorProps): React.ReactElement {
   const colors = useRubanColors();
   const baseTheme = colors.mode === 'dark' ? DarkTheme : DefaultTheme;
   const theme = React.useMemo<Theme>(
@@ -207,16 +250,27 @@ export default function AppNavigator({onReady}: AppNavigatorProps): React.ReactE
         notification: colors.accent,
       },
     }),
-    [baseTheme, colors]
+    [baseTheme, colors],
   );
 
   return (
     <NavigationContainer linking={linking} onReady={onReady} theme={theme}>
       <RootStack.Navigator
         initialRouteName="Main"
-        screenOptions={{headerShown: false, animation: 'slide_from_right'}}>
-        <RootStack.Screen name="Main" component={MainTabs} options={{animation: 'none'}} />
-        <RootStack.Screen name="ComponentDetail" component={ComponentDetailRoute} />
+        screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
+      >
+        <RootStack.Screen
+          name="Main"
+          component={MainTabs}
+          options={{ animation: 'none' }}
+        />
+        <RootStack.Screen name="DeveloperLab" component={DeveloperLabRoute} />
+        <RootStack.Screen name="DAppBrowser" component={DAppBrowserScreen} />
+        <RootStack.Screen name="DAppTest" component={DAppTestScreen} />
+        <RootStack.Screen
+          name="ComponentDetail"
+          component={ComponentDetailRoute}
+        />
       </RootStack.Navigator>
     </NavigationContainer>
   );
@@ -229,7 +283,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     flexDirection: 'row',
   },
-  tabButton: {flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center'},
-  tabButtonPressed: {opacity: 0.62},
-  tabLabel: {fontSize: 11, lineHeight: 14, fontWeight: '700', letterSpacing: 0.25},
+  tabButton: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabButtonPressed: { opacity: 0.62 },
 });

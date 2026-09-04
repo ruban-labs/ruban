@@ -18,6 +18,8 @@
     "brand:app-store:check-screenshots": "node scripts/brand/frame-app-store-screenshots.mjs --check",
     "design:theme:generate": "node scripts/design/generate-theme-colors.mjs",
     "design:theme:check": "node scripts/design/generate-theme-colors.mjs --check",
+    "design:ui-graph": "node scripts/design/analyze-ui-dependencies.mjs",
+    "design:ui-graph:check": "node --test scripts/design/analyze-ui-dependencies.test.mjs && node scripts/design/analyze-ui-dependencies.mjs --check",
     "registry:sync": "node scripts/design/sync-source-registry.mjs",
     "registry:check": "node scripts/design/sync-source-registry.mjs --check",
     "site:build": "pnpm design:theme:check && pnpm --filter @ruban-labs/website build",
@@ -38,6 +40,7 @@
     "gongshu:android-signing": "node scripts/release/android-signing.mjs",
     "gongshu:apple-signing": "node scripts/release/apple-signing.mjs",
     "gongshu:device:prepare": "node scripts/device/prepare-dev-device.mjs",
+    "gongshu:dapp-smoke": "node scripts/device/dapp-provider-smoke.mjs",
     "gongshu:release-health": "node scripts/device/release-health.mjs"
   },
   "devDependencies": {

@@ -14,7 +14,12 @@ import {
   createNativeStackNavigator,
   type NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {
+  HomeIcon,
+  SettingsIcon,
+  TabsIcon,
+} from '@ruban-labs/react-native-ui-icons';
+import {Pressable, StyleSheet, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useRubanColors} from '../design/tokens';
 import ComponentDetailScreen from '../screens/components/ComponentDetailScreen';
@@ -32,7 +37,11 @@ type AppNavigatorProps = {
 };
 
 const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: ['ruban-rn066://', 'ruban-rn066-regression://', 'ruban-rn066-debug://'],
+  prefixes: [
+    'ruban-rn066://',
+    'ruban-rn066-regression://',
+    'ruban-rn066-debug://',
+  ],
   config: {
     initialRouteName: 'Main',
     screens: {
@@ -64,6 +73,13 @@ const RubanTabButton = React.memo(function RubanTabButtonView({
   onLongPress,
 }: RubanTabButtonProps): React.ReactElement {
   const colors = useRubanColors();
+  const color = focused ? colors.ink : colors.faint;
+  const TabIcon =
+    name === 'Home'
+      ? HomeIcon
+      : name === 'Playground'
+      ? TabsIcon
+      : SettingsIcon;
 
   return (
     <Pressable
@@ -79,10 +95,7 @@ const RubanTabButton = React.memo(function RubanTabButtonView({
         focused ? {backgroundColor: colors.navigationActive} : undefined,
         pressed ? styles.tabButtonPressed : undefined,
       ]}>
-      <Text
-        style={[styles.tabLabel, {color: focused ? colors.ink : colors.faint}]}>
-        {label}
-      </Text>
+      <TabIcon size={23} color={color} />
     </Pressable>
   );
 });
@@ -264,10 +277,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabButtonPressed: {opacity: 0.62},
-  tabLabel: {
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: '700',
-    letterSpacing: 0.25,
-  },
 });

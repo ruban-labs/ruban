@@ -110,7 +110,7 @@ export function classifyChangedPaths(inputPaths, { forceFull = false } = {}) {
       continue;
     }
 
-    if (/^apps\/gongshu-(?:0\.66|0\.76|latest)\/android\//.test(path)) {
+    if (/^apps\/gongshu-(?:0\.66|0\.77|latest)\/android\//.test(path)) {
       continue;
     }
 

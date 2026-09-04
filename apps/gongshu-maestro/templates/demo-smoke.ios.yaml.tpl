@@ -7,16 +7,8 @@ appId: {{appId}}
 - launchApp:
     clearState: true
 - setOrientation: portrait
-- extendedWaitUntil:
-    visible:
-      text: "{{homeTitle}}"
-    timeout: 120000
-- assertVisible:
-    text: "01.*Button.*"
-- assertVisible:
-    text: "Playground"
-- tapOn:
-    text: "01.*Button.*"
+{{initialAssertions}}
+{{openButtonShowcase}}
 - extendedWaitUntil:
     visible:
       text: "Back to components"
@@ -25,19 +17,11 @@ appId: {{appId}}
     text: "Playground"
 - assertNotVisible:
     text: "Settings"
-- tapOn:
-    text: "Back to components"
-- extendedWaitUntil:
-    visible:
-      text: "{{homeTitle}}"
-    timeout: 20000
+{{afterButtonShowcase}}
 - openLink: "{{scheme}}://components/badge?theme=light&variant=live&size=md"
-- extendedWaitUntil:
-    visible:
-      text: "Open"
-    timeout: 180000
 - tapOn:
-    text: "Open"
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Back to components"
@@ -45,6 +29,9 @@ appId: {{appId}}
 - assertVisible:
     text: "LIVE"
 - openLink: "{{scheme}}://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Live separator vertical accent bold"
@@ -54,6 +41,9 @@ appId: {{appId}}
 - assertVisible:
     text: "Live separator vertical accent bold"
 - openLink: "{{scheme}}://components/switch?theme=light&state=on&size=md"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Live switch state ON"
@@ -66,13 +56,65 @@ appId: {{appId}}
     text: "Live switch"
 - assertVisible:
     text: "Live switch state OFF"
-- openLink: "{{scheme}}://home"
+- openLink: "{{scheme}}://components/dialog?theme=light&scenario=sequential"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
-      text: "{{homeTitle}}"
-    timeout: 20000
+      text: "FIRST DIALOG"
+    timeout: 60000
 - tapOn:
-    text: "Playground"
+    text: "NEXT DIALOG"
+- extendedWaitUntil:
+    visible:
+      text: "SECOND DIALOG"
+    timeout: 60000
+- assertNotVisible:
+    text: "FIRST DIALOG"
+- tapOn:
+    text: "DONE"
+- openLink: "{{scheme}}://components/dialog?theme=dark&scenario=nested"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      text: "PARENT DIALOG"
+    timeout: 60000
+- tapOn:
+    text: "OPEN CONFIRMATION"
+- extendedWaitUntil:
+    visible:
+      text: "CONFIRM ACTION"
+    timeout: 60000
+- tapOn:
+    text: "RETURN TO PARENT"
+- extendedWaitUntil:
+    visible:
+      text: "PARENT DIALOG"
+    timeout: 60000
+- tapOn:
+    text: "CLOSE"
+- openLink: "{{scheme}}://components/dialog?theme=light&scenario=external"
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      text: "RELEASE GATE"
+    timeout: 60000
+- assertNotVisible:
+    text: "GATED DIALOG"
+- tapOn:
+    text: "RELEASE GATE"
+- extendedWaitUntil:
+    visible:
+      text: "GATED DIALOG"
+    timeout: 60000
+- tapOn:
+    text: "DONE"
+{{openPlayground}}
 - extendedWaitUntil:
     visible:
       text: "PLAYGROUND"
@@ -81,14 +123,29 @@ appId: {{appId}}
     text: "LIGHT"
 - assertVisible:
     text: "TYPE"
-- tapOn:
-    text: "Settings"
+{{openSettings}}
 - extendedWaitUntil:
     visible:
       text: "Settings"
     timeout: 20000
 - assertVisible:
     text: "Appearance.*"
+- tapOn:
+    text: "Appearance.*"
+- extendedWaitUntil:
+    visible:
+      text: "System"
+    timeout: 20000
+- assertVisible:
+    text: "Light"
+- assertVisible:
+    text: "Dark"
+- tapOn:
+    text: "Light"
+- extendedWaitUntil:
+    visible:
+      text: "Settings"
+    timeout: 20000
 - scrollUntilVisible:
     element:
       text: "{{settingsBuildEntry}}.*"

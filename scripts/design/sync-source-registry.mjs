@@ -20,38 +20,23 @@ if (requestedApp && !appNames.includes(requestedApp)) {
 
 const selectedApps = requestedApp ? [requestedApp] : appNames;
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-const outputs = validateManifest(manifest);
+const { appOutputs, packageOutputs } = validateManifest(manifest);
 const staleTargets = [];
 
+for (const output of packageOutputs) {
+  await syncOutput(output, adaptSourceForPackage);
+}
+
 for (const appName of selectedApps) {
-  for (const output of outputs) {
-    const sourcePath = path.join(registryRoot, output.source);
-    const targetPath = path.join(
-      repositoryRoot,
-      "apps",
-      appName,
-      output.target
+  for (const output of appOutputs) {
+    await syncOutput(
+      {
+        ...output,
+        target: path.posix.join("apps", appName, output.target),
+        appName,
+      },
+      adaptSourceForApp
     );
-    const source = adaptSourceForApp(
-      await readFile(sourcePath, "utf8"),
-      appName
-    );
-    const prettierConfig = await prettier.resolveConfig(targetPath);
-    const expected = prettier.format(source, {
-      ...prettierConfig,
-      filepath: targetPath,
-    });
-
-    if (checkOnly) {
-      const actual = await readFile(targetPath, "utf8").catch(() => "");
-      if (actual !== expected) {
-        staleTargets.push(path.relative(repositoryRoot, targetPath));
-      }
-      continue;
-    }
-
-    await mkdir(path.dirname(targetPath), { recursive: true });
-    await writeFile(targetPath, expected);
   }
 }
 
@@ -81,19 +66,26 @@ function validateManifest(value) {
 
   const seenNames = new Set();
   const seenFiles = new Set();
-  const outputs = [];
+  const packageOutputs = [];
+  const appOutputs = [];
   for (const item of value.items) {
     if (typeof item.name !== "string" || seenNames.has(item.name)) {
       throw new Error(`Invalid or duplicate registry item: ${item.name}`);
     }
     seenNames.add(item.name);
+    if (
+      typeof item.package !== "string" ||
+      !/^react-native-ui-[a-z-]+$/.test(item.package)
+    ) {
+      throw new Error(`Registry item ${item.name} has an invalid package`);
+    }
     if (!Array.isArray(item.files) || item.files.length === 0) {
       throw new Error(`Registry item ${item.name} has no files`);
     }
     for (const file of item.files) {
       if (
         typeof file !== "string" ||
-        !/^[A-Za-z][A-Za-z0-9]*\.tsx$/.test(file)
+        !/^[A-Za-z][A-Za-z0-9]*\.tsx?$/.test(file)
       ) {
         throw new Error(`Registry item ${item.name} has invalid file ${file}`);
       }
@@ -101,9 +93,10 @@ function validateManifest(value) {
         throw new Error(`Registry file is assigned more than once: ${file}`);
       }
       seenFiles.add(file);
-      outputs.push({
+      packageOutputs.push({
         source: path.posix.join("ui", file),
-        target: path.posix.join(value.targetDirectory, file),
+        target: path.posix.join("packages", item.package, "src", file),
+        package: item.package,
       });
     }
   }
@@ -122,21 +115,144 @@ function validateManifest(value) {
         "Source registry manifest contains an invalid verification file"
       );
     }
-    if (outputs.some((output) => output.target === file.target)) {
+    if (appOutputs.some((output) => output.target === file.target)) {
       throw new Error(
         `Registry target is assigned more than once: ${file.target}`
       );
     }
-    outputs.push(file);
+    appOutputs.push(file);
   }
 
-  return outputs;
+  if (!Array.isArray(value.testFiles)) {
+    throw new Error("Source registry manifest must contain testFiles");
+  }
+  for (const file of value.testFiles) {
+    if (
+      typeof file.source !== "string" ||
+      !/^tests\/[A-Za-z][A-Za-z0-9]*\.test\.js$/.test(file.source) ||
+      typeof file.target !== "string" ||
+      !/^__tests__\/[A-Za-z][A-Za-z0-9]*\.test\.js$/.test(file.target)
+    ) {
+      throw new Error("Source registry manifest contains an invalid test file");
+    }
+    if (appOutputs.some((output) => output.target === file.target)) {
+      throw new Error(
+        `Registry target is assigned more than once: ${file.target}`
+      );
+    }
+    appOutputs.push(file);
+  }
+
+  return { appOutputs, packageOutputs };
+}
+
+async function syncOutput(output, adaptSource) {
+  const sourcePath = path.join(registryRoot, output.source);
+  const targetPath = path.join(repositoryRoot, output.target);
+  const source = adaptSource(
+    await readFile(sourcePath, "utf8"),
+    output.appName || output.package
+  );
+  const prettierConfig = await prettier.resolveConfig(targetPath);
+  const expected = prettier.format(source, {
+    ...prettierConfig,
+    filepath: targetPath,
+  });
+  const actual = await readFile(targetPath, "utf8").catch(() => "");
+
+  if (checkOnly) {
+    if (actual !== expected) {
+      staleTargets.push(path.relative(repositoryRoot, targetPath));
+    }
+    return;
+  }
+
+  if (actual === expected) {
+    return;
+  }
+
+  await mkdir(path.dirname(targetPath), { recursive: true });
+  await writeFile(targetPath, expected);
+}
+
+function adaptSourceForPackage(source, packageName) {
+  let adapted = source.replaceAll(
+    "../../design/tokens",
+    "@ruban-labs/react-native-ui-theme"
+  );
+
+  if (
+    packageName === "react-native-ui-dialog" ||
+    packageName === "react-native-ui-sheet"
+  ) {
+    adapted = adapted.replaceAll(
+      "./OverlayHost",
+      "@ruban-labs/react-native-ui-overlay"
+    );
+  }
+
+  return adapted;
 }
 
 function adaptSourceForApp(source, appName) {
-  if (appName !== "gongshu-0.66") {
-    return source;
+  const packageImports = source
+    .replaceAll(
+      "../../components/ui/Dialog",
+      "@ruban-labs/react-native-ui-dialog"
+    )
+    .replaceAll(
+      "../../components/ui/OverlayHost",
+      "@ruban-labs/react-native-ui-overlay"
+    )
+    .replaceAll(
+      "../../components/ui/Checkbox",
+      "@ruban-labs/react-native-ui-form/checkbox"
+    )
+    .replaceAll(
+      "../../components/ui/Field",
+      "@ruban-labs/react-native-ui-form/field"
+    )
+    .replaceAll(
+      "../../components/ui/Input",
+      "@ruban-labs/react-native-ui-form/input"
+    )
+    .replaceAll(
+      "../../components/ui/RadioGroup",
+      "@ruban-labs/react-native-ui-form/radio-group"
+    )
+    .replaceAll(
+      "../../components/ui/Select",
+      "@ruban-labs/react-native-ui-form/select"
+    )
+    .replaceAll(
+      "../../components/ui/Textarea",
+      "@ruban-labs/react-native-ui-form/textarea"
+    )
+    .replaceAll(
+      "../../design/theme-colors",
+      "@ruban-labs/react-native-ui-theme/colors"
+    )
+    .replaceAll(
+      "../../design/tokens",
+      "@ruban-labs/react-native-ui-theme"
+    )
+    .replaceAll(
+      "../src/components/ui/OverlayCoordinator",
+      "@ruban-labs/react-native-ui-overlay/coordinator"
+    );
+
+  if (appName === "gongshu-0.66") {
+    return packageImports
+      .replace(/\n\s*navigationBarTranslucent(?=\n)/g, "")
+      .replaceAll("ruban-debug://", "ruban-rn066-debug://");
   }
 
-  return source.replace(/\n\s*navigationBarTranslucent(?=\n)/g, "");
+  if (appName === "gongshu-0.77") {
+    return packageImports.replaceAll(
+      "ruban-debug://",
+      "ruban-rn077-debug://"
+    );
+  }
+
+  return packageImports;
 }
