@@ -6,6 +6,7 @@ import {
   DappBridgeHostSession,
 } from "@ruban-labs/react-native-dapp-bridge";
 import { createEvmClient } from "@ruban-labs/react-native-evm-client";
+import { WorkerThread } from "@ruban-labs/react-native-worker-thread";
 import {
   Bar,
   Circle,
@@ -47,6 +48,13 @@ void isWalletCoreAvailable;
 
 export function Sample(): React.ReactElement {
   const sections = ["FIRST", "SECOND"] as const;
+  const worker = WorkerThread.create({
+    name: "typecheck-latest",
+    bundle: {id: "com.ruban.fixture.latest"},
+    capabilities: ['native-rpc'],
+    limits: {maxQueueDepth: 8, maxMessageBytes: 1024},
+  });
+  void worker.then(instance => instance.terminate());
 
   return (
     <>
