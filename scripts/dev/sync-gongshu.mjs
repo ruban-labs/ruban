@@ -9,7 +9,7 @@
 //
 // Usage:
 //   node scripts/dev/sync-gongshu.mjs --app <gongshu-0.66|gongshu-0.77|gongshu-latest>
-//   node scripts/dev/sync-gongshu.mjs --all [--skip-install] [--offline]
+//   node scripts/dev/sync-gongshu.mjs --all [--skip-install] [--offline] [--ignore-scripts]
 
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -146,6 +146,7 @@ function syncApp(app, options) {
   console.log(`sync-gongshu: ${app} installing with ${manifest.packageManager} (Node ${process.version})`);
   const installArgs = ['pnpm', 'install', '--force', '--no-frozen-lockfile'];
   if (options.offline) installArgs.push('--offline');
+  if (options.ignoreScripts) installArgs.push('--ignore-scripts');
   run('corepack', installArgs, {
     cwd: appDir,
     env: { ...process.env, NODE_ENV: 'development' },
@@ -157,6 +158,7 @@ function syncApp(app, options) {
 const argv = process.argv.slice(2);
 const skipInstall = argv.includes('--skip-install');
 const offline = argv.includes('--offline');
+const ignoreScripts = argv.includes('--ignore-scripts');
 const nativePlatformIndex = argv.indexOf('--native-platform');
 const nativePlatform = nativePlatformIndex >= 0 ? argv[nativePlatformIndex + 1] : null;
 if (nativePlatform && !['android', 'ios'].includes(nativePlatform)) {
@@ -173,4 +175,4 @@ if (argv.includes('--all')) {
 }
 
 for (const library of LIBRARIES) ensureLibraryBuilt(library, nativePlatform);
-for (const app of selected) syncApp(app, {skipInstall, offline});
+for (const app of selected) syncApp(app, {skipInstall, offline, ignoreScripts});

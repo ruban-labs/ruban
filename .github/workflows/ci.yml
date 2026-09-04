@@ -319,18 +319,8 @@ jobs:
         with:
           node-version: ${{ matrix.era-node }}
       - name: Sync app (demo + tarball + deps)
-        # setup-android can leave a large runner environment behind. The nested
-        # package-manager process needs only its toolchain and SDK inputs.
-        run: |
-          env -i \
-            PATH="$PATH" \
-            HOME="$HOME" \
-            CI=true \
-            TMPDIR="${RUNNER_TEMP:-/tmp}" \
-            ANDROID_HOME="$ANDROID_HOME" \
-            ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT" \
-            JAVA_HOME="$JAVA_HOME" \
-            node scripts/dev/sync-gongshu.mjs --app ${{ matrix.app }}
+        # The native build does not execute Node tooling lifecycle scripts.
+        run: node scripts/dev/sync-gongshu.mjs --app ${{ matrix.app }} --ignore-scripts
       - name: Build Android debug app with Hermes
         working-directory: apps/${{ matrix.app }}/android
         env:
