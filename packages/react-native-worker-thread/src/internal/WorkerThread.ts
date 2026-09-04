@@ -209,7 +209,13 @@ export class WorkerThread implements WorkerThreadHandle {
     this.lifecycleState = 'terminating';
     this.termination = this.transport
       .terminate(this.id)
-      .finally(() => this.markTerminal('terminated'));
+      .then(
+        () => this.markTerminal('terminated'),
+        error => {
+          this.markTerminal('failed');
+          throw error;
+        },
+      );
     return this.termination;
   }
 

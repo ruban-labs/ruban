@@ -98,6 +98,7 @@ class WorkerRuntimeCore final {
   const WorkerMessageHandler handler_;
 
   mutable std::mutex mutex_;
+  std::mutex joinMutex_;
   std::condition_variable wake_;
   std::deque<std::string> inbound_;
   std::deque<std::string> outbound_;

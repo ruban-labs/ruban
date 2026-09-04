@@ -120,6 +120,23 @@ int main() {
   assert(std::chrono::steady_clock::now() - terminationStarted < std::chrono::milliseconds(500));
   assert(WorkerRuntimeCore::activeThreadCountForTesting() == 0);
 
+  WorkerRuntimeCore concurrentTerminationRuntime(
+      "concurrent-termination-smoke",
+      limits,
+      [](const std::string&, const auto&, const auto& execution) {
+        while (!execution.shouldStop()) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+      });
+  assert(concurrentTerminationRuntime.start());
+  assert(concurrentTerminationRuntime.postToWorker("{}") == QueueResult::Accepted);
+  std::thread firstTerminator([&concurrentTerminationRuntime] { concurrentTerminationRuntime.terminate(); });
+  std::thread secondTerminator([&concurrentTerminationRuntime] { concurrentTerminationRuntime.terminate(); });
+  firstTerminator.join();
+  secondTerminator.join();
+  assert(concurrentTerminationRuntime.state() == WorkerRuntimeState::Terminated);
+  assert(WorkerRuntimeCore::activeThreadCountForTesting() == 0);
+
   WorkerRuntimeLimits timeoutLimits = limits;
   timeoutLimits.maxRuntime = std::chrono::milliseconds(10);
   WorkerRuntimeCore timeoutRuntime(

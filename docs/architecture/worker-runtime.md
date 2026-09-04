@@ -63,8 +63,9 @@ ArrayBuffers, and worker-pool scheduling without changing this API shape.
 
 ## Limits and cleanup
 
-Limits are enforced on both the JavaScript-facing API and the native core. The
-defaults are deliberately conservative:
+The JavaScript-facing API validates the option envelope and each message body;
+the native core owns queue admission and byte accounting. The defaults are
+deliberately conservative:
 
 | Boundary | Default | Behaviour at limit |
 | --- | ---: | --- |

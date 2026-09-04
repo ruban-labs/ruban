@@ -42,7 +42,12 @@ bool WorkerRuntimeCore::start() {
     return false;
   }
   state_ = WorkerRuntimeState::Running;
-  thread_ = std::thread(&WorkerRuntimeCore::threadMain, this);
+  try {
+    thread_ = std::thread(&WorkerRuntimeCore::threadMain, this);
+  } catch (const std::exception& error) {
+    setTerminalLocked(WorkerRuntimeState::Failed, error.what());
+    return false;
+  }
   return true;
 }
 
@@ -121,10 +126,21 @@ void WorkerRuntimeCore::terminate() {
       inboundBytes_ = 0;
       wake_.notify_all();
     }
+    if (thread_.joinable() && thread_.get_id() == std::this_thread::get_id()) {
+      return;
+    }
   }
 
-  if (thread_.joinable() && thread_.get_id() != std::this_thread::get_id()) {
-    thread_.join();
+  std::unique_lock<std::mutex> joinLock(joinMutex_);
+  std::thread threadToJoin;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (thread_.joinable()) {
+      threadToJoin = std::move(thread_);
+    }
+  }
+  if (threadToJoin.joinable()) {
+    threadToJoin.join();
   }
 }
 

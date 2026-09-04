@@ -35,6 +35,12 @@ class EchoTransport implements NativeWorkerTransport {
   }
 }
 
+class RejectingTerminateTransport extends EchoTransport {
+  async terminate(): Promise<void> {
+    throw new Error('native shutdown did not complete');
+  }
+}
+
 function options(name: string, limits?: WorkerOptions['limits']): WorkerOptions {
   return {
     name,
@@ -100,6 +106,14 @@ describe('WorkerThread JSON transport', () => {
     transport.fail(worker.id, 'E_WORKER_EXCEPTION', 'entry threw');
 
     expect(errors).toEqual(['E_WORKER_EXCEPTION']);
+    expect(worker.state).toBe('failed');
+  });
+
+  it('does not report a failed native shutdown as a successful termination', async () => {
+    const transport = new RejectingTerminateTransport();
+    const worker = await createWorkerWithTransport(options('terminate-rejection'), transport);
+
+    await expect(worker.terminate()).rejects.toThrow('native shutdown did not complete');
     expect(worker.state).toBe('failed');
   });
 });
