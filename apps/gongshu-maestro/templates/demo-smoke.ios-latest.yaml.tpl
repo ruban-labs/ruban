@@ -3,7 +3,11 @@ appId: {{appId}}
 # The iOS 18 simulator does not reliably relaunch a stopped app through
 # Maestro custom-scheme action or deliver taps to the custom icon-only tab.
 # The CI harness opens ruban-debug://settings through simctl after the separate
-# cold-launch flow, then this flow validates the user-visible Settings paths.
+# cold-launch flow. A fresh simulator asks for system confirmation the first
+# time it opens the custom scheme, while a reused simulator does not.
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true
 - extendedWaitUntil:
     visible:
       text: "Appearance.*"
