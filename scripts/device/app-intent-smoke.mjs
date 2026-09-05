@@ -226,7 +226,7 @@ function startReceiptServer() {
       });
     });
     server.once('error', reject);
-    server.listen(0, '127.0.0.1', () => {
+    server.listen({port: 0, host: '::', ipv6Only: false}, () => {
       const address = server.address();
       if (!address || typeof address === 'string') {
         server.close();
