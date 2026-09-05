@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import {randomUUID} from 'node:crypto';
-import {spawn, spawnSync} from 'node:child_process';
+import {spawnSync} from 'node:child_process';
 import {appendFileSync, writeFileSync} from 'node:fs';
+import {createServer} from 'node:http';
 
 const ERAS = {
   latest: {
@@ -83,10 +84,9 @@ const appId = config.appIds[lane];
 const workflowPrefix = `intent-${era.replace('.', '')}-${randomUUID().slice(0, 8)}`;
 const addressA = '0x1111111111111111111111111111111111111111';
 const addressB = '0x2222222222222222222222222222222222222222';
-const maxIosLogBytes = 2 * 1024 * 1024;
-let iosLogBuffer = '';
-let iosLogStream = null;
-let iosLogStreamExit = null;
+let receiptServer = null;
+let receiptServerPort = null;
+const receivedReceipts = new Map();
 
 const scenarios = [
   {
@@ -188,86 +188,74 @@ function sleep(durationMs) {
   return new Promise(resolve => setTimeout(resolve, durationMs));
 }
 
-function appendIosLog(chunk) {
-  const text = chunk.toString('utf8');
-  iosLogBuffer = `${iosLogBuffer}${text}`.slice(-maxIosLogBytes);
-  if (diagnosticLogPath) appendFileSync(diagnosticLogPath, text);
+function appendDiagnostic(message) {
+  if (diagnosticLogPath) appendFileSync(diagnosticLogPath, `${message}\n`);
 }
 
-function startIosLogStream() {
-  if (diagnosticLogPath) writeFileSync(diagnosticLogPath, '');
-  const child = spawn(
-    'xcrun',
-    [
-      'simctl',
-      'spawn',
-      device,
-      'log',
-      'stream',
-      '--style',
-      'compact',
-      '--level',
-      'debug',
-      '--predicate',
-      'eventMessage CONTAINS "RUBAN_APP_INTENT"',
-    ],
-    {stdio: ['ignore', 'pipe', 'pipe']},
-  );
-  child.stdout.on('data', appendIosLog);
-  child.stderr.on('data', appendIosLog);
-  child.on('error', error => {
-    iosLogStreamExit = `error: ${error.message}`;
+function startReceiptServer() {
+  return new Promise((resolve, reject) => {
+    if (diagnosticLogPath) writeFileSync(diagnosticLogPath, '');
+    const server = createServer((request, response) => {
+      if (request.method !== 'POST' || request.url !== '/receipt') {
+        response.writeHead(404).end();
+        return;
+      }
+
+      let body = '';
+      request.setEncoding('utf8');
+      request.on('data', chunk => {
+        body += chunk;
+        if (body.length > 64 * 1024) request.destroy();
+      });
+      request.on('end', () => {
+        try {
+          const receipt = JSON.parse(body);
+          if (typeof receipt?.runId !== 'string') throw new Error('runId');
+          receivedReceipts.set(receipt.runId, receipt);
+          appendDiagnostic(
+            JSON.stringify({
+              runId: receipt.runId,
+              action: receipt.action,
+              status: receipt.status,
+            }),
+          );
+          response.writeHead(204).end();
+        } catch {
+          response.writeHead(400).end();
+        }
+      });
+    });
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+      if (!address || typeof address === 'string') {
+        server.close();
+        reject(new Error('receipt server did not expose a TCP port'));
+        return;
+      }
+      receiptServer = server;
+      receiptServerPort = address.port;
+      appendDiagnostic(`listening on localhost:${address.port}`);
+      resolve();
+    });
   });
-  child.on('exit', (code, signal) => {
-    iosLogStreamExit = `exit ${code ?? 'null'} signal ${signal ?? 'none'}`;
+}
+
+function stopReceiptServer() {
+  return new Promise(resolve => {
+    if (!receiptServer) {
+      resolve();
+      return;
+    }
+    receiptServer.close(() => resolve());
   });
-  return child;
-}
-
-function stopIosLogStream() {
-  if (iosLogStream && iosLogStream.exitCode === null) {
-    iosLogStream.kill('SIGTERM');
-  }
-}
-
-function parseReceipt(buffer, runId) {
-  const marker = 'RUBAN_APP_INTENT_RECEIPT ';
-  for (const line of buffer.split('\n')) {
-    const markerIndex = line.indexOf(marker);
-    if (markerIndex < 0) continue;
-    const json = line.slice(markerIndex + marker.length).trim();
-    try {
-      const receipt = JSON.parse(json);
-      if (receipt.runId === runId) return receipt;
-    } catch {}
-  }
-  return null;
-}
-
-function readLogs(runId) {
-  if (platform === 'android') {
-    const result = adb(
-      'logcat',
-      '-d',
-      '-v',
-      'brief',
-      '-s',
-      'ReactNativeJS:V',
-      '*:S',
-    );
-    return `${result.stdout || ''}${result.stderr || ''}`;
-  }
-  if (iosLogStreamExit) {
-    throw new Error(`iOS log stream stopped: ${iosLogStreamExit}`);
-  }
-  return iosLogBuffer;
 }
 
 async function waitForReceipt(runId) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    const receipt = parseReceipt(readLogs(runId), runId);
-    if (receipt) return receipt;
+    const callbackReceipt = receivedReceipts.get(runId);
+    if (callbackReceipt) return callbackReceipt;
     await sleep(500);
   }
   throw new Error(`timed out waiting for receipt ${runId}`);
@@ -302,6 +290,7 @@ function launch(url, restart = false) {
 }
 
 try {
+  await startReceiptServer();
   if (platform === 'android') {
     requireSuccess(adb('get-state'), 'device readiness');
     adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP');
@@ -314,7 +303,14 @@ try {
       ),
       'Metro reverse',
     );
-    requireSuccess(adb('logcat', '-c'), 'clear logcat');
+    requireSuccess(
+      adb(
+        'reverse',
+        `tcp:${receiptServerPort}`,
+        `tcp:${receiptServerPort}`,
+      ),
+      'receipt server reverse',
+    );
   } else {
     requireSuccess(
       run('xcrun', ['simctl', 'bootstatus', device, '-b']),
@@ -333,16 +329,15 @@ try {
       ]),
       'configure Metro location',
     );
-    iosLogStream = startIosLogStream();
-    await sleep(750);
-    if (iosLogStreamExit) {
-      throw new Error(`iOS log stream failed to start: ${iosLogStreamExit}`);
-    }
   }
 
   for (const [index, scenario] of scenarios.entries()) {
     const runId = `${workflowPrefix}-${index}`;
-    const query = new URLSearchParams({runId, ...scenario.query});
+    const query = new URLSearchParams({
+      runId,
+      receiptUrl: `http://localhost:${receiptServerPort}/receipt`,
+      ...scenario.query,
+    });
     const url = `${scheme}://dev/${scenario.path}?${query.toString()}`;
     launch(url, scenario.restart);
     const receipt = await waitForReceipt(runId);
@@ -371,5 +366,5 @@ try {
   );
   process.exitCode = 1;
 } finally {
-  stopIosLogStream();
+  await stopReceiptServer();
 }

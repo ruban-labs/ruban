@@ -39,6 +39,7 @@ export type AppIntentEnvelope = {
   runId: string;
   source: AppIntentSource;
   intent: AppIntent;
+  receiptUrl?: string;
 };
 
 export type AppIntentResult = Record<
@@ -137,6 +138,14 @@ function parseBoundedTimeout(value: string | undefined): number | null {
   return parsed != null && parsed <= 60_000 ? parsed : null;
 }
 
+function normalizeReceiptUrl(value: string | undefined): string | null {
+  if (!value) return null;
+  const match = /^http:\/\/localhost:([1-9][0-9]{0,4})\/receipt$/.exec(value);
+  if (!match) return null;
+  const port = Number(match[1]);
+  return port <= 65535 ? value : null;
+}
+
 export function parseDeveloperAppIntent(
   url: string | null | undefined,
   environment: RubanAppEnvironment,
@@ -153,14 +162,15 @@ export function parseDeveloperAppIntent(
   const queryText = remainder.slice(queryStart + 1);
 
   const allowedKeysByPath: Record<string, ReadonlySet<string>> = {
-    'runtime-ready': new Set(['runId']),
-    'address/add': new Set(['runId', 'address', 'label']),
-    'address/select': new Set(['runId', 'address']),
-    'address/delete': new Set(['runId', 'address']),
-    'chain/select': new Set(['runId', 'chainId']),
-    'portfolio/sync': new Set(['runId', 'address', 'provider']),
+    'runtime-ready': new Set(['runId', 'receiptUrl']),
+    'address/add': new Set(['runId', 'receiptUrl', 'address', 'label']),
+    'address/select': new Set(['runId', 'receiptUrl', 'address']),
+    'address/delete': new Set(['runId', 'receiptUrl', 'address']),
+    'chain/select': new Set(['runId', 'receiptUrl', 'chainId']),
+    'portfolio/sync': new Set(['runId', 'receiptUrl', 'address', 'provider']),
     'dapp/review': new Set([
       'runId',
+      'receiptUrl',
       'decision',
       'method',
       'timeoutMs',
@@ -213,7 +223,15 @@ export function parseDeveloperAppIntent(
     }
   }
 
+  const receiptUrl = normalizeReceiptUrl(query.receiptUrl);
+  if (query.receiptUrl && !receiptUrl) return null;
+
   return intent
-    ? { runId: query.runId, source: 'deep-link', intent }
+    ? {
+        runId: query.runId,
+        source: 'deep-link',
+        intent,
+        ...(receiptUrl ? { receiptUrl } : {}),
+      }
     : null;
 }

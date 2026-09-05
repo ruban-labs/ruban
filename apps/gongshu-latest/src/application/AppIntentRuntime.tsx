@@ -20,6 +20,22 @@ function publishReceipt(receipt: AppIntentReceipt): void {
   receiptListeners.forEach(listener => listener(receipt));
 }
 
+async function postReceipt(
+  receiptUrl: string | undefined,
+  receipt: AppIntentReceipt,
+): Promise<void> {
+  if (!receiptUrl) return;
+  try {
+    await fetch(receiptUrl, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(receipt),
+    });
+  } catch {
+    console.info(`RUBAN_APP_INTENT_CALLBACK_FAILED ${receipt.runId}`);
+  }
+}
+
 export const appIntentDispatcher = new AppIntentDispatcher({
   receipts: {
     get: runId => repositories.getAppIntentReceipt(runId),
@@ -48,7 +64,8 @@ async function handleDeveloperUrl(url: string | null | undefined): Promise<void>
   const envelope = parseDeveloperAppIntent(url, appEnvironment);
   if (!envelope) return;
   try {
-    await appIntentDispatcher.dispatch(envelope);
+    const receipt = await appIntentDispatcher.dispatch(envelope);
+    await postReceipt(envelope.receiptUrl, receipt);
   } catch (error) {
     const errorCode =
       error instanceof AppIntentFailure ? error.code : 'intent_dispatch_failed';

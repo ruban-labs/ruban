@@ -40,6 +40,17 @@ test('parses the bounded developer intent namespace', () => {
     expectedMethod: 'eth_requestAccounts',
     timeoutMs: 30_000,
   });
+  expect(
+    parseDeveloperAppIntent(
+      'ruban-debug://dev/runtime-ready?runId=ready-2&receiptUrl=http%3A%2F%2Flocalhost%3A43123%2Freceipt',
+      'debug',
+    ),
+  ).toEqual({
+    runId: 'ready-2',
+    source: 'deep-link',
+    intent: { action: 'runtime.ready' },
+    receiptUrl: 'http://localhost:43123/receipt',
+  });
 });
 
 test('rejects production, wrong schemes, duplicates, and malformed values', () => {
@@ -72,6 +83,18 @@ test('rejects production, wrong schemes, duplicates, and malformed values', () =
       `ruban-debug://dev/address/add?runId=add-1&address=${address}&label=${encodeURIComponent(
         'bad\nlabel',
       )}`,
+      'debug',
+    ),
+  ).toBeNull();
+  expect(
+    parseDeveloperAppIntent(
+      'ruban-debug://dev/runtime-ready?runId=ready-1&receiptUrl=https%3A%2F%2Fexample.com%2Freceipt',
+      'debug',
+    ),
+  ).toBeNull();
+  expect(
+    parseDeveloperAppIntent(
+      'ruban-debug://dev/runtime-ready?runId=ready-1&receiptUrl=http%3A%2F%2Flocalhost%3A99999%2Freceipt',
       'debug',
     ),
   ).toBeNull();
