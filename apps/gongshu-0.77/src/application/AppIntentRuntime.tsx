@@ -1,9 +1,10 @@
 import * as React from 'react';
-import {Linking} from 'react-native';
+import {Linking, Platform, Settings} from 'react-native';
 import {buildInfo} from '../buildInfo';
 import {appEnvironment} from '../runtime/appEnvironment';
 
 const handledRunIds = new Set<string>();
+const iosReceiptKey = 'RubanAppIntentReceipt';
 
 type RuntimeReadyRequest = {runId: string; receiptUrl?: string};
 
@@ -79,6 +80,9 @@ async function handleUrl(url: string | null | undefined): Promise<void> {
     completedAt: Date.now(),
   };
   console.info(`RUBAN_APP_INTENT_RECEIPT ${JSON.stringify(receipt)}`);
+  if (Platform.OS === 'ios') {
+    Settings.set({[iosReceiptKey]: JSON.stringify(receipt)});
+  }
   if (receiptUrl) {
     try {
       await fetch(receiptUrl, {

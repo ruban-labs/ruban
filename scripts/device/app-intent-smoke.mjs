@@ -4,6 +4,7 @@ import {randomUUID} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {appendFileSync, writeFileSync} from 'node:fs';
 import {createServer} from 'node:http';
+import {join} from 'node:path';
 
 const ERAS = {
   latest: {
@@ -84,8 +85,10 @@ const appId = config.appIds[lane];
 const workflowPrefix = `intent-${era.replace('.', '')}-${randomUUID().slice(0, 8)}`;
 const addressA = '0x1111111111111111111111111111111111111111';
 const addressB = '0x2222222222222222222222222222222222222222';
+const iosReceiptKey = 'RubanAppIntentReceipt';
 let receiptServer = null;
 let receiptServerPort = null;
+let iosPreferencesPath = null;
 const receivedReceipts = new Map();
 
 const scenarios = [
@@ -194,7 +197,6 @@ function appendDiagnostic(message) {
 
 function startReceiptServer() {
   return new Promise((resolve, reject) => {
-    if (diagnosticLogPath) writeFileSync(diagnosticLogPath, '');
     const server = createServer((request, response) => {
       if (request.method !== 'POST' || request.url !== '/receipt') {
         response.writeHead(404).end();
@@ -254,8 +256,34 @@ function stopReceiptServer() {
 async function waitForReceipt(runId) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    const callbackReceipt = receivedReceipts.get(runId);
-    if (callbackReceipt) return callbackReceipt;
+    if (platform === 'ios') {
+      const result = run('plutil', [
+        '-extract',
+        iosReceiptKey,
+        'raw',
+        '-o',
+        '-',
+        iosPreferencesPath,
+      ]);
+      if (result.status === 0) {
+        try {
+          const receipt = JSON.parse(result.stdout.trim());
+          if (receipt.runId === runId) {
+            appendDiagnostic(
+              JSON.stringify({
+                runId: receipt.runId,
+                action: receipt.action,
+                status: receipt.status,
+              }),
+            );
+            return receipt;
+          }
+        } catch {}
+      }
+    } else {
+      const callbackReceipt = receivedReceipts.get(runId);
+      if (callbackReceipt) return callbackReceipt;
+    }
     await sleep(500);
   }
   throw new Error(`timed out waiting for receipt ${runId}`);
@@ -290,8 +318,9 @@ function launch(url, restart = false) {
 }
 
 try {
-  await startReceiptServer();
+  if (diagnosticLogPath) writeFileSync(diagnosticLogPath, '');
   if (platform === 'android') {
+    await startReceiptServer();
     requireSuccess(adb('get-state'), 'device readiness');
     adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP');
     adb('shell', 'wm', 'dismiss-keyguard');
@@ -329,15 +358,29 @@ try {
       ]),
       'configure Metro location',
     );
+    const dataContainer = run('xcrun', [
+      'simctl',
+      'get_app_container',
+      device,
+      appId,
+      'data',
+    ]);
+    requireSuccess(dataContainer, 'resolve app data container');
+    iosPreferencesPath = join(
+      dataContainer.stdout.trim(),
+      'Library',
+      'Preferences',
+      `${appId}.plist`,
+    );
   }
 
   for (const [index, scenario] of scenarios.entries()) {
     const runId = `${workflowPrefix}-${index}`;
-    const query = new URLSearchParams({
-      runId,
-      receiptUrl: `http://localhost:${receiptServerPort}/receipt`,
-      ...scenario.query,
-    });
+    const queryValues = {runId, ...scenario.query};
+    if (platform === 'android') {
+      queryValues.receiptUrl = `http://localhost:${receiptServerPort}/receipt`;
+    }
+    const query = new URLSearchParams(queryValues);
     const url = `${scheme}://dev/${scenario.path}?${query.toString()}`;
     launch(url, scenario.restart);
     const receipt = await waitForReceipt(runId);

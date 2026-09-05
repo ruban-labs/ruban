@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Linking } from 'react-native';
+import { Linking, Platform, Settings } from 'react-native';
 import { appEnvironment } from '../runtime/appEnvironment';
 import { repositories } from '../storage/repositories';
 import {
@@ -14,6 +14,7 @@ import { appIntentUseCases } from './appIntentUseCases';
 
 type ReceiptListener = (receipt: AppIntentReceipt) => void;
 const receiptListeners = new Set<ReceiptListener>();
+const iosReceiptKey = 'RubanAppIntentReceipt';
 
 function publishReceipt(receipt: AppIntentReceipt): void {
   console.info(`RUBAN_APP_INTENT_RECEIPT ${JSON.stringify(receipt)}`);
@@ -24,6 +25,9 @@ async function postReceipt(
   receiptUrl: string | undefined,
   receipt: AppIntentReceipt,
 ): Promise<void> {
+  if (Platform.OS === 'ios') {
+    Settings.set({ [iosReceiptKey]: JSON.stringify(receipt) });
+  }
   if (!receiptUrl) return;
   try {
     await fetch(receiptUrl, {
