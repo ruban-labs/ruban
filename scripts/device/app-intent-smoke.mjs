@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import {randomUUID} from 'node:crypto';
-import {spawnSync} from 'node:child_process';
+import {spawn, spawnSync} from 'node:child_process';
+import {appendFileSync, writeFileSync} from 'node:fs';
 
 const ERAS = {
   latest: {
@@ -54,6 +55,7 @@ const device = arg('--device');
 const lane = arg('--lane') || 'debug';
 const timeoutMs = Number(arg('--timeout') || 90000);
 const config = ERAS[era];
+const diagnosticLogPath = arg('--diagnostic-log');
 const metroPort = Number(
   arg('--metro-port') || (platform === 'ios' ? 8081 : config?.metroPort),
 );
@@ -81,6 +83,10 @@ const appId = config.appIds[lane];
 const workflowPrefix = `intent-${era.replace('.', '')}-${randomUUID().slice(0, 8)}`;
 const addressA = '0x1111111111111111111111111111111111111111';
 const addressB = '0x2222222222222222222222222222222222222222';
+const maxIosLogBytes = 2 * 1024 * 1024;
+let iosLogBuffer = '';
+let iosLogStream = null;
+let iosLogStreamExit = null;
 
 const scenarios = [
   {
@@ -182,6 +188,48 @@ function sleep(durationMs) {
   return new Promise(resolve => setTimeout(resolve, durationMs));
 }
 
+function appendIosLog(chunk) {
+  const text = chunk.toString('utf8');
+  iosLogBuffer = `${iosLogBuffer}${text}`.slice(-maxIosLogBytes);
+  if (diagnosticLogPath) appendFileSync(diagnosticLogPath, text);
+}
+
+function startIosLogStream() {
+  if (diagnosticLogPath) writeFileSync(diagnosticLogPath, '');
+  const child = spawn(
+    'xcrun',
+    [
+      'simctl',
+      'spawn',
+      device,
+      'log',
+      'stream',
+      '--style',
+      'compact',
+      '--level',
+      'debug',
+      '--predicate',
+      'eventMessage CONTAINS "RUBAN_APP_INTENT"',
+    ],
+    {stdio: ['ignore', 'pipe', 'pipe']},
+  );
+  child.stdout.on('data', appendIosLog);
+  child.stderr.on('data', appendIosLog);
+  child.on('error', error => {
+    iosLogStreamExit = `error: ${error.message}`;
+  });
+  child.on('exit', (code, signal) => {
+    iosLogStreamExit = `exit ${code ?? 'null'} signal ${signal ?? 'none'}`;
+  });
+  return child;
+}
+
+function stopIosLogStream() {
+  if (iosLogStream && iosLogStream.exitCode === null) {
+    iosLogStream.kill('SIGTERM');
+  }
+}
+
 function parseReceipt(buffer, runId) {
   const marker = 'RUBAN_APP_INTENT_RECEIPT ';
   for (const line of buffer.split('\n')) {
@@ -209,23 +257,10 @@ function readLogs(runId) {
     );
     return `${result.stdout || ''}${result.stderr || ''}`;
   }
-  const predicate = `eventMessage CONTAINS "${runId}"`;
-  const result = run('xcrun', [
-    'simctl',
-    'spawn',
-    device,
-    'log',
-    'show',
-    '--last',
-    '3m',
-    '--style',
-    'compact',
-    '--info',
-    '--debug',
-    '--predicate',
-    predicate,
-  ]);
-  return `${result.stdout || ''}${result.stderr || ''}`;
+  if (iosLogStreamExit) {
+    throw new Error(`iOS log stream stopped: ${iosLogStreamExit}`);
+  }
+  return iosLogBuffer;
 }
 
 async function waitForReceipt(runId) {
@@ -298,6 +333,11 @@ try {
       ]),
       'configure Metro location',
     );
+    iosLogStream = startIosLogStream();
+    await sleep(750);
+    if (iosLogStreamExit) {
+      throw new Error(`iOS log stream failed to start: ${iosLogStreamExit}`);
+    }
   }
 
   for (const [index, scenario] of scenarios.entries()) {
@@ -326,5 +366,10 @@ try {
 
   console.log(`app-intent-smoke ${platform}/${era}/${lane}: PASS`);
 } catch (error) {
-  fail(error instanceof Error ? error.message : String(error));
+  console.error(
+    `app-intent-smoke: ${error instanceof Error ? error.message : String(error)}`,
+  );
+  process.exitCode = 1;
+} finally {
+  stopIosLogStream();
 }
