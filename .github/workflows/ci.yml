@@ -279,11 +279,14 @@ jobs:
             exit 0
           fi
 
-          if find "$HOME/.maestro/tests" -type f -name 'commands*.json' -print -quit | grep -q .; then
+          if find "$HOME/.maestro/tests" -type f -name 'commands*.json' \
+            -exec grep -Eql '"status"[[:space:]]*:[[:space:]]*"FAILED"' {} \; \
+            -print -quit | grep -q .; then
+            echo "::error::Maestro recorded a definitive failed command; not retrying the flow."
             exit "$status"
           fi
 
-          echo "::warning::Maestro XCTest driver did not reach flow execution; rebooting the simulator and retrying once."
+          echo "::warning::Maestro exited without recording a failed command; rebooting the simulator and retrying once."
           xcrun simctl shutdown "${{ steps.sim.outputs.udid }}" || true
           xcrun simctl boot "${{ steps.sim.outputs.udid }}"
           xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
