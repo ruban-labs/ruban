@@ -2,7 +2,7 @@
 
 import {randomUUID} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
-import {appendFileSync, writeFileSync} from 'node:fs';
+import {appendFileSync, existsSync, writeFileSync} from 'node:fs';
 import {createServer} from 'node:http';
 import {join} from 'node:path';
 
@@ -88,7 +88,6 @@ const addressB = '0x2222222222222222222222222222222222222222';
 const iosReceiptKey = 'RubanAppIntentReceipt';
 let receiptServer = null;
 let receiptServerPort = null;
-let iosPreferencesPath = null;
 const receivedReceipts = new Map();
 
 const scenarios = [
@@ -255,19 +254,55 @@ function stopReceiptServer() {
 
 async function waitForReceipt(runId) {
   const deadline = Date.now() + timeoutMs;
+  let lastIosRead = null;
   while (Date.now() < deadline) {
     if (platform === 'ios') {
+      const dataContainer = run('xcrun', [
+        'simctl',
+        'get_app_container',
+        device,
+        appId,
+        'data',
+      ]);
+      const preferencesPath =
+        dataContainer.status === 0
+          ? join(
+              dataContainer.stdout.trim(),
+              'Library',
+              'Preferences',
+              `${appId}.plist`,
+            )
+          : null;
+      if (!preferencesPath) {
+        lastIosRead = {
+          containerStatus: dataContainer.status,
+          containerError: dataContainer.stderr.trim().slice(0, 240),
+        };
+        await sleep(500);
+        continue;
+      }
       const result = run('plutil', [
         '-extract',
         iosReceiptKey,
         'raw',
         '-o',
         '-',
-        iosPreferencesPath,
+        preferencesPath,
       ]);
+      lastIosRead = {
+        preferencesExists: existsSync(preferencesPath),
+        plutilStatus: result.status,
+        plutilError: result.stderr.trim().slice(0, 240),
+      };
       if (result.status === 0) {
         try {
           const receipt = JSON.parse(result.stdout.trim());
+          lastIosRead = {
+            ...lastIosRead,
+            observedRunId: receipt.runId,
+            observedAction: receipt.action,
+            observedStatus: receipt.status,
+          };
           if (receipt.runId === runId) {
             appendDiagnostic(
               JSON.stringify({
@@ -286,10 +321,13 @@ async function waitForReceipt(runId) {
     }
     await sleep(500);
   }
+  if (lastIosRead) {
+    appendDiagnostic(JSON.stringify({runId, timeout: lastIosRead}));
+  }
   throw new Error(`timed out waiting for receipt ${runId}`);
 }
 
-function launch(url, restart = false) {
+async function launch(url, restart = false) {
   if (platform === 'android') {
     if (restart) {
       requireSuccess(adb('shell', 'am', 'force-stop', appId), 'stop app');
@@ -310,7 +348,13 @@ function launch(url, restart = false) {
     requireSuccess(result, `launch ${url}`);
     return;
   }
-  if (restart) run('xcrun', ['simctl', 'terminate', device, appId]);
+  if (restart) {
+    run('xcrun', ['simctl', 'terminate', device, appId]);
+    const launched = run('xcrun', ['simctl', 'launch', device, appId]);
+    requireSuccess(launched, `launch ${appId}`);
+    appendDiagnostic(`launched ${appId}`);
+    await sleep(8000);
+  }
   requireSuccess(
     run('xcrun', ['simctl', 'openurl', device, url]),
     `open ${url}`,
@@ -358,20 +402,6 @@ try {
       ]),
       'configure Metro location',
     );
-    const dataContainer = run('xcrun', [
-      'simctl',
-      'get_app_container',
-      device,
-      appId,
-      'data',
-    ]);
-    requireSuccess(dataContainer, 'resolve app data container');
-    iosPreferencesPath = join(
-      dataContainer.stdout.trim(),
-      'Library',
-      'Preferences',
-      `${appId}.plist`,
-    );
   }
 
   for (const [index, scenario] of scenarios.entries()) {
@@ -382,7 +412,7 @@ try {
     }
     const query = new URLSearchParams(queryValues);
     const url = `${scheme}://dev/${scenario.path}?${query.toString()}`;
-    launch(url, scenario.restart);
+    await launch(url, scenario.restart);
     const receipt = await waitForReceipt(runId);
     if (
       receipt.action !== scenario.action ||
