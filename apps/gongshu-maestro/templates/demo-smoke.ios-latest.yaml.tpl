@@ -9,24 +9,24 @@ appId: {{appId}}
 - setOrientation: portrait
 {{initialAssertions}}
 - tapOn:
-    text: "Settings"
+    id: "tab-settings"
 - extendedWaitUntil:
     visible:
-      text: "Settings"
+      text: "Appearance.*"
     timeout: 20000
 - scrollUntilVisible:
     element:
-      text: "Playground.*"
+      id: "settings-playground"
     direction: DOWN
     timeout: 20000
 - tapOn:
-    text: "Playground.*"
+    id: "settings-playground"
 - extendedWaitUntil:
     visible:
       text: "COMPONENTS"
     timeout: 20000
 - tapOn:
-    text: "Button"
+    id: "playground-open-button"
 - extendedWaitUntil:
     visible:
       text: "Button"
@@ -41,15 +41,15 @@ appId: {{appId}}
     text: "Back to components"
 - extendedWaitUntil:
     visible:
-      text: "Settings"
+      text: "Appearance.*"
     timeout: 20000
 - scrollUntilVisible:
     element:
-      text: "{{settingsBuildEntry}}.*"
+      id: "settings-build"
     direction: DOWN
     timeout: 20000
 - tapOn:
-    text: "{{settingsBuildEntry}}.*"
+    id: "settings-build"
 - extendedWaitUntil:
     visible:
       text: "{{settingsBuildTitle}}"
@@ -60,5 +60,5 @@ appId: {{appId}}
     text: "CLOSE"
 - extendedWaitUntil:
     visible:
-      text: "Settings"
+      text: "Appearance.*"
     timeout: 20000
