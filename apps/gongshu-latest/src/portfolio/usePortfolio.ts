@@ -1,9 +1,14 @@
 import {
+  dataEngine,
+  type PortfolioSyncState,
+} from '@ruban-labs/react-native-data-engine';
+import {
   createEvmClient,
-  type ChainPortfolio,
   type PortfolioSnapshot,
 } from '@ruban-labs/react-native-evm-client';
 import * as React from 'react';
+import { runUiAppIntent } from '../application/AppIntentRuntime';
+import { useDataEngine } from '../data/DataEngineContext';
 import { repositories } from '../storage/repositories';
 
 export const evmClient = createEvmClient({ timeoutMs: 7000 });
@@ -17,6 +22,7 @@ type PortfolioState = {
 };
 
 export function usePortfolio(address?: string): PortfolioState {
+  const engine = useDataEngine();
   const [snapshot, setSnapshot] = React.useState<PortfolioSnapshot | null>(
     null,
   );
@@ -24,6 +30,7 @@ export function usePortfolio(address?: string): PortfolioState {
   const [completedChains, setCompletedChains] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
   const [refreshNonce, setRefreshNonce] = React.useState(0);
+  const forceRefreshRef = React.useRef(false);
 
   React.useEffect(() => {
     let active = true;
@@ -35,32 +42,53 @@ export function usePortfolio(address?: string): PortfolioState {
       };
     }
 
-    const chains = new Map<number, ChainPortfolio>();
-    setCompletedChains(0);
+    if (!engine.ready) {
+      setRefreshing(true);
+      setError(engine.error);
+      return () => {
+        active = false;
+      };
+    }
+
+    const normalizedAddress = address.toLowerCase();
+    const forceRefresh = forceRefreshRef.current;
+    forceRefreshRef.current = false;
     setError(null);
     setRefreshing(true);
 
-    repositories
-      .getPortfolioSnapshot(address)
-      .then(cached => {
-        if (active && cached) setSnapshot(cached);
-      })
-      .catch(() => {});
+    const subscription = dataEngine.addSyncStateListener(
+      (state: PortfolioSyncState) => {
+        if (!active || state.address !== normalizedAddress) return;
+        setCompletedChains(state.completedChains);
+        setRefreshing(state.state === 'queued' || state.state === 'running');
+        if (state.state === 'failed') {
+          setError(state.errorCode || 'Portfolio refresh failed');
+        }
+      },
+    );
 
-    evmClient
-      .syncPortfolio(address, {
-        onChain: chain => {
-          if (!active) return;
-          chains.set(chain.chain.id, chain);
-          setCompletedChains(chains.size);
-        },
+    const loadSnapshot = () =>
+      repositories.getPortfolioSnapshot(normalizedAddress).then(cached => {
+        if (!active || !cached) return cached;
+        setSnapshot(cached);
+        setCompletedChains(cached.chains.length);
+        return cached;
+      });
+
+    loadSnapshot()
+      .catch(() => null)
+      .then(async cached => {
+        if (cached && !forceRefresh) return;
+        await runUiAppIntent({
+          action: 'portfolio.sync',
+          address: normalizedAddress,
+          providerMode: 'current',
+        });
+        await loadSnapshot();
       })
       .then(
-        result => {
-          if (!active) return;
-          setSnapshot(result);
-          setRefreshing(false);
-          repositories.savePortfolioSnapshot(result).catch(() => {});
+        () => {
+          if (active) setRefreshing(false);
         },
         failure => {
           if (!active) return;
@@ -75,14 +103,18 @@ export function usePortfolio(address?: string): PortfolioState {
 
     return () => {
       active = false;
+      subscription.remove();
     };
-  }, [address, refreshNonce]);
+  }, [address, engine.error, engine.ready, refreshNonce]);
 
   return {
     snapshot,
     refreshing,
     completedChains,
     error,
-    refresh: () => setRefreshNonce(value => value + 1),
+    refresh: () => {
+      forceRefreshRef.current = true;
+      setRefreshNonce(value => value + 1);
+    },
   };
 }

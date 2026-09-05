@@ -2,11 +2,15 @@ import 'reflect-metadata';
 import { DataSource, type DataSourceOptions } from 'typeorm/browser';
 import { ensureUnreleasedBaselineSchema } from './baselineSchema';
 import { entities } from './entities';
-import { opSqliteTypeOrmDriver } from './opSqliteTypeOrmDriver';
+import {
+  getOpSqliteDatabasePath,
+  opSqliteTypeOrmDriver,
+} from './opSqliteTypeOrmDriver';
 
 type DataSourceState = {
   dataSource: DataSource | null;
   initialization: Promise<DataSource> | null;
+  schemaReady: boolean;
 };
 
 type RubanGlobal = typeof globalThis & {
@@ -17,6 +21,7 @@ const globalState = globalThis as RubanGlobal;
 const state = (globalState.__rubanDataSourceState ||= {
   dataSource: null,
   initialization: null,
+  schemaReady: false,
 });
 
 const options: DataSourceOptions = {
@@ -36,7 +41,10 @@ async function initializeDataSource(): Promise<DataSource> {
     await dataSource.query('PRAGMA journal_mode = WAL');
     await dataSource.query('PRAGMA synchronous = NORMAL');
     await dataSource.query('PRAGMA busy_timeout = 5000');
-    await ensureUnreleasedBaselineSchema(dataSource);
+    if (!state.schemaReady) {
+      await ensureUnreleasedBaselineSchema(dataSource);
+      state.schemaReady = true;
+    }
     state.dataSource = dataSource;
     return dataSource;
   } catch (error) {
@@ -45,7 +53,7 @@ async function initializeDataSource(): Promise<DataSource> {
   }
 }
 
-export function getDataSource(): Promise<DataSource> {
+function getOrInitializeDataSource(): Promise<DataSource> {
   if (state.dataSource?.isInitialized) {
     return Promise.resolve(state.dataSource);
   }
@@ -56,4 +64,18 @@ export function getDataSource(): Promise<DataSource> {
     });
   }
   return state.initialization;
+}
+
+export function getDataSource(): Promise<DataSource> {
+  return getOrInitializeDataSource();
+}
+
+export async function checkpointDataSourceForNativeWrite(): Promise<void> {
+  const dataSource = await getOrInitializeDataSource();
+  await dataSource.query('PRAGMA wal_checkpoint(TRUNCATE)');
+}
+
+export async function getDatabasePath(): Promise<string> {
+  await getDataSource();
+  return getOpSqliteDatabasePath();
 }

@@ -1,15 +1,19 @@
 import {
   BottomSheetBackdrop,
   BottomSheetModal as GorhomBottomSheetModal,
+  BottomSheetTextInput,
   BottomSheetView,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import {
+  BackIcon,
   CheckIcon,
   type RubanIconProps,
 } from '@ruban-labs/react-native-ui-icons';
 import * as React from 'react';
 import {
+  BackHandler,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -22,22 +26,31 @@ import { radius, spacing, useRubanColors } from '../../design/tokens';
 export type BottomSheetModalRootProps = {
   visible: boolean;
   onDismiss: () => void;
+  onAfterDismiss?: () => void;
   children: React.ReactNode;
   overlayId?: string;
   enablePanDownToClose?: boolean;
+  enableDynamicSizing?: boolean;
+  snapPoints?: Array<number | string>;
+  onRequestBack?: () => void;
 };
 
 export function BottomSheetModalRoot({
   visible,
   onDismiss,
+  onAfterDismiss,
   children,
   overlayId,
   enablePanDownToClose = true,
+  enableDynamicSizing = true,
+  snapPoints,
+  onRequestBack,
 }: BottomSheetModalRootProps): React.ReactElement {
   const colors = useRubanColors();
   const modalRef =
     React.useRef<React.ElementRef<typeof GorhomBottomSheetModal>>(null);
   const presentedRef = React.useRef(false);
+  const [androidBackActive, setAndroidBackActive] = React.useState(false);
   const { height: windowHeight } = useWindowDimensions();
 
   React.useEffect(() => {
@@ -46,10 +59,13 @@ export function BottomSheetModalRoot({
     if (visible) {
       frame = requestAnimationFrame(() => {
         presentedRef.current = true;
+        setAndroidBackActive(true);
         modalRef.current?.present();
       });
     } else if (presentedRef.current) {
       modalRef.current?.dismiss();
+    } else {
+      setAndroidBackActive(false);
     }
 
     return () => {
@@ -61,10 +77,28 @@ export function BottomSheetModalRoot({
 
   const handleDismiss = React.useCallback(() => {
     presentedRef.current = false;
+    setAndroidBackActive(false);
     if (visible) {
       onDismiss();
     }
-  }, [onDismiss, visible]);
+    onAfterDismiss?.();
+  }, [onAfterDismiss, onDismiss, visible]);
+
+  React.useEffect(() => {
+    if (Platform.OS !== 'android' || !androidBackActive) return;
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        if (visible) {
+          (onRequestBack || onDismiss)();
+        }
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [androidBackActive, onDismiss, onRequestBack, visible]);
 
   const renderBackdrop = React.useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -86,9 +120,13 @@ export function BottomSheetModalRoot({
       accessible={false}
       index={0}
       animateOnMount
-      enableDynamicSizing
+      enableDynamicSizing={enableDynamicSizing}
+      snapPoints={snapPoints}
       maxDynamicContentSize={Math.round(windowHeight * 0.82)}
       enablePanDownToClose={enablePanDownToClose}
+      keyboardBehavior="interactive"
+      keyboardBlurBehavior="restore"
+      android_keyboardInputMode="adjustPan"
       backdropComponent={renderBackdrop}
       onDismiss={handleDismiss}
       backgroundStyle={[
@@ -112,6 +150,41 @@ export function BottomSheetModalRoot({
     >
       {children}
     </GorhomBottomSheetModal>
+  );
+}
+
+export function BottomSheetInput({
+  onBlur,
+  onFocus,
+  style,
+  ...inputProps
+}: React.ComponentProps<typeof BottomSheetTextInput>): React.ReactElement {
+  const colors = useRubanColors();
+  const [focused, setFocused] = React.useState(false);
+
+  return (
+    <BottomSheetTextInput
+      {...inputProps}
+      onFocus={event => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={event => {
+        setFocused(false);
+        onBlur?.(event);
+      }}
+      placeholderTextColor={inputProps.placeholderTextColor || colors.faint}
+      selectionColor={inputProps.selectionColor || colors.accent}
+      style={[
+        styles.input,
+        {
+          backgroundColor: colors.surface,
+          borderColor: focused ? colors.focusRing : colors.borderStrong,
+          color: colors.ink,
+        },
+        style,
+      ]}
+    />
   );
 }
 
@@ -150,6 +223,127 @@ export function BottomSheetModal({
           {children}
         </SafeAreaView>
       </BottomSheetView>
+    </BottomSheetModalRoot>
+  );
+}
+
+export type BottomSheetFlowController<Route extends string> = {
+  route: Route;
+  canGoBack: boolean;
+  push: (route: Route) => void;
+  back: () => void;
+  dismiss: () => void;
+};
+
+export function BottomSheetFlow<Route extends string>({
+  visible,
+  initialRoute,
+  title,
+  renderRightAction,
+  renderContent,
+  onDismiss,
+  onAfterDismiss,
+  overlayId,
+  testID,
+  enableDynamicSizing,
+  snapPoints,
+}: {
+  visible: boolean;
+  initialRoute: Route;
+  title: (controller: BottomSheetFlowController<Route>) => string | undefined;
+  renderRightAction?: (
+    controller: BottomSheetFlowController<Route>,
+  ) => React.ReactNode;
+  renderContent: (
+    controller: BottomSheetFlowController<Route>,
+  ) => React.ReactNode;
+  onDismiss: () => void;
+  onAfterDismiss?: () => void;
+  overlayId?: string;
+  testID?: string;
+  enableDynamicSizing?: boolean;
+  snapPoints?:
+    | Array<number | string>
+    | ((route: Route) => Array<number | string>);
+}): React.ReactElement {
+  const colors = useRubanColors();
+  const [routes, setRoutes] = React.useState<readonly Route[]>([initialRoute]);
+  const route = routes[routes.length - 1] || initialRoute;
+  const canGoBack = routes.length > 1;
+
+  React.useEffect(() => {
+    if (!visible) setRoutes([initialRoute]);
+  }, [initialRoute, visible]);
+
+  const push = React.useCallback((nextRoute: Route) => {
+    setRoutes(currentRoutes =>
+      currentRoutes[currentRoutes.length - 1] === nextRoute
+        ? currentRoutes
+        : [...currentRoutes, nextRoute],
+    );
+  }, []);
+  const back = React.useCallback(() => {
+    setRoutes(currentRoutes =>
+      currentRoutes.length > 1 ? currentRoutes.slice(0, -1) : currentRoutes,
+    );
+  }, []);
+  const controller = React.useMemo<BottomSheetFlowController<Route>>(
+    () => ({ route, canGoBack, push, back, dismiss: onDismiss }),
+    [back, canGoBack, onDismiss, push, route],
+  );
+  const currentSnapPoints =
+    typeof snapPoints === 'function' ? snapPoints(route) : snapPoints;
+  const currentTitle = title(controller);
+  const handleRequestBack = React.useCallback(() => {
+    if (canGoBack) {
+      back();
+      return;
+    }
+    onDismiss();
+  }, [back, canGoBack, onDismiss]);
+
+  return (
+    <BottomSheetModalRoot
+      visible={visible}
+      onDismiss={onDismiss}
+      onAfterDismiss={onAfterDismiss}
+      overlayId={overlayId}
+      onRequestBack={handleRequestBack}
+      enableDynamicSizing={enableDynamicSizing}
+      snapPoints={currentSnapPoints}
+    >
+      <View testID={testID} style={styles.flow}>
+        <View style={[styles.flowHeader, { borderBottomColor: colors.border }]}>
+          <View style={styles.flowHeaderSlot}>
+            {canGoBack ? (
+              <Pressable
+                testID="bottom-sheet-flow-back"
+                accessibilityRole="button"
+                accessibilityLabel="Back"
+                hitSlop={8}
+                onPress={back}
+                style={({ pressed }) => [
+                  styles.flowHeaderButton,
+                  pressed ? styles.flowHeaderButtonPressed : undefined,
+                ]}
+              >
+                <BackIcon size={24} color={colors.ink} />
+              </Pressable>
+            ) : null}
+          </View>
+          {currentTitle ? (
+            <Text style={[styles.flowTitle, { color: colors.ink }]}>
+              {currentTitle}
+            </Text>
+          ) : (
+            <View />
+          )}
+          <View style={[styles.flowHeaderSlot, styles.flowHeaderRight]}>
+            {renderRightAction ? renderRightAction(controller) : null}
+          </View>
+        </View>
+        {renderContent(controller)}
+      </View>
     </BottomSheetModalRoot>
   );
 }
@@ -272,6 +466,36 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1.1,
   },
+  flowHeader: {
+    minHeight: 54,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  flow: { flex: 1 },
+  flowHeaderSlot: {
+    width: 48,
+    minHeight: 48,
+    justifyContent: 'center',
+  },
+  flowHeaderRight: { alignItems: 'flex-end' },
+  flowHeaderButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flowHeaderButtonPressed: { opacity: 0.62 },
+  flowTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: '800',
+    letterSpacing: -0.25,
+  },
   safeArea: { flexShrink: 1 },
   options: {
     marginTop: spacing.md,
@@ -296,5 +520,15 @@ const styles = StyleSheet.create({
     lineHeight: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
+  },
+  input: {
+    minHeight: 48,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '600',
   },
 });

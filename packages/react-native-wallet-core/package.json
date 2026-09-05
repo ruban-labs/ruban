@@ -63,7 +63,9 @@
   "ruban": {
     "reactNativeFloor": "0.66.0",
     "runtimePolicy": "native-contained",
-    "nativeCode": true
+    "nativeCode": true,
+    "nativeLanguage": "rust",
+    "nativeArtifacts": true
   },
   "devDependencies": {
     "@react-native/babel-preset": "0.87.0",

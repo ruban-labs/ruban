@@ -65,7 +65,7 @@ RCT_REMAP_METHOD(addWatchOnly,
     @"label": [self normalizedLabel:label fallback:@"Watch account"],
     @"address": normalized[@"address"],
     @"kind": @"watch-only",
-    @"createdAt": @([NSDate date].timeIntervalSince1970 * 1000)
+    @"createdAt": @((long long)([NSDate date].timeIntervalSince1970 * 1000.0))
   };
   resolve(account);
 }
@@ -145,7 +145,7 @@ RCT_REMAP_METHOD(signEip1559Transaction,
     @"label": [self normalizedLabel:label fallback:@"Account"],
     @"address": derived[@"address"],
     @"kind": kind,
-    @"createdAt": @([NSDate date].timeIntervalSince1970 * 1000)
+    @"createdAt": @((long long)([NSDate date].timeIntervalSince1970 * 1000.0))
   } mutableCopy];
   if (path) account[@"derivationPath"] = path;
   NSDictionary *stored = path ? @{ @"kind": kind, @"derivationPath": path, @"value": secret } : @{ @"kind": kind, @"value": secret };

@@ -18,20 +18,14 @@ appId: {{appId}}
 - assertNotVisible:
     text: "Settings"
 {{afterButtonShowcase}}
-- openLink: "{{scheme}}://components/badge?theme=light&variant=live&size=md"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+{{openBadgeShowcase}}
 - extendedWaitUntil:
     visible:
       text: "Back to components"
     timeout: 120000
 - assertVisible:
     text: "LIVE"
-- openLink: "{{scheme}}://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+{{openSeparatorShowcase}}
 - extendedWaitUntil:
     visible:
       text: "Live separator vertical accent bold"
@@ -40,10 +34,7 @@ appId: {{appId}}
     text: "VERTICAL"
 - assertVisible:
     text: "Live separator vertical accent bold"
-- openLink: "{{scheme}}://components/switch?theme=light&state=on&size=md"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+{{openSwitchShowcase}}
 - extendedWaitUntil:
     visible:
       text: "Live switch state ON"
@@ -56,10 +47,7 @@ appId: {{appId}}
     text: "Live switch"
 - assertVisible:
     text: "Live switch state OFF"
-- openLink: "{{scheme}}://components/dialog?theme=light&scenario=sequential"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+{{openSequentialDialogShowcase}}
 - extendedWaitUntil:
     visible:
       text: "FIRST DIALOG"
@@ -74,10 +62,7 @@ appId: {{appId}}
     text: "FIRST DIALOG"
 - tapOn:
     text: "DONE"
-- openLink: "{{scheme}}://components/dialog?theme=dark&scenario=nested"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+{{openNestedDialogShowcase}}
 - extendedWaitUntil:
     visible:
       text: "PARENT DIALOG"
@@ -96,10 +81,7 @@ appId: {{appId}}
     timeout: 60000
 - tapOn:
     text: "CLOSE"
-- openLink: "{{scheme}}://components/dialog?theme=light&scenario=external"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+{{openExternalDialogShowcase}}
 - extendedWaitUntil:
     visible:
       text: "RELEASE GATE"

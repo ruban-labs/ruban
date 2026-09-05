@@ -4,7 +4,7 @@ import {Button} from '../components/ui/Button';
 import {BottomSheetModal} from '../components/ui/BottomSheetModal';
 import {spacing, useRubanColors} from '../design/tokens';
 import {
-  RpcReviewQueue,
+  appRpcReviewQueue,
   type RpcReviewRequest,
 } from './rpcReviewQueue';
 
@@ -22,7 +22,7 @@ export function RpcRequestReviewProvider({
   children: React.ReactNode;
 }): React.ReactElement {
   const colors = useRubanColors();
-  const queue = React.useRef(new RpcReviewQueue()).current;
+  const queue = appRpcReviewQueue;
   const active = React.useSyncExternalStore(
     queue.subscribe,
     queue.getActive,
@@ -33,7 +33,16 @@ export function RpcRequestReviewProvider({
 
   const value = React.useMemo<RpcRequestReviewContextValue>(
     () => ({
-      review: request => queue.request(request),
+      review: request => {
+        const review = queue.request(request);
+        console.info(
+          `RUBAN_DAPP_REVIEW_PENDING ${JSON.stringify({
+            requestId: request.id,
+            method: request.method,
+          })}`,
+        );
+        return review;
+      },
       cancelSession: sessionId => queue.cancelSession(sessionId),
     }),
     [queue],

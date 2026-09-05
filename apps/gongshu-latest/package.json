@@ -43,7 +43,8 @@
     "react-native-webview": "14.0.1",
     "react-native-worklets": "0.12.1",
     "reflect-metadata": "0.2.2",
-    "typeorm": "1.1.1"
+    "typeorm": "1.1.1",
+    "@ruban-labs/react-native-data-engine": "file:ruban-data-engine-local.tgz"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

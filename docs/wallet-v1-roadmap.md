@@ -2,8 +2,8 @@
 
 [简体中文](./wallet-v1-roadmap.zh-CN.md)
 
-This roadmap turns Ruban into a real self-custodial EVM DApp workbench while
-producing a reusable bare React Native package. Progress is controlled by
+This roadmap turns Ruban into a fast EVM portfolio viewer and DApp workbench
+while producing reusable bare React Native packages. Progress is controlled by
 capability and security gates, not dates or screen count. A phase may begin in
 parallel, but it cannot be called complete until its exit gate is proven.
 
@@ -26,8 +26,10 @@ V1 includes:
 - origin-scoped account and chain permissions;
 - human-readable confirmation for supported messages and transactions;
 - configurable EVM networks and RPC endpoints;
-- a cache-first portfolio for native assets and selected ERC-20 assets, with
-  fiat estimates, source attribution, freshness, and incremental refresh;
+- a cache-first portfolio for tokens and protocol positions, with fiat
+  estimates, source attribution, freshness, and incremental refresh;
+- DeBank Cloud BYOK as the first discovery adapter, with an explicit
+  deterministic mock used during development;
 - local activity and deterministic deep links for testing.
 
 Account capability parity is part of the V1 contract. Watch-only,
@@ -43,18 +45,19 @@ V1 excludes:
 - smart accounts and account abstraction;
 - hardware wallets;
 - cloud mnemonic backup or account recovery services;
-- swaps, bridges, staking, fiat on-ramp, exchange, DeFi positions, profit and
-  loss analytics, and NFT products;
+- swaps, bridges, staking, fiat on-ramp, exchange, profit and loss analytics,
+  and NFT products;
 - blind signing and the ambiguous `eth_sign` method;
 - arbitrary native capability exposure to loaded DApps.
 
-The first release is distributed directly and to a controlled tester group.
-App Store and Google Play listing work may continue independently, but store
-approval is not an architecture requirement for V1.
+Store products expose watch-address onboarding and portfolio viewing without
+claiming custody. Direct Android distribution may additionally expose local
+signer onboarding. Both products use one account model and one capability
+stack, and differ only through product-policy gates.
 
 ## Target Package Shape
 
-The implementation has three boundaries:
+The implementation has two independent native boundaries:
 
 ```text
 Rust wallet core
@@ -64,6 +67,12 @@ iOS and Android vault/platform wrappers
 @ruban-labs/react-native-wallet-core
     ↓ opaque identifiers and public results only
 Ruban application and DApp runtime
+
+C++ provider adapters and normalized projections
+    ↓ serial platform writer + WAL
+@ruban-labs/react-native-data-engine
+    ↓ TypeORM read models and sync-state events
+Ruban portfolio surfaces
 ```
 
 - The Rust core has no React Native dependency.
@@ -78,10 +87,11 @@ Ruban application and DApp runtime
 
 ## App Structured Data Layer
 
-The Ruban App uses `@op-engineering/op-sqlite` as its sole SQLite connection
-implementation and TypeORM for TypeScript-side queries. An App process owns one
-global `DataSource` and one initialization promise; Fast Refresh must not open a
-second connection to the same database.
+The Ruban App uses `@op-engineering/op-sqlite` and TypeORM for TypeScript-side
+queries. An App process owns one global `DataSource` and one initialization
+promise; Fast Refresh must not open a second JavaScript connection to the same
+database. Native synchronization uses a separate serialized writer against the
+same WAL file.
 
 - Before the first release, maintain one editable baseline schema without a
   migration class or migration table. Reset test data when that baseline
@@ -89,19 +99,22 @@ second connection to the same database.
 - After a real release freezes its schema, later schema changes may add TypeORM
   migrations only from that published baseline. Production always keeps
   `synchronize` disabled.
-- Public account metadata, selected-account state, portfolio caches, DApp
+- Public account metadata, selected-account state, portfolio projections, DApp
   permissions, and activity indexes use structured tables. Querying, sorting,
   and filtering go through repositories or query builders rather than KV JSON
   lists.
 - Mnemonics, private keys, and derived seeds remain inside the native vault.
   SQLite stores no plaintext secret and does not replace Keychain or Keystore.
 - The default connection uses WAL, `synchronous=NORMAL`, and a bounded busy
-  timeout. One-off user writes use transactions; future bulk synchronization
-  adds coalescing, cancellation, batch limits, and timing diagnostics.
-- A future C++ synchronizer may write the same database through OP-SQLite's
-  native interface, but it must consume a published schema version, transact
-  every write, and notify the JS query layer after commit. Native code never
-  migrates the schema independently.
+  timeout. Native synchronization has one writer queue and atomically replaces
+  one provider/address projection before publishing success.
+- C++ owns provider-independent projection types. Platform adapters write the
+  same database and emit a post-commit event; JavaScript and workers re-query
+  through TypeORM instead of receiving bulk portfolio payloads over the bridge.
+- Provider credentials remain in Keychain or Keystore. SQLite stores only
+  non-secret source metadata, normalized projections, and redacted sync state.
+- Schema ownership stays in the App baseline and later migrations. Native code
+  validates and consumes the schema but never creates or migrates it.
 
 ## Phase 0 — Freeze Boundaries
 

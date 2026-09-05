@@ -45,12 +45,25 @@ const TEMPLATES = ['android', 'ios'];
 const flowsDir = path.join(harnessRoot, 'flows');
 fs.mkdirSync(flowsDir, { recursive: true });
 
-function openPrompt(platform) {
-  return platform === 'ios'
-    ? `- tapOn:
-    text: "^(Open|打开)$"
-    optional: true\n`
-    : '';
+function openDeepLink(app, platform, path, expectedText) {
+  const url = `${app.scheme}://${path}`;
+  if (platform !== 'ios') {
+    return `- openLink: "${url}"`;
+  }
+
+  const stopApp = app.era === 'latest' ? '      - stopApp\n' : '';
+  const timeout = app.era === 'latest' ? 120000 : 20000;
+  return `- retry:
+    maxRetries: 1
+    commands:
+${stopApp}      - openLink: "${url}"
+      - tapOn:
+          text: "^(Open|打开)$"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            text: "${expectedText}"
+          timeout: ${timeout}`;
 }
 
 function initialAssertions(app, platform) {
@@ -77,8 +90,12 @@ function initialAssertions(app, platform) {
 
 function openButtonShowcase(app, platform) {
   if (app.era === 'latest') {
-    return `- openLink: "${app.scheme}://components/button?theme=light&variant=primary&size=md&state=default"
-${openPrompt(platform)}`.trimEnd();
+    return openDeepLink(
+      app,
+      platform,
+      'components/button?theme=light&variant=primary&size=md&state=default',
+      'RUN ACTION'
+    );
   }
 
   return `- tapOn:
@@ -98,12 +115,11 @@ function afterButtonShowcase(app) {
 
 function openPlayground(app, platform) {
   if (app.era === 'latest') {
-    return `- openLink: "${app.scheme}://lab/design?theme=light"
-${openPrompt(platform)}`.trimEnd();
+    return openDeepLink(app, platform, 'dev/lab/design?theme=light', 'PLAYGROUND');
   }
 
-  return `- openLink: "${app.scheme}://home"
-${openPrompt(platform)}- extendedWaitUntil:
+  return `${openDeepLink(app, platform, 'home', app.homeTitle)}
+- extendedWaitUntil:
     visible:
       text: "${app.homeTitle}"
     timeout: 20000
@@ -113,8 +129,7 @@ ${openPrompt(platform)}- extendedWaitUntil:
 
 function openSettings(app, platform) {
   if (app.era === 'latest') {
-    return `- openLink: "${app.scheme}://settings"
-${openPrompt(platform)}`.trimEnd();
+    return openDeepLink(app, platform, 'settings', 'Appearance.*');
   }
 
   return `- tapOn:
@@ -134,6 +149,35 @@ for (const platform of TEMPLATES) {
       .replaceAll('{{initialAssertions}}', initialAssertions(app, platform))
       .replaceAll('{{openButtonShowcase}}', openButtonShowcase(app, platform))
       .replaceAll('{{afterButtonShowcase}}', afterButtonShowcase(app))
+      .replaceAll(
+        '{{openBadgeShowcase}}',
+        openDeepLink(app, platform, 'components/badge?theme=light&variant=live&size=md', 'Badge')
+      )
+      .replaceAll(
+        '{{openSeparatorShowcase}}',
+        openDeepLink(
+          app,
+          platform,
+          'components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold',
+          'Live separator vertical accent bold'
+        )
+      )
+      .replaceAll(
+        '{{openSwitchShowcase}}',
+        openDeepLink(app, platform, 'components/switch?theme=light&state=on&size=md', 'Live switch state ON')
+      )
+      .replaceAll(
+        '{{openSequentialDialogShowcase}}',
+        openDeepLink(app, platform, 'components/dialog?theme=light&scenario=sequential', 'FIRST DIALOG')
+      )
+      .replaceAll(
+        '{{openNestedDialogShowcase}}',
+        openDeepLink(app, platform, 'components/dialog?theme=dark&scenario=nested', 'PARENT DIALOG')
+      )
+      .replaceAll(
+        '{{openExternalDialogShowcase}}',
+        openDeepLink(app, platform, 'components/dialog?theme=light&scenario=external', 'RELEASE GATE')
+      )
       .replaceAll('{{openPlayground}}', openPlayground(app, platform))
       .replaceAll('{{openSettings}}', openSettings(app, platform))
       .replaceAll('{{buttonSelector}}', platform === 'ios' ? '01.*Button.*' : 'Button');

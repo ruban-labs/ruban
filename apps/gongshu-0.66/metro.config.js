@@ -5,7 +5,28 @@
  * @format
  */
 
+const fs = require('fs');
+const path = require('path');
 const {getDefaultConfig} = require('metro-config');
+
+const packageManifest = require('./package.json');
+const linkedDependencies = Object.keys({
+  ...packageManifest.dependencies,
+  ...packageManifest.devDependencies,
+}).reduce(
+  (result, packageName) => {
+    const packagePath = path.join(__dirname, 'node_modules', packageName);
+
+    try {
+      if (fs.lstatSync(packagePath).isSymbolicLink()) {
+        result[packageName] = fs.realpathSync(packagePath);
+      }
+    } catch (_error) {}
+
+    return result;
+  },
+  {},
+);
 
 module.exports = (async () => {
   const {
@@ -13,6 +34,7 @@ module.exports = (async () => {
   } = await getDefaultConfig();
 
   return {
+    watchFolders: Object.values(linkedDependencies),
     transformer: {
       babelTransformerPath: require.resolve(
         'react-native-svg-transformer/react-native',
@@ -26,6 +48,7 @@ module.exports = (async () => {
     },
     resolver: {
       assetExts: assetExts.filter(extension => extension !== 'svg'),
+      extraNodeModules: linkedDependencies,
       sourceExts: [...sourceExts, 'svg'],
     },
   };

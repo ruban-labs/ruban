@@ -28,6 +28,7 @@ import DAppTestScreen from '../screens/DAppTestScreen';
 import DAppsScreen from '../screens/DAppsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LabScreen from '../screens/LabScreen';
+import NetworkSettingsScreen from '../screens/NetworkSettingsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import { ScreenFrame } from './ScreenFrame';
 import type { RootStackParamList, TabParamList } from './types';
@@ -51,9 +52,10 @@ const linking: LinkingOptions<RootStackParamList> = {
           Settings: 'settings',
         },
       },
-      DeveloperLab: 'lab/:tool?',
+      DeveloperLab: 'dev/lab/:tool?',
       DAppBrowser: 'dapp',
-      DAppTest: 'dapp-test',
+      DAppTest: 'dev/dapp-provider',
+      NetworkSettings: 'settings/networks',
       ComponentDetail: 'components/:component',
     },
   },
@@ -267,6 +269,10 @@ export default function AppNavigator({
         <RootStack.Screen name="DeveloperLab" component={DeveloperLabRoute} />
         <RootStack.Screen name="DAppBrowser" component={DAppBrowserScreen} />
         <RootStack.Screen name="DAppTest" component={DAppTestScreen} />
+        <RootStack.Screen
+          name="NetworkSettings"
+          component={NetworkSettingsScreen}
+        />
         <RootStack.Screen
           name="ComponentDetail"
           component={ComponentDetailRoute}
