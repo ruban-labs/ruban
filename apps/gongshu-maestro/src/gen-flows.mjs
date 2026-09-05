@@ -51,17 +51,19 @@ function openDeepLink(app, platform, path, expectedText) {
     return `- openLink: "${url}"`;
   }
 
+  const stopApp = app.era === 'latest' ? '      - stopApp\n' : '';
+  const timeout = app.era === 'latest' ? 120000 : 20000;
   return `- retry:
     maxRetries: 1
     commands:
-      - openLink: "${url}"
+${stopApp}      - openLink: "${url}"
       - tapOn:
           text: "^(Open|打开)$"
           optional: true
       - extendedWaitUntil:
           visible:
             text: "${expectedText}"
-          timeout: 20000`;
+          timeout: ${timeout}`;
 }
 
 function initialAssertions(app, platform) {

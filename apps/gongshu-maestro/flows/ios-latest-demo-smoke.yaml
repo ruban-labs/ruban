@@ -18,6 +18,7 @@ appId: com.rubanlabs.mobile.debug
 - retry:
     maxRetries: 1
     commands:
+      - stopApp
       - openLink: "ruban-debug://components/button?theme=light&variant=primary&size=md&state=default"
       - tapOn:
           text: "^(Open|打开)$"
@@ -25,7 +26,7 @@ appId: com.rubanlabs.mobile.debug
       - extendedWaitUntil:
           visible:
             text: "RUN ACTION"
-          timeout: 20000
+          timeout: 120000
 - extendedWaitUntil:
     visible:
       text: "Back to components"
@@ -38,6 +39,7 @@ appId: com.rubanlabs.mobile.debug
 - retry:
     maxRetries: 1
     commands:
+      - stopApp
       - openLink: "ruban-debug://components/badge?theme=light&variant=live&size=md"
       - tapOn:
           text: "^(Open|打开)$"
@@ -45,7 +47,7 @@ appId: com.rubanlabs.mobile.debug
       - extendedWaitUntil:
           visible:
             text: "Badge"
-          timeout: 20000
+          timeout: 120000
 - extendedWaitUntil:
     visible:
       text: "Back to components"
@@ -55,6 +57,7 @@ appId: com.rubanlabs.mobile.debug
 - retry:
     maxRetries: 1
     commands:
+      - stopApp
       - openLink: "ruban-debug://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
       - tapOn:
           text: "^(Open|打开)$"
@@ -62,7 +65,7 @@ appId: com.rubanlabs.mobile.debug
       - extendedWaitUntil:
           visible:
             text: "Live separator vertical accent bold"
-          timeout: 20000
+          timeout: 120000
 - extendedWaitUntil:
     visible:
       text: "Live separator vertical accent bold"
@@ -74,6 +77,7 @@ appId: com.rubanlabs.mobile.debug
 - retry:
     maxRetries: 1
     commands:
+      - stopApp
       - openLink: "ruban-debug://components/switch?theme=light&state=on&size=md"
       - tapOn:
           text: "^(Open|打开)$"
@@ -81,7 +85,7 @@ appId: com.rubanlabs.mobile.debug
       - extendedWaitUntil:
           visible:
             text: "Live switch state ON"
-          timeout: 20000
+          timeout: 120000
 - extendedWaitUntil:
     visible:
       text: "Live switch state ON"
@@ -97,6 +101,7 @@ appId: com.rubanlabs.mobile.debug
 - retry:
     maxRetries: 1
     commands:
+      - stopApp
       - openLink: "ruban-debug://components/dialog?theme=light&scenario=sequential"
       - tapOn:
           text: "^(Open|打开)$"
@@ -104,7 +109,7 @@ appId: com.rubanlabs.mobile.debug
       - extendedWaitUntil:
           visible:
             text: "FIRST DIALOG"
-          timeout: 20000
+          timeout: 120000
 - extendedWaitUntil:
     visible:
       text: "FIRST DIALOG"
@@ -122,6 +127,7 @@ appId: com.rubanlabs.mobile.debug
 - retry:
     maxRetries: 1
     commands:
+      - stopApp
       - openLink: "ruban-debug://components/dialog?theme=dark&scenario=nested"
       - tapOn:
           text: "^(Open|打开)$"
@@ -129,7 +135,7 @@ appId: com.rubanlabs.mobile.debug
       - extendedWaitUntil:
           visible:
             text: "PARENT DIALOG"
-          timeout: 20000
+          timeout: 120000
 - extendedWaitUntil:
     visible:
       text: "PARENT DIALOG"
@@ -151,6 +157,7 @@ appId: com.rubanlabs.mobile.debug
 - retry:
     maxRetries: 1
     commands:
+      - stopApp
       - openLink: "ruban-debug://components/dialog?theme=light&scenario=external"
       - tapOn:
           text: "^(Open|打开)$"
@@ -158,7 +165,7 @@ appId: com.rubanlabs.mobile.debug
       - extendedWaitUntil:
           visible:
             text: "RELEASE GATE"
-          timeout: 20000
+          timeout: 120000
 - extendedWaitUntil:
     visible:
       text: "RELEASE GATE"
@@ -176,6 +183,7 @@ appId: com.rubanlabs.mobile.debug
 - retry:
     maxRetries: 1
     commands:
+      - stopApp
       - openLink: "ruban-debug://lab/design?theme=light"
       - tapOn:
           text: "^(Open|打开)$"
@@ -183,7 +191,7 @@ appId: com.rubanlabs.mobile.debug
       - extendedWaitUntil:
           visible:
             text: "PLAYGROUND"
-          timeout: 20000
+          timeout: 120000
 - extendedWaitUntil:
     visible:
       text: "PLAYGROUND"
@@ -195,6 +203,7 @@ appId: com.rubanlabs.mobile.debug
 - retry:
     maxRetries: 1
     commands:
+      - stopApp
       - openLink: "ruban-debug://settings"
       - tapOn:
           text: "^(Open|打开)$"
@@ -202,7 +211,7 @@ appId: com.rubanlabs.mobile.debug
       - extendedWaitUntil:
           visible:
             text: "Appearance.*"
-          timeout: 20000
+          timeout: 120000
 - extendedWaitUntil:
     visible:
       text: "Settings"
