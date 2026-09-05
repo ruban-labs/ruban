@@ -2,12 +2,8 @@ appId: com.rubanlabs.mobile.debug
 ---
 # The iOS 18 simulator does not reliably relaunch a stopped app through
 # Maestro custom-scheme action or deliver taps to the custom icon-only tab.
-# The CI harness opens ruban-debug://settings through simctl after the separate
-# cold-launch flow. A fresh simulator asks for system confirmation the first
-# time it opens the custom scheme, while a reused simulator does not.
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+# The CI harness cold-launches the app, accepts the first-use scheme prompt in
+# a separate flow, then opens ruban-debug://settings again before this flow.
 - extendedWaitUntil:
     visible:
       text: "Appearance.*"

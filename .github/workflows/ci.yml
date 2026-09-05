@@ -263,6 +263,8 @@ jobs:
             if [ "${{ matrix.era }}" = "latest" ]; then
               maestro test --reinstall-driver flows/ios-latest-launch-smoke.yaml || return $?
               xcrun simctl openurl "${{ steps.sim.outputs.udid }}" "ruban-debug://settings" || return $?
+              maestro test --no-reinstall-driver flows/ios-latest-deeplink-permission.yaml || return $?
+              xcrun simctl openurl "${{ steps.sim.outputs.udid }}" "ruban-debug://settings" || return $?
               maestro test --no-reinstall-driver flows/ios-latest-demo-smoke.yaml
               return $?
             fi
