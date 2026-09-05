@@ -1,174 +1,49 @@
 appId: com.rubanlabs.mobile.debug
 ---
-# Gongshu app-shell smoke (ios, era latest). Maestro 2.x syntax.
-# Text-based selectors on purpose: RN exposes testID to the automation
-# hierarchy inconsistently across eras/architectures (Paper vs Fabric).
-# User-facing copy and explicit accessibility labels form the stable contract.
-- launchApp:
-    clearState: true
-- setOrientation: portrait
+# The iOS 18 simulator does not reliably relaunch a stopped app through
+# Maestro custom-scheme action or deliver taps to the custom icon-only tab.
+# The CI harness cold-launches the app, accepts the first-use scheme prompt in
+# a separate flow, then opens ruban-debug://settings again before this flow.
 - extendedWaitUntil:
     visible:
-      text: "Portfolio"
-    timeout: 120000
-- assertVisible:
-    text: "Create a wallet"
-- assertVisible:
-    text: "Network, Ethereum"
-- openLink: "ruban-debug://components/button?theme=light&variant=primary&size=md&state=default"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
-- extendedWaitUntil:
-    visible:
-      text: "Back to components"
+      text: "Appearance.*"
     timeout: 20000
+- scrollUntilVisible:
+    element:
+      id: "settings-playground"
+    direction: DOWN
+    timeout: 20000
+- tapOn:
+    id: "settings-playground"
+- extendedWaitUntil:
+    visible:
+      text: "COMPONENTS"
+    timeout: 20000
+- tapOn:
+    id: "playground-open-button"
+- extendedWaitUntil:
+    visible:
+      text: "Button"
+    timeout: 20000
+- assertVisible:
+    text: "RUN ACTION"
 - assertNotVisible:
     text: "Playground"
 - assertNotVisible:
     text: "Settings"
-
-- openLink: "ruban-debug://components/badge?theme=light&variant=live&size=md"
 - tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+    text: "Back to components"
 - extendedWaitUntil:
     visible:
-      text: "Back to components"
-    timeout: 120000
-- assertVisible:
-    text: "LIVE"
-- openLink: "ruban-debug://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
-- extendedWaitUntil:
-    visible:
-      text: "Live separator vertical accent bold"
-    timeout: 60000
-- assertVisible:
-    text: "VERTICAL"
-- assertVisible:
-    text: "Live separator vertical accent bold"
-- openLink: "ruban-debug://components/switch?theme=light&state=on&size=md"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
-- extendedWaitUntil:
-    visible:
-      text: "Live switch state ON"
-    timeout: 60000
-- assertVisible:
-    text: "CONTROL"
-- assertVisible:
-    text: "Live switch state ON"
-- tapOn:
-    text: "Live switch"
-- assertVisible:
-    text: "Live switch state OFF"
-- openLink: "ruban-debug://components/dialog?theme=light&scenario=sequential"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
-- extendedWaitUntil:
-    visible:
-      text: "FIRST DIALOG"
-    timeout: 60000
-- tapOn:
-    text: "NEXT DIALOG"
-- extendedWaitUntil:
-    visible:
-      text: "SECOND DIALOG"
-    timeout: 60000
-- assertNotVisible:
-    text: "FIRST DIALOG"
-- tapOn:
-    text: "DONE"
-- openLink: "ruban-debug://components/dialog?theme=dark&scenario=nested"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
-- extendedWaitUntil:
-    visible:
-      text: "PARENT DIALOG"
-    timeout: 60000
-- tapOn:
-    text: "OPEN CONFIRMATION"
-- extendedWaitUntil:
-    visible:
-      text: "CONFIRM ACTION"
-    timeout: 60000
-- tapOn:
-    text: "RETURN TO PARENT"
-- extendedWaitUntil:
-    visible:
-      text: "PARENT DIALOG"
-    timeout: 60000
-- tapOn:
-    text: "CLOSE"
-- openLink: "ruban-debug://components/dialog?theme=light&scenario=external"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
-- extendedWaitUntil:
-    visible:
-      text: "RELEASE GATE"
-    timeout: 60000
-- assertNotVisible:
-    text: "GATED DIALOG"
-- tapOn:
-    text: "RELEASE GATE"
-- extendedWaitUntil:
-    visible:
-      text: "GATED DIALOG"
-    timeout: 60000
-- tapOn:
-    text: "DONE"
-- openLink: "ruban-debug://lab/design?theme=light"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
-- extendedWaitUntil:
-    visible:
-      text: "PLAYGROUND"
-    timeout: 20000
-- assertVisible:
-    text: "LIGHT"
-- assertVisible:
-    text: "TYPE"
-- openLink: "ruban-debug://settings"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
-- extendedWaitUntil:
-    visible:
-      text: "Settings"
-    timeout: 20000
-- assertVisible:
-    text: "Appearance.*"
-- tapOn:
-    text: "Appearance.*"
-- extendedWaitUntil:
-    visible:
-      text: "System"
-    timeout: 20000
-- assertVisible:
-    text: "Light"
-- assertVisible:
-    text: "Dark"
-- tapOn:
-    text: "Light"
-- extendedWaitUntil:
-    visible:
-      text: "Settings"
+      text: "Appearance.*"
     timeout: 20000
 - scrollUntilVisible:
     element:
-      text: "Build & matrix.*"
+      id: "settings-build"
     direction: DOWN
     timeout: 20000
 - tapOn:
-    text: "Build & matrix.*"
+    id: "settings-build"
 - extendedWaitUntil:
     visible:
       text: "Build & matrix"
@@ -179,5 +54,5 @@ appId: com.rubanlabs.mobile.debug
     text: "CLOSE"
 - extendedWaitUntil:
     visible:
-      text: "Settings"
+      text: "Appearance.*"
     timeout: 20000

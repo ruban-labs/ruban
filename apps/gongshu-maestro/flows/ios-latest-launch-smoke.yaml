@@ -1,0 +1,15 @@
+appId: com.rubanlabs.mobile.debug
+---
+# Cold-launch phase for the latest iOS app. The CI harness follows this with a
+# system-level custom-scheme open before running the Settings interaction flow.
+- launchApp:
+    clearState: true
+- setOrientation: portrait
+- extendedWaitUntil:
+    visible:
+      text: "Portfolio"
+    timeout: 120000
+- assertVisible:
+    text: "Create a wallet"
+- assertVisible:
+    text: "Network, Ethereum"

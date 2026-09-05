@@ -1,0 +1,8 @@
+appId: {{appId}}
+---
+# A fresh iOS simulator asks before opening the custom URL scheme. The first
+# accepted request can return to the app without delivering the URL, so CI
+# sends the same deeplink again after this bounded permission handshake.
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true

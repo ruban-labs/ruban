@@ -3,6 +3,7 @@ import path from 'node:path';
 export const RUBAN_PACKAGE_DEFINITIONS = [
   ['@ruban-labs/react-native-progress', 'react-native-progress', 'ruban-progress-local.tgz'],
   ['@ruban-labs/react-native-collapsible', 'react-native-collapsible', 'ruban-collapsible-local.tgz'],
+  ['@ruban-labs/react-native-worker-thread', 'react-native-worker-thread', 'ruban-worker-thread-local.tgz'],
   ['@ruban-labs/react-native-ui-theme', 'react-native-ui-theme', 'ruban-ui-theme-local.tgz'],
   ['@ruban-labs/react-native-ui-overlay', 'react-native-ui-overlay', 'ruban-ui-overlay-local.tgz'],
   ['@ruban-labs/react-native-ui-dialog', 'react-native-ui-dialog', 'ruban-ui-dialog-local.tgz'],

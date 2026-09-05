@@ -381,6 +381,36 @@ importers:
         specifier: ^5.8.0
         version: 5.9.3
 
+  packages/react-native-worker-thread:
+    devDependencies:
+      '@react-native/babel-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)
+      '@react-native/jest-preset':
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(react@19.2.8)
+      '@types/jest':
+        specifier: ^29.5.14
+        version: 29.5.14
+      '@types/react':
+        specifier: ^19.1.0
+        version: 19.2.18
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@26.2.0)
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-native:
+        specifier: 0.87.0
+        version: 0.87.0(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.8)
+      react-native-builder-bob:
+        specifier: ^0.43.0
+        version: 0.43.0
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
   website:
     dependencies:
       astro:

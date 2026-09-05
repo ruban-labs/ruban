@@ -45,6 +45,24 @@ const IOS_MATRIX = [
   },
 ];
 
+const ANDROID_MATRIX = [
+  {
+    era: "latest",
+    app: "gongshu-latest",
+    "era-node": 22,
+  },
+  {
+    era: "0.77",
+    app: "gongshu-0.77",
+    "era-node": 18,
+  },
+  {
+    era: "0.66",
+    app: "gongshu-0.66",
+    "era-node": 18,
+  },
+];
+
 function addAll(target) {
   for (const era of ERAS) {
     target.add(era);
@@ -80,6 +98,12 @@ function appEra(path) {
   return match[1] === "latest" ? "rn-latest" : `rn-${match[1]}`;
 }
 
+function androidAppEra(path) {
+  const match = path.match(/^apps\/gongshu-(0\.66|0\.77|latest)\/android\//);
+  if (!match) return null;
+  return match[1] === "latest" ? "rn-latest" : `rn-${match[1]}`;
+}
+
 function fixtureEra(path) {
   const match = path.match(/^fixtures\/typecheck\/(rn-(?:0\.66|0\.77|latest))\//);
   return match?.[1] ?? null;
@@ -90,6 +114,7 @@ export function classifyChangedPaths(inputPaths, { forceFull = false } = {}) {
   const typecheck = new Set();
   const bundle = new Set();
   const ios = new Set();
+  const android = new Set();
   let verify = false;
   let site = false;
   let full = forceFull || paths.length === 0;
@@ -110,7 +135,9 @@ export function classifyChangedPaths(inputPaths, { forceFull = false } = {}) {
       continue;
     }
 
-    if (/^apps\/gongshu-(?:0\.66|0\.77|latest)\/android\//.test(path)) {
+    const matchedAndroidAppEra = androidAppEra(path);
+    if (matchedAndroidAppEra) {
+      android.add(matchedAndroidAppEra);
       continue;
     }
 
@@ -122,12 +149,14 @@ export function classifyChangedPaths(inputPaths, { forceFull = false } = {}) {
 
     if (path.startsWith("apps/gongshu-maestro/") || path === "scripts/dev/sync-gongshu.mjs") {
       addAll(ios);
+      addAll(android);
       continue;
     }
 
     if (path.startsWith("registry/") || path === "scripts/design/sync-source-registry.mjs") {
       verify = true;
       addAll(ios);
+      addAll(android);
       continue;
     }
 
@@ -182,6 +211,7 @@ export function classifyChangedPaths(inputPaths, { forceFull = false } = {}) {
     addAll(typecheck);
     addAll(bundle);
     addAll(ios);
+    addAll(android);
   }
 
   return {
@@ -192,6 +222,7 @@ export function classifyChangedPaths(inputPaths, { forceFull = false } = {}) {
     typecheck: [...typecheck],
     bundle: [...bundle],
     ios: [...ios],
+    android: [...android],
   };
 }
 
@@ -206,6 +237,8 @@ export function buildWorkflowOutputs(classification) {
   const bundleMatrix = matrixFor(classification.bundle, BUNDLE_MATRIX, "era");
   const selectedIosEras = classification.ios.map((era) => era.replace(/^rn-/, ""));
   const iosMatrix = matrixFor(selectedIosEras, IOS_MATRIX, "era");
+  const selectedAndroidEras = classification.android.map((era) => era.replace(/^rn-/, ""));
+  const androidMatrix = matrixFor(selectedAndroidEras, ANDROID_MATRIX, "era");
 
   return {
     full: String(classification.full),
@@ -214,9 +247,11 @@ export function buildWorkflowOutputs(classification) {
     typecheck: String(typecheckMatrix.include.length > 0),
     bundle: String(bundleMatrix.include.length > 0),
     ios: String(iosMatrix.include.length > 0),
+    android: String(androidMatrix.include.length > 0),
     typecheck_matrix: JSON.stringify(typecheckMatrix),
     bundle_matrix: JSON.stringify(bundleMatrix),
     ios_matrix: JSON.stringify(iosMatrix),
+    android_matrix: JSON.stringify(androidMatrix),
   };
 }
 
