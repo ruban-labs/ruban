@@ -121,6 +121,24 @@ ${openPrompt(platform)}`.trimEnd();
     text: "Settings"`;
 }
 
+function renderTemplate(template, app, platform) {
+  return template
+    .replaceAll('{{appId}}', app[platform])
+    .replaceAll('{{era}}', app.era)
+    .replaceAll('{{homeTitle}}', app.homeTitle)
+    .replaceAll('{{settingsBuildEntry}}', app.settingsBuildEntry)
+    .replaceAll('{{settingsBuildTitle}}', app.settingsBuildTitle)
+    .replaceAll('{{scheme}}', app.scheme)
+    .replaceAll('{{initialAssertions}}', initialAssertions(app, platform))
+    .replaceAll('{{openButtonShowcase}}', openButtonShowcase(app, platform))
+    .replaceAll('{{afterButtonShowcase}}', afterButtonShowcase(app))
+    .replaceAll('{{openPlayground}}', openPlayground(app, platform))
+    .replaceAll('{{openSettings}}', openSettings(app, platform))
+    .replaceAll('{{buttonShowcaseReady}}', 'Button')
+    .replaceAll('{{badgeShowcaseReady}}', 'LIVE')
+    .replaceAll('{{buttonSelector}}', platform === 'ios' ? '01.*Button.*' : 'Button');
+}
+
 for (const platform of TEMPLATES) {
   for (const app of APPS) {
     const templateName =
@@ -128,23 +146,19 @@ for (const platform of TEMPLATES) {
         ? 'demo-smoke.ios-latest.yaml.tpl'
         : `demo-smoke.${platform}.yaml.tpl`;
     const template = fs.readFileSync(path.join(harnessRoot, 'templates', templateName), 'utf8');
-    const rendered = template
-      .replaceAll('{{appId}}', app[platform])
-      .replaceAll('{{era}}', app.era)
-      .replaceAll('{{homeTitle}}', app.homeTitle)
-      .replaceAll('{{settingsBuildEntry}}', app.settingsBuildEntry)
-      .replaceAll('{{settingsBuildTitle}}', app.settingsBuildTitle)
-      .replaceAll('{{scheme}}', app.scheme)
-      .replaceAll('{{initialAssertions}}', initialAssertions(app, platform))
-      .replaceAll('{{openButtonShowcase}}', openButtonShowcase(app, platform))
-      .replaceAll('{{afterButtonShowcase}}', afterButtonShowcase(app))
-      .replaceAll('{{openPlayground}}', openPlayground(app, platform))
-      .replaceAll('{{openSettings}}', openSettings(app, platform))
-      .replaceAll('{{buttonShowcaseReady}}', 'Button')
-      .replaceAll('{{badgeShowcaseReady}}', 'LIVE')
-      .replaceAll('{{buttonSelector}}', platform === 'ios' ? '01.*Button.*' : 'Button');
+    const rendered = renderTemplate(template, app, platform);
     const outFile = path.join(flowsDir, `${platform}-${app.era}-demo-smoke.yaml`);
     fs.writeFileSync(outFile, rendered);
     console.log(`gen-flows: wrote ${path.relative(harnessRoot, outFile)}`);
+
+    if (platform === 'ios' && app.era === 'latest') {
+      const launchTemplate = fs.readFileSync(
+        path.join(harnessRoot, 'templates', 'demo-smoke.ios-latest-launch.yaml.tpl'),
+        'utf8',
+      );
+      const launchOutFile = path.join(flowsDir, 'ios-latest-launch-smoke.yaml');
+      fs.writeFileSync(launchOutFile, renderTemplate(launchTemplate, app, platform));
+      console.log(`gen-flows: wrote ${path.relative(harnessRoot, launchOutFile)}`);
+    }
   }
 }

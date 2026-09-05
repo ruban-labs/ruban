@@ -1,15 +1,9 @@
 appId: {{appId}}
 ---
 # The iOS 18 simulator does not reliably relaunch a stopped app through
-# Maestro's custom-scheme openLink action. Deep links remain covered by the
-# Android latest flow and both older iOS flows; this flow validates the latest
-# app through the same user-visible in-app navigation paths.
-- launchApp:
-    clearState: true
-- setOrientation: portrait
-{{initialAssertions}}
-- tapOn:
-    id: "tab-settings"
+# Maestro custom-scheme action or deliver taps to the custom icon-only tab.
+# The CI harness opens ruban-debug://settings through simctl after the separate
+# cold-launch flow, then this flow validates the user-visible Settings paths.
 - extendedWaitUntil:
     visible:
       text: "Appearance.*"

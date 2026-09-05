@@ -259,8 +259,19 @@ jobs:
           MAESTRO_CLI_NO_ANALYTICS: "1"
           MAESTRO_DRIVER_STARTUP_TIMEOUT: "180000"
         run: |
+          run_flow() {
+            if [ "${{ matrix.era }}" = "latest" ]; then
+              maestro test --reinstall-driver flows/ios-latest-launch-smoke.yaml || return $?
+              xcrun simctl openurl "${{ steps.sim.outputs.udid }}" "ruban-debug://settings" || return $?
+              maestro test --no-reinstall-driver flows/ios-latest-demo-smoke.yaml
+              return $?
+            fi
+
+            maestro test --reinstall-driver flows/ios-${{ matrix.era }}-demo-smoke.yaml
+          }
+
           set +e
-          maestro test --reinstall-driver flows/ios-${{ matrix.era }}-demo-smoke.yaml
+          run_flow
           status=$?
           set -e
 
@@ -276,7 +287,7 @@ jobs:
           xcrun simctl shutdown "${{ steps.sim.outputs.udid }}" || true
           xcrun simctl boot "${{ steps.sim.outputs.udid }}"
           xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
-          maestro test --reinstall-driver flows/ios-${{ matrix.era }}-demo-smoke.yaml
+          run_flow
       - name: Metro log on failure
         if: failure()
         run: tail -80 /tmp/metro.log || true
