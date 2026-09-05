@@ -115,7 +115,7 @@ function afterButtonShowcase(app) {
 
 function openPlayground(app, platform) {
   if (app.era === 'latest') {
-    return openDeepLink(app, platform, 'lab/design?theme=light', 'PLAYGROUND');
+    return openDeepLink(app, platform, 'dev/lab/design?theme=light', 'PLAYGROUND');
   }
 
   return `${openDeepLink(app, platform, 'home', app.homeTitle)}

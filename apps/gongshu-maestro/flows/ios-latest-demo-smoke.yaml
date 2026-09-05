@@ -184,7 +184,7 @@ appId: com.rubanlabs.mobile.debug
     maxRetries: 1
     commands:
       - stopApp
-      - openLink: "ruban-debug://lab/design?theme=light"
+      - openLink: "ruban-debug://dev/lab/design?theme=light"
       - tapOn:
           text: "^(Open|打开)$"
           optional: true
