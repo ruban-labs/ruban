@@ -3,10 +3,30 @@
 [中文](./README.zh-CN.md)
 
 Native portfolio synchronization and SQLite projection primitives for bare
-React Native. C++ owns provider-independent projection types and deterministic
-mock data. Platform modules serialize writes to the application's WAL database,
-while JavaScript reads normalized tables and observes sync-state events.
+React Native. C++ owns provider-independent projections and provider response
+mapping. Platform modules own secure credentials, bounded HTTP transport, and
+serialized writes to the application's WAL database. JavaScript reads the
+normalized tables and observes sync-state events.
 
-The initial DeBank adapter is an explicit mock and performs no network calls.
-A future BYOK adapter can replace it without changing the database contract.
-Provider credentials belong in Keychain or Keystore, never SQLite or JavaScript.
+The DeBank adapter supports a deterministic official-shape mock and BYOK. Both
+use the same parser and full or chain-incremental replacement contract. DeBank
+credentials live in iOS Keychain or Android Keystore-backed app storage and are
+never returned from the native module.
+
+```ts
+await dataEngine.initialize(databasePath);
+
+await dataEngine.configureMockDeBank();
+await dataEngine.syncPortfolio(address);
+await dataEngine.syncPortfolio(address, {
+  mode: 'incremental',
+  chains: [{ id: 1, key: 'eth' }],
+});
+
+await dataEngine.importDeBankAccessKey(accessKey);
+await dataEngine.configureByokDeBank();
+await dataEngine.syncPortfolio(address);
+```
+
+The application owns the SQLite schema. This package never creates or migrates
+tables. See [`docs/architecture/native-sync-storage.md`](../../docs/architecture/native-sync-storage.md).

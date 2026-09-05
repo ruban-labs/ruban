@@ -30,6 +30,7 @@ export function usePortfolio(address?: string): PortfolioState {
   const [completedChains, setCompletedChains] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
   const [refreshNonce, setRefreshNonce] = React.useState(0);
+  const forceRefreshRef = React.useRef(false);
 
   React.useEffect(() => {
     let active = true;
@@ -50,6 +51,8 @@ export function usePortfolio(address?: string): PortfolioState {
     }
 
     const normalizedAddress = address.toLowerCase();
+    const forceRefresh = forceRefreshRef.current;
+    forceRefreshRef.current = false;
     setError(null);
     setRefreshing(true);
 
@@ -66,16 +69,20 @@ export function usePortfolio(address?: string): PortfolioState {
 
     const loadSnapshot = () =>
       repositories.getPortfolioSnapshot(normalizedAddress).then(cached => {
-        if (!active || !cached) return;
+        if (!active || !cached) return cached;
         setSnapshot(cached);
         setCompletedChains(cached.chains.length);
+        return cached;
       });
 
     loadSnapshot()
-      .catch(() => {})
-      .then(() => dataEngine.syncMockPortfolio(normalizedAddress))
-      .then(() => refreshDataSourceAfterNativeWrite())
-      .then(loadSnapshot)
+      .catch(() => null)
+      .then(async cached => {
+        if (cached && !forceRefresh) return;
+        await dataEngine.syncPortfolio(normalizedAddress);
+        await refreshDataSourceAfterNativeWrite();
+        await loadSnapshot();
+      })
       .then(
         () => {
           if (active) setRefreshing(false);
@@ -102,6 +109,9 @@ export function usePortfolio(address?: string): PortfolioState {
     refreshing,
     completedChains,
     error,
-    refresh: () => setRefreshNonce(value => value + 1),
+    refresh: () => {
+      forceRefreshRef.current = true;
+      setRefreshNonce(value => value + 1);
+    },
   };
 }

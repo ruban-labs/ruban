@@ -117,7 +117,7 @@ const query = new URLSearchParams({
   runId,
   timeoutMs: String(Math.min(Math.max(timeoutMs - 5000, 1000), 60000)),
 });
-const url = `${config.scheme}://dapp-test?${query.toString()}`;
+const url = `${config.scheme}://dev/dapp-provider?${query.toString()}`;
 const deadline = Date.now() + timeoutMs;
 let reviewHandled = false;
 

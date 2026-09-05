@@ -32,7 +32,12 @@ export function ensureDataEngine(): Promise<PortfolioDataSource> {
   if (!runtime.initialization) {
     runtime.initialization = getDatabasePath()
       .then(databasePath => dataEngine.initialize(databasePath))
-      .then(() => dataEngine.configureMockDeBank())
+      .then(() => dataEngine.getDeBankCredentialState())
+      .then(credential =>
+        credential.credentialState === 'configured'
+          ? dataEngine.configureByokDeBank()
+          : dataEngine.configureMockDeBank(),
+      )
       .catch(error => {
         runtime.initialization = null;
         throw error;

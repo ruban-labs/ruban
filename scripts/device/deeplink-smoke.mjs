@@ -38,7 +38,7 @@ const SCENARIOS = [
   },
   {
     name: "playground-dark",
-    path: "lab/design?theme=dark",
+    path: "dev/lab/design?theme=dark",
     testId: "screen-design-playground",
   },
   {

@@ -7,5 +7,18 @@ final class RubanDataEngineBindings {
 
   private RubanDataEngineBindings() {}
 
-  static native String createMockProjectionJson(String address, long observedAt);
+  static native String createMockSyncResultJson(
+      String address, long observedAt, String optionsJson);
+
+  static native String createDeBankRequestPlanJson(String address, String optionsJson);
+
+  static native String createDeBankSyncResultJson(
+      String address,
+      long observedAt,
+      String optionsJson,
+      String payloadsJson,
+      String source);
+
+  static native long retryDelayMs(
+      int statusCode, int completedAttempts, long retryAfterMs, int maxAttempts);
 }

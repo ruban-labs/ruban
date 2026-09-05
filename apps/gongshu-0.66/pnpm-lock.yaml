@@ -3083,7 +3083,7 @@ packages:
     dependencies:
       baseline-browser-mapping: 2.11.21
       caniuse-lite: 1.0.30001810
-      electron-to-chromium: 1.5.420
+      electron-to-chromium: 1.5.422
       node-releases: 2.0.54
       update-browserslist-db: 1.3.2(browserslist@4.28.9)
 
@@ -3760,8 +3760,8 @@ packages:
   /ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  /electron-to-chromium@1.5.420:
-    resolution: {integrity: sha512-2yD6XreGusOfNV+dUcvipJEXc3n/n7fgr7996aszTG+YY5E4mqM4tOq/3uhP129cazL9YHbVWSpc79ePotWtPA==}
+  /electron-to-chromium@1.5.422:
+    resolution: {integrity: sha512-UvA/32XqrLDdZSn7Jllo1AYNcWji/G0d5M0GTViE7KoGBiMunw3a34Sb2KO4ZZyrSEhqsxFoVhWWJshdyfKqJA==}
 
   /emittery@0.7.2:
     resolution: {integrity: sha512-A8OG5SR/ij3SsJdWDJdkkSYUjQdCUx6APQXem0SaEePBSRg4eymGYwBkKo1Y6DU+af/Jn2dBQqDBvjnr9Vi8nQ==}
@@ -8853,7 +8853,7 @@ packages:
     dev: false
 
   file:ruban-data-engine-local.tgz(react-native@0.66.4)(react@17.0.2):
-    resolution: {integrity: sha512-H9fK5/BDuG0L8vSHYQxHvMIT53FrKC/er0F+dhswT4ZwlglNM8YiBSF7c4nuKhCIlImDBhl2R32mcJVKTEL0Hw==, tarball: file:ruban-data-engine-local.tgz}
+    resolution: {integrity: sha512-/2DjFYQLspJGrmYBZUE669tSz91LYyl3q4Ha2v5N2SwUnbMRpSRI7EW7iXMEH+stYvgf1Ufo/YBdiyA/cFoW9g==, tarball: file:ruban-data-engine-local.tgz}
     id: file:ruban-data-engine-local.tgz
     name: '@ruban-labs/react-native-data-engine'
     version: 0.1.0
@@ -8984,7 +8984,7 @@ packages:
     dev: false
 
   file:ruban-wallet-core-local.tgz(react-native@0.66.4)(react@17.0.2):
-    resolution: {integrity: sha512-K0GJDh798yoYu/o1UUDs0M1rvk91qGOHSk8FJirmG8XgMUeWG5V+EUBFEGCSUSNgb89A9wk50d/BVzcYRS71hw==, tarball: file:ruban-wallet-core-local.tgz}
+    resolution: {integrity: sha512-KWraoUCxN4EFivZF30jQK9cnY6VEdBHI9CnIh/boLwwfogvlpKuz9pn6GR9ZcFaP1FtW+0dclizD9omTCL3Mfw==, tarball: file:ruban-wallet-core-local.tgz}
     id: file:ruban-wallet-core-local.tgz
     name: '@ruban-labs/react-native-wallet-core'
     version: 0.1.0

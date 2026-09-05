@@ -1419,7 +1419,7 @@ packages:
       react-native: '>=0.66.0'
 
   '@ruban-labs/react-native-data-engine@file:ruban-data-engine-local.tgz':
-    resolution: {integrity: sha512-H9fK5/BDuG0L8vSHYQxHvMIT53FrKC/er0F+dhswT4ZwlglNM8YiBSF7c4nuKhCIlImDBhl2R32mcJVKTEL0Hw==, tarball: file:ruban-data-engine-local.tgz}
+    resolution: {integrity: sha512-/2DjFYQLspJGrmYBZUE669tSz91LYyl3q4Ha2v5N2SwUnbMRpSRI7EW7iXMEH+stYvgf1Ufo/YBdiyA/cFoW9g==, tarball: file:ruban-data-engine-local.tgz}
     version: 0.1.0
     peerDependencies:
       react: '>=17.0.0'
@@ -1489,7 +1489,7 @@ packages:
       react-native: '>=0.66.0'
 
   '@ruban-labs/react-native-wallet-core@file:ruban-wallet-core-local.tgz':
-    resolution: {integrity: sha512-K0GJDh798yoYu/o1UUDs0M1rvk91qGOHSk8FJirmG8XgMUeWG5V+EUBFEGCSUSNgb89A9wk50d/BVzcYRS71hw==, tarball: file:ruban-wallet-core-local.tgz}
+    resolution: {integrity: sha512-KWraoUCxN4EFivZF30jQK9cnY6VEdBHI9CnIh/boLwwfogvlpKuz9pn6GR9ZcFaP1FtW+0dclizD9omTCL3Mfw==, tarball: file:ruban-wallet-core-local.tgz}
     version: 0.1.0
     peerDependencies:
       react: '>=17.0.0'

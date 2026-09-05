@@ -4,6 +4,8 @@ project(ruban_data_engine LANGUAGES CXX)
 add_library(
   ruban_data_engine
   SHARED
+  ../native/src/debank_provider.cpp
+  ../native/src/ruban_json.cpp
   ../native/src/ruban_data_engine.cpp
   ../native/src/ruban_data_engine_jni.cpp
 )

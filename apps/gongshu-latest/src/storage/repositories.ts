@@ -170,20 +170,21 @@ export const repositories = {
 
     return {
       address: normalizedAddress,
-      chains: chains.map(chain => {
+      chains: chains.flatMap(chain => {
         const registryChain = defaultEvmChains.find(
           candidate => candidate.id === chain.chainId,
         );
-        if (!registryChain) {
-          throw new Error(`Unsupported portfolio chain ${chain.chainId}`);
-        }
-        return {
-          chain: registryChain,
-          assets: assets.filter(asset => asset.chainId === chain.chainId),
-          latencyMs: chain.latencyMs,
-          source: chain.source,
-          updatedAt: chain.observedAt,
-        };
+        return registryChain
+          ? [
+              {
+                chain: registryChain,
+                assets: assets.filter(asset => asset.chainId === chain.chainId),
+                latencyMs: chain.latencyMs,
+                source: chain.source,
+                updatedAt: chain.observedAt,
+              },
+            ]
+          : [];
       }),
       assets,
       totalValueUsd: account.totalValueUsd,
