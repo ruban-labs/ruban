@@ -62,10 +62,6 @@ function adb(...args) {
   return spawnSync('adb', ['-s', device, ...args], {encoding: 'utf8'});
 }
 
-function shellQuote(value) {
-  return `'${String(value).replace(/'/g, `'\\''`)}'`;
-}
-
 function requireAdb(result, operation) {
   if (result.status !== 0) {
     const output = `${result.stdout || ''}${result.stderr || ''}`.trim();
@@ -73,41 +69,38 @@ function requireAdb(result, operation) {
   }
 }
 
+function launch(url) {
+  const result = adb(
+    'shell',
+    'am',
+    'start',
+    '-W',
+    '-a',
+    'android.intent.action.VIEW',
+    '-c',
+    'android.intent.category.DEFAULT',
+    '-d',
+    `'${url}'`,
+    config.appId,
+  );
+  requireAdb(result, `launch ${url}`);
+}
+
 function sleep(durationMs) {
   return new Promise(resolve => setTimeout(resolve, durationMs));
 }
 
-function readHierarchy() {
-  const path = '/sdcard/ruban-dapp-provider-smoke.xml';
-  const dumped = adb('shell', 'uiautomator', 'dump', path);
-  if (dumped.status !== 0) return '';
-  const read = adb('shell', 'cat', path);
-  return read.status === 0 ? read.stdout || '' : '';
-}
-
-function readNodeBounds(hierarchy, resourceId) {
-  const nodes = hierarchy.match(/<node\b[^>]*\/?/g) || [];
-  const node = nodes.find(candidate =>
-    candidate.includes(`resource-id="${resourceId}"`),
+function readLogs() {
+  const result = adb(
+    'logcat',
+    '-d',
+    '-v',
+    'brief',
+    '-s',
+    'ReactNativeJS:V',
+    '*:S',
   );
-  const bounds = node?.match(
-    /bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/,
-  );
-  return bounds ? bounds.slice(1).map(Number) : null;
-}
-
-function tapBounds(bounds) {
-  const [left, top, right, bottom] = bounds;
-  requireAdb(
-    adb(
-      'shell',
-      'input',
-      'tap',
-      String(Math.round((left + right) / 2)),
-      String(Math.round((top + bottom) / 2)),
-    ),
-    'tap review action',
-  );
+  return `${result.stdout || ''}${result.stderr || ''}`;
 }
 
 const query = new URLSearchParams({
@@ -118,12 +111,13 @@ const query = new URLSearchParams({
   timeoutMs: String(Math.min(Math.max(timeoutMs - 5000, 1000), 60000)),
 });
 const url = `${config.scheme}://dev/dapp-provider?${query.toString()}`;
+const reviewRunId = `review-${randomUUID()}`;
 const deadline = Date.now() + timeoutMs;
-let reviewHandled = false;
+let reviewLaunched = false;
 
 try {
   requireAdb(adb('get-state'), 'device readiness');
-  requireAdb(adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP'), 'wake device');
+  adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP');
   adb('shell', 'wm', 'dismiss-keyguard');
   if (config.metroPort) {
     requireAdb(
@@ -132,47 +126,50 @@ try {
     );
   }
   requireAdb(adb('shell', 'am', 'force-stop', config.appId), 'stop app');
-  requireAdb(
-    adb(
-      'shell',
-      [
-        'am start -W',
-        '-a android.intent.action.VIEW',
-        '-c android.intent.category.DEFAULT',
-        `-d ${shellQuote(url)}`,
-        shellQuote(config.appId),
-      ].join(' '),
-    ),
-    'launch DApp test',
-  );
+  requireAdb(adb('logcat', '-c'), 'clear logcat');
+  launch(url);
 
   while (Date.now() < deadline) {
-    const hierarchy = readHierarchy();
-    if (hierarchy.includes('resource-id="dapp-rpc-review-sheet"')) {
-      if (expected === 'review') {
-        console.log(
-          `dapp-provider-smoke: PASS review-visible runId=${runId} method=${method}`,
-        );
-        process.exit(0);
-      }
-      if (reviewAction && !reviewHandled) {
-        const actionId = `dapp-rpc-review-${reviewAction}`;
-        const bounds = readNodeBounds(hierarchy, actionId);
-        if (!bounds) throw new Error(`review action ${actionId} was not found`);
-        tapBounds(bounds);
-        reviewHandled = true;
-        await sleep(500);
-        continue;
-      }
+    const logs = readLogs();
+    const reviewPending =
+      logs.includes('RUBAN_DAPP_REVIEW_PENDING') &&
+      logs.includes(`"method":"${method}"`);
+    if (
+      expected === 'review' &&
+      reviewPending
+    ) {
+      console.log(
+        `dapp-provider-smoke: PASS review-pending runId=${runId} method=${method}`,
+      );
+      process.exit(0);
     }
-    if (hierarchy.includes('resource-id="dapp-test-pass"')) {
+    if (reviewAction && reviewPending && !reviewLaunched) {
+      const reviewQuery = new URLSearchParams({
+        runId: reviewRunId,
+        decision: reviewAction,
+        method,
+        timeoutMs: String(Math.min(timeoutMs - 1000, 60000)),
+      });
+      launch(`${config.scheme}://dev/dapp/review?${reviewQuery.toString()}`);
+      reviewLaunched = true;
+      await sleep(500);
+      continue;
+    }
+    if (
+      reviewAction &&
+      logs.includes(`"runId":"${reviewRunId}"`) &&
+      logs.includes('"status":"failed"')
+    ) {
+      throw new Error(`review intent failed: ${reviewRunId}`);
+    }
+    if (logs.includes(`RUBAN_DAPP_TEST PASSED runId=${runId} method=${method}`)) {
       if (expected !== 'pass') {
         throw new Error(`provider request passed; expected ${expected}`);
       }
       console.log(`dapp-provider-smoke: PASS runId=${runId} method=${method}`);
       process.exit(0);
     }
-    if (hierarchy.includes('resource-id="dapp-test-fail"')) {
+    if (logs.includes(`RUBAN_DAPP_TEST FAILED runId=${runId} method=${method}`)) {
       if (expected === 'fail') {
         console.log(
           `dapp-provider-smoke: PASS expected-failure runId=${runId} method=${method}`,
@@ -181,13 +178,7 @@ try {
       }
       throw new Error(`provider request failed: runId=${runId} method=${method}`);
     }
-    if (hierarchy.includes('resource-id="dapp-test-invalid"')) {
-      throw new Error('DApp test deep link was invalid');
-    }
-    if (hierarchy.includes('resource-id="dapp-test-disabled"')) {
-      throw new Error('DApp test deep link is disabled in this build');
-    }
-    await sleep(750);
+    await sleep(500);
   }
   throw new Error(`timed out waiting for runId=${runId} method=${method}`);
 } catch (error) {

@@ -20,6 +20,18 @@ export async function ensureUnreleasedBaselineSchema(
     await manager.query(
       'CREATE INDEX IF NOT EXISTS "wallet_accounts_created_at" ON "wallet_accounts" ("created_at", "id")',
     );
+    await manager.query(`CREATE TABLE IF NOT EXISTS "app_intent_receipts" (
+      "run_id" TEXT PRIMARY KEY NOT NULL,
+      "action" TEXT NOT NULL,
+      "source" TEXT NOT NULL CHECK ("source" IN ('ui', 'deep-link', 'background', 'worker')),
+      "status" TEXT NOT NULL CHECK ("status" IN ('succeeded', 'failed')),
+      "result_json" TEXT,
+      "error_code" TEXT,
+      "completed_at" INTEGER NOT NULL
+    ) WITHOUT ROWID`);
+    await manager.query(
+      'CREATE INDEX IF NOT EXISTS "app_intent_receipts_completed_at" ON "app_intent_receipts" ("completed_at" DESC)',
+    );
     await manager.query('DROP TABLE IF EXISTS "portfolio_cache"');
     await manager.query(`CREATE TABLE IF NOT EXISTS "portfolio_data_sources" (
       "provider_id" TEXT PRIMARY KEY NOT NULL,

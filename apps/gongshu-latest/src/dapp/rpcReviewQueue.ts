@@ -148,3 +148,5 @@ export class RpcReviewQueue {
     this.listeners.forEach(listener => listener());
   }
 }
+
+export const appRpcReviewQueue = new RpcReviewQueue();

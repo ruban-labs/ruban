@@ -14,6 +14,7 @@ import {
 } from './src/settings/AppPreferences';
 import {useBootSplashExit} from './src/startup/useBootSplashExit';
 import {RubanSystemBars} from './src/system/RubanSystemBars';
+import {AppIntentRuntime} from './src/application/AppIntentRuntime';
 
 enableScreens(true);
 
@@ -56,6 +57,7 @@ function App(): React.ReactElement {
       <SafeAreaProvider>
         <BottomSheetModalProvider>
           <AppPreferencesProvider>
+            <AppIntentRuntime />
             <ThemedApp />
           </AppPreferencesProvider>
         </BottomSheetModalProvider>

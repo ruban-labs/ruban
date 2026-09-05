@@ -7,8 +7,8 @@ import {
   type PortfolioSnapshot,
 } from '@ruban-labs/react-native-evm-client';
 import * as React from 'react';
+import { runUiAppIntent } from '../application/AppIntentRuntime';
 import { useDataEngine } from '../data/DataEngineContext';
-import { refreshDataSourceAfterNativeWrite } from '../storage/dataSource';
 import { repositories } from '../storage/repositories';
 
 export const evmClient = createEvmClient({ timeoutMs: 7000 });
@@ -79,8 +79,11 @@ export function usePortfolio(address?: string): PortfolioState {
       .catch(() => null)
       .then(async cached => {
         if (cached && !forceRefresh) return;
-        await dataEngine.syncPortfolio(normalizedAddress);
-        await refreshDataSourceAfterNativeWrite();
+        await runUiAppIntent({
+          action: 'portfolio.sync',
+          address: normalizedAddress,
+          providerMode: 'current',
+        });
         await loadSnapshot();
       })
       .then(

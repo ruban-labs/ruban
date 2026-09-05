@@ -15,6 +15,16 @@ export type WalletAccountRow = {
   createdAt: number;
 };
 
+export type AppIntentReceiptRow = {
+  runId: string;
+  action: string;
+  source: 'ui' | 'deep-link' | 'background' | 'worker';
+  status: 'succeeded' | 'failed';
+  resultJson: string | null;
+  errorCode: string | null;
+  completedAt: number;
+};
+
 export type PortfolioDataSourceRow = {
   providerId: string;
   mode: 'mock' | 'byok';
@@ -119,6 +129,21 @@ export const WalletAccountEntity = new EntitySchema<WalletAccountRow>({
     },
   ],
 });
+
+export const AppIntentReceiptEntity =
+  new EntitySchema<AppIntentReceiptRow>({
+    name: 'AppIntentReceipt',
+    tableName: 'app_intent_receipts',
+    columns: {
+      runId: { name: 'run_id', type: 'text', primary: true },
+      action: { type: 'text' },
+      source: { type: 'text' },
+      status: { type: 'text' },
+      resultJson: { name: 'result_json', type: 'text', nullable: true },
+      errorCode: { name: 'error_code', type: 'text', nullable: true },
+      completedAt: { name: 'completed_at', type: 'integer' },
+    },
+  });
 
 export const PortfolioDataSourceEntity =
   new EntitySchema<PortfolioDataSourceRow>({
@@ -229,6 +254,7 @@ export const PortfolioProtocolPositionEntity =
 export const entities = [
   AppStateEntity,
   WalletAccountEntity,
+  AppIntentReceiptEntity,
   PortfolioDataSourceEntity,
   PortfolioSyncStateEntity,
   PortfolioAccountSnapshotEntity,

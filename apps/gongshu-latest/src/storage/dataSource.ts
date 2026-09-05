@@ -10,7 +10,6 @@ import {
 type DataSourceState = {
   dataSource: DataSource | null;
   initialization: Promise<DataSource> | null;
-  refresh: Promise<DataSource> | null;
   schemaReady: boolean;
 };
 
@@ -22,7 +21,6 @@ const globalState = globalThis as RubanGlobal;
 const state = (globalState.__rubanDataSourceState ||= {
   dataSource: null,
   initialization: null,
-  refresh: null,
   schemaReady: false,
 });
 
@@ -69,23 +67,12 @@ function getOrInitializeDataSource(): Promise<DataSource> {
 }
 
 export function getDataSource(): Promise<DataSource> {
-  return state.refresh || getOrInitializeDataSource();
+  return getOrInitializeDataSource();
 }
 
-export function refreshDataSourceAfterNativeWrite(): Promise<DataSource> {
-  if (!state.refresh) {
-    state.refresh = getOrInitializeDataSource()
-      .then(async dataSource => {
-        state.dataSource = null;
-        state.initialization = null;
-        if (dataSource.isInitialized) await dataSource.destroy();
-        return getOrInitializeDataSource();
-      })
-      .finally(() => {
-        state.refresh = null;
-      });
-  }
-  return state.refresh;
+export async function checkpointDataSourceForNativeWrite(): Promise<void> {
+  const dataSource = await getOrInitializeDataSource();
+  await dataSource.query('PRAGMA wal_checkpoint(TRUNCATE)');
 }
 
 export async function getDatabasePath(): Promise<string> {

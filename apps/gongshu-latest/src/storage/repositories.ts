@@ -7,7 +7,9 @@ import type {
   PortfolioSyncState,
 } from '@ruban-labs/react-native-data-engine';
 import type { WalletAccount } from '@ruban-labs/react-native-wallet-core';
+import type { AppIntentReceipt } from '../application/appIntent';
 import {
+  AppIntentReceiptEntity,
   AppStateEntity,
   PortfolioAccountSnapshotEntity,
   PortfolioChainSnapshotEntity,
@@ -24,6 +26,14 @@ import { getDataSource } from './dataSource';
 const selectedAccountKey = 'wallet.selected-account';
 const selectedChainKey = 'wallet.selected-chain';
 const portfolioProviderId = 'debank';
+const appIntentReceiptLimit = 256;
+
+function toSqliteInteger(value: number, field: string): number {
+  if (!Number.isFinite(value)) {
+    throw new Error(`${field} must be finite`);
+  }
+  return Math.trunc(value);
+}
 
 function toWalletAccount(row: WalletAccountRow): WalletAccount {
   return {
@@ -37,6 +47,52 @@ function toWalletAccount(row: WalletAccountRow): WalletAccount {
 }
 
 export const repositories = {
+  async getAppIntentReceipt(runId: string): Promise<AppIntentReceipt | null> {
+    const dataSource = await getDataSource();
+    const row = await dataSource
+      .getRepository(AppIntentReceiptEntity)
+      .findOneBy({ runId });
+    if (!row) return null;
+    const result = row.resultJson
+      ? (JSON.parse(row.resultJson) as AppIntentReceipt['result'])
+      : undefined;
+    return {
+      runId: row.runId,
+      action: row.action as AppIntentReceipt['action'],
+      source: row.source,
+      status: row.status,
+      ...(result ? { result } : {}),
+      ...(row.errorCode ? { errorCode: row.errorCode } : {}),
+      completedAt: row.completedAt,
+    };
+  },
+
+  async saveAppIntentReceipt(receipt: AppIntentReceipt): Promise<void> {
+    const dataSource = await getDataSource();
+    await dataSource.transaction(async manager => {
+      await manager.getRepository(AppIntentReceiptEntity).upsert(
+        {
+          runId: receipt.runId,
+          action: receipt.action,
+          source: receipt.source,
+          status: receipt.status,
+          resultJson: receipt.result ? JSON.stringify(receipt.result) : null,
+          errorCode: receipt.errorCode || null,
+          completedAt: receipt.completedAt,
+        },
+        ['runId'],
+      );
+      await manager.query(
+        `DELETE FROM "app_intent_receipts"
+         WHERE "run_id" IN (
+           SELECT "run_id" FROM "app_intent_receipts"
+           ORDER BY "completed_at" DESC, "run_id" DESC
+           LIMIT -1 OFFSET ${appIntentReceiptLimit}
+         )`,
+      );
+    });
+  },
+
   async listWalletAccounts(): Promise<WalletAccount[]> {
     const dataSource = await getDataSource();
     const rows = await dataSource.getRepository(WalletAccountEntity).find({
@@ -55,7 +111,7 @@ export const repositories = {
           address: account.address,
           kind: account.kind,
           derivationPath: account.derivationPath || null,
-          createdAt: account.createdAt,
+          createdAt: toSqliteInteger(account.createdAt, 'account.createdAt'),
         },
         ['id'],
       );

@@ -40,6 +40,7 @@
     "gongshu:android-signing": "node scripts/release/android-signing.mjs",
     "gongshu:apple-signing": "node scripts/release/apple-signing.mjs",
     "gongshu:device:prepare": "node scripts/device/prepare-dev-device.mjs",
+    "gongshu:intent-smoke": "node scripts/device/app-intent-smoke.mjs",
     "gongshu:dapp-smoke": "node scripts/device/dapp-provider-smoke.mjs",
     "gongshu:release-health": "node scripts/device/release-health.mjs"
   },
