@@ -31,20 +31,34 @@ appId: com.rubanlabs.mobile.gongshu.rn066.debug
     visible:
       text: "Components"
     timeout: 20000
-- openLink: "ruban-rn066-debug://components/badge?theme=light&variant=live&size=md"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+- retry:
+    maxRetries: 1
+    commands:
+      - openLink: "ruban-rn066-debug://components/badge?theme=light&variant=live&size=md"
+      - tapOn:
+          text: "^(Open|打开)$"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            text: "Badge"
+          timeout: 20000
 - extendedWaitUntil:
     visible:
       text: "Back to components"
     timeout: 120000
 - assertVisible:
     text: "LIVE"
-- openLink: "ruban-rn066-debug://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+- retry:
+    maxRetries: 1
+    commands:
+      - openLink: "ruban-rn066-debug://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
+      - tapOn:
+          text: "^(Open|打开)$"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            text: "Live separator vertical accent bold"
+          timeout: 20000
 - extendedWaitUntil:
     visible:
       text: "Live separator vertical accent bold"
@@ -53,10 +67,17 @@ appId: com.rubanlabs.mobile.gongshu.rn066.debug
     text: "VERTICAL"
 - assertVisible:
     text: "Live separator vertical accent bold"
-- openLink: "ruban-rn066-debug://components/switch?theme=light&state=on&size=md"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+- retry:
+    maxRetries: 1
+    commands:
+      - openLink: "ruban-rn066-debug://components/switch?theme=light&state=on&size=md"
+      - tapOn:
+          text: "^(Open|打开)$"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            text: "Live switch state ON"
+          timeout: 20000
 - extendedWaitUntil:
     visible:
       text: "Live switch state ON"
@@ -69,10 +90,17 @@ appId: com.rubanlabs.mobile.gongshu.rn066.debug
     text: "Live switch"
 - assertVisible:
     text: "Live switch state OFF"
-- openLink: "ruban-rn066-debug://components/dialog?theme=light&scenario=sequential"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+- retry:
+    maxRetries: 1
+    commands:
+      - openLink: "ruban-rn066-debug://components/dialog?theme=light&scenario=sequential"
+      - tapOn:
+          text: "^(Open|打开)$"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            text: "FIRST DIALOG"
+          timeout: 20000
 - extendedWaitUntil:
     visible:
       text: "FIRST DIALOG"
@@ -87,10 +115,17 @@ appId: com.rubanlabs.mobile.gongshu.rn066.debug
     text: "FIRST DIALOG"
 - tapOn:
     text: "DONE"
-- openLink: "ruban-rn066-debug://components/dialog?theme=dark&scenario=nested"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+- retry:
+    maxRetries: 1
+    commands:
+      - openLink: "ruban-rn066-debug://components/dialog?theme=dark&scenario=nested"
+      - tapOn:
+          text: "^(Open|打开)$"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            text: "PARENT DIALOG"
+          timeout: 20000
 - extendedWaitUntil:
     visible:
       text: "PARENT DIALOG"
@@ -109,10 +144,17 @@ appId: com.rubanlabs.mobile.gongshu.rn066.debug
     timeout: 60000
 - tapOn:
     text: "CLOSE"
-- openLink: "ruban-rn066-debug://components/dialog?theme=light&scenario=external"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+- retry:
+    maxRetries: 1
+    commands:
+      - openLink: "ruban-rn066-debug://components/dialog?theme=light&scenario=external"
+      - tapOn:
+          text: "^(Open|打开)$"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            text: "RELEASE GATE"
+          timeout: 20000
 - extendedWaitUntil:
     visible:
       text: "RELEASE GATE"
@@ -127,10 +169,17 @@ appId: com.rubanlabs.mobile.gongshu.rn066.debug
     timeout: 60000
 - tapOn:
     text: "DONE"
-- openLink: "ruban-rn066-debug://home"
-- tapOn:
-    text: "^(Open|打开)$"
-    optional: true
+- retry:
+    maxRetries: 1
+    commands:
+      - openLink: "ruban-rn066-debug://home"
+      - tapOn:
+          text: "^(Open|打开)$"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            text: "Components"
+          timeout: 20000
 - extendedWaitUntil:
     visible:
       text: "Components"
