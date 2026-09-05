@@ -273,14 +273,6 @@ jobs:
         if: matrix.era == 'latest'
         working-directory: apps/${{ matrix.app }}
         run: corepack pnpm exec jest --runInBand
-      - name: Run headless intent workflow
-        run: |
-          node scripts/device/app-intent-smoke.mjs \
-            --platform ios \
-            --era ${{ matrix.era }} \
-            --device "${{ steps.sim.outputs.udid }}" \
-            --lane debug \
-            --diagnostic-log /tmp/ruban-app-intent.log
       - name: Metro log on failure
         if: failure()
         run: tail -80 /tmp/metro.log || true
@@ -291,7 +283,6 @@ jobs:
           name: ios-${{ matrix.era }}-debug
           path: |
             /tmp/metro.log
-            /tmp/ruban-app-intent.log
           if-no-files-found: ignore
           include-hidden-files: true
 

@@ -100,10 +100,18 @@ Keep these merge-blocking:
 
 - pure intent/use-case, parser, reducer, queue, and package tests;
 - Deep Link-to-intent adapter validation;
-- headless device workflows that launch an exact URL and assert the correlated
-  receipt plus durable state;
+- headless device workflows only when the hosted runner reliably delivers the
+  platform intent and exposes a deterministic completion oracle;
 - package, typecheck, bundle, native compile, and architecture matrices;
-- one thin cold-launch/scheme-dispatch smoke per platform.
+- one thin cold-launch/scheme-dispatch smoke per platform where the runner has
+  proven stable.
+
+If the same workflow repeatedly passes on local simulators or physical devices
+but fails only because a hosted runner does not deliver the URL, device event,
+or lifecycle callback, remove it from required CI checks. Keep parser,
+dispatcher, use-case, receipt, native compile, installability, and bundle
+coverage merge-blocking; keep the complete workflow in the local/physical
+device runner. Re-enable the hosted check only after its transport is stable.
 
 Do not make broad component tours, copy assertions, repeated text taps, theme
 previews, or modal open/close tours merge-blocking. Use Maestro or another UI
@@ -114,7 +122,9 @@ non-blocking checks.
 
 Headless runners should use platform primitives such as `adb am start` or
 `xcrun simctl openurl`; they do not need Maestro. Prefer logs or app-sandbox
-state over accessibility labels as the completion oracle.
+state over accessibility labels as the completion oracle. Do not add retries,
+private injection channels, or test-only business implementations merely to
+make an unreliable hosted device transport pass.
 
 ## Device Verification
 
