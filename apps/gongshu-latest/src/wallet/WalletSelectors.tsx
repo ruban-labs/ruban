@@ -2,7 +2,6 @@ import {
   BottomSheetFlatList,
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
-import { Input } from '@ruban-labs/react-native-ui-form/input';
 import {
   DocumentIcon,
   EyeIcon,
@@ -17,6 +16,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BottomSheetFlow,
+  BottomSheetInput,
   type BottomSheetFlowController,
 } from '../components/ui/BottomSheetModal';
 import { SelectionMark } from '../components/ui/SelectionMark';
@@ -24,7 +24,16 @@ import { radius, spacing, useRubanColors } from '../design/tokens';
 
 type AddressSheetRoute = 'addresses' | 'add';
 
-const ADDRESS_SHEET_SNAP_POINTS: Array<number | string> = ['58%'];
+const ADDRESS_LIST_SHEET_SNAP_POINTS: Array<number | string> = ['58%'];
+const ADDRESS_ADD_SHEET_SNAP_POINTS: Array<number | string> = ['70%'];
+
+function getAddressSheetSnapPoints(
+  route: AddressSheetRoute,
+): Array<number | string> {
+  return route === 'add'
+    ? ADDRESS_ADD_SHEET_SNAP_POINTS
+    : ADDRESS_LIST_SHEET_SNAP_POINTS;
+}
 
 function shortAddress(address: string): string {
   return `${address.slice(0, 8)}…${address.slice(-6)}`;
@@ -141,13 +150,13 @@ export function AddressSelectorSheet({
                 { backgroundColor: colors.surfaceRaised },
               ]}
             >
-              <Input
+              <BottomSheetInput
                 value={watchLabel}
                 onChangeText={setWatchLabel}
                 placeholder="Label"
                 returnKeyType="next"
               />
-              <Input
+              <BottomSheetInput
                 value={watchAddress}
                 onChangeText={setWatchAddress}
                 autoCapitalize="none"
@@ -312,7 +321,7 @@ export function AddressSelectorSheet({
       overlayId="wallet-address-selector"
       testID="address-selector-sheet"
       enableDynamicSizing={false}
-      snapPoints={ADDRESS_SHEET_SNAP_POINTS}
+      snapPoints={getAddressSheetSnapPoints}
     />
   );
 }

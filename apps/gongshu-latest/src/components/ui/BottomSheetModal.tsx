@@ -1,6 +1,7 @@
 import {
   BottomSheetBackdrop,
   BottomSheetModal as GorhomBottomSheetModal,
+  BottomSheetTextInput,
   BottomSheetView,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
@@ -123,6 +124,9 @@ export function BottomSheetModalRoot({
       snapPoints={snapPoints}
       maxDynamicContentSize={Math.round(windowHeight * 0.82)}
       enablePanDownToClose={enablePanDownToClose}
+      keyboardBehavior="interactive"
+      keyboardBlurBehavior="restore"
+      android_keyboardInputMode="adjustPan"
       backdropComponent={renderBackdrop}
       onDismiss={handleDismiss}
       backgroundStyle={[
@@ -146,6 +150,41 @@ export function BottomSheetModalRoot({
     >
       {children}
     </GorhomBottomSheetModal>
+  );
+}
+
+export function BottomSheetInput({
+  onBlur,
+  onFocus,
+  style,
+  ...inputProps
+}: React.ComponentProps<typeof BottomSheetTextInput>): React.ReactElement {
+  const colors = useRubanColors();
+  const [focused, setFocused] = React.useState(false);
+
+  return (
+    <BottomSheetTextInput
+      {...inputProps}
+      onFocus={event => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={event => {
+        setFocused(false);
+        onBlur?.(event);
+      }}
+      placeholderTextColor={inputProps.placeholderTextColor || colors.faint}
+      selectionColor={inputProps.selectionColor || colors.accent}
+      style={[
+        styles.input,
+        {
+          backgroundColor: colors.surface,
+          borderColor: focused ? colors.focusRing : colors.borderStrong,
+          color: colors.ink,
+        },
+        style,
+      ]}
+    />
   );
 }
 
@@ -223,7 +262,9 @@ export function BottomSheetFlow<Route extends string>({
   overlayId?: string;
   testID?: string;
   enableDynamicSizing?: boolean;
-  snapPoints?: Array<number | string>;
+  snapPoints?:
+    | Array<number | string>
+    | ((route: Route) => Array<number | string>);
 }): React.ReactElement {
   const colors = useRubanColors();
   const [routes, setRoutes] = React.useState<readonly Route[]>([initialRoute]);
@@ -250,6 +291,8 @@ export function BottomSheetFlow<Route extends string>({
     () => ({ route, canGoBack, push, back, dismiss: onDismiss }),
     [back, canGoBack, onDismiss, push, route],
   );
+  const currentSnapPoints =
+    typeof snapPoints === 'function' ? snapPoints(route) : snapPoints;
   const currentTitle = title(controller);
   const handleRequestBack = React.useCallback(() => {
     if (canGoBack) {
@@ -267,9 +310,9 @@ export function BottomSheetFlow<Route extends string>({
       overlayId={overlayId}
       onRequestBack={handleRequestBack}
       enableDynamicSizing={enableDynamicSizing}
-      snapPoints={snapPoints}
+      snapPoints={currentSnapPoints}
     >
-      <BottomSheetView testID={testID} style={styles.flow}>
+      <View testID={testID} style={styles.flow}>
         <View style={[styles.flowHeader, { borderBottomColor: colors.border }]}>
           <View style={styles.flowHeaderSlot}>
             {canGoBack ? (
@@ -300,7 +343,7 @@ export function BottomSheetFlow<Route extends string>({
           </View>
         </View>
         {renderContent(controller)}
-      </BottomSheetView>
+      </View>
     </BottomSheetModalRoot>
   );
 }
@@ -477,5 +520,15 @@ const styles = StyleSheet.create({
     lineHeight: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
+  },
+  input: {
+    minHeight: 48,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '600',
   },
 });
