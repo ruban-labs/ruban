@@ -5,17 +5,36 @@ import ReactAppDependencyProvider
 import RNBootSplash
 
 @main
-class AppDelegate: RCTAppDelegate {
-  override func application(
+class AppDelegate: UIResponder, UIApplicationDelegate {
+  var window: UIWindow?
+
+  var reactNativeDelegate: ReactNativeDelegate?
+  var reactNativeFactory: RCTReactNativeFactory?
+
+  func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
-    moduleName = "gongshulatest"
-    dependencyProvider = RCTAppDependencyProvider()
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    let delegate = ReactNativeDelegate()
+    let factory = RCTReactNativeFactory(delegate: delegate)
+    delegate.dependencyProvider = RCTAppDependencyProvider()
+
+    reactNativeDelegate = delegate
+    reactNativeFactory = factory
+
+    window = UIWindow(frame: UIScreen.main.bounds)
+    window?.backgroundColor = UIColor(red: 16 / 255, green: 17 / 255, blue: 20 / 255, alpha: 1)
+
+    factory.startReactNative(
+      withModuleName: "gongshulatest",
+      in: window,
+      launchOptions: launchOptions
+    )
+
+    return true
   }
 
-  override func application(
+  func application(
     _ application: UIApplication,
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]
@@ -23,18 +42,9 @@ class AppDelegate: RCTAppDelegate {
     RCTLinkingManager.application(application, open: url, options: options)
   }
 
-  override func application(
-    _ application: UIApplication,
-    continue userActivity: NSUserActivity,
-    restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
-  ) -> Bool {
-    RCTLinkingManager.application(
-      application,
-      continue: userActivity,
-      restorationHandler: restorationHandler
-    )
-  }
+}
 
+class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
   override func customize(_ rootView: RCTRootView) {
     super.customize(rootView)
     RNBootSplash.initWithStoryboard("LaunchScreen", rootView: rootView)

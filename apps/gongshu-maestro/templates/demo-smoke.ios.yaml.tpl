@@ -18,7 +18,7 @@ appId: {{appId}}
 - assertNotVisible:
     text: "Settings"
 {{afterButtonShowcase}}
-{{beforeExternalLink}}- openLink: "{{scheme}}://components/badge?theme=light&variant=live&size=md"
+- openLink: "{{scheme}}://components/badge?theme=light&variant=live&size=md"
 - tapOn:
     text: "^(Open|打开)$"
     optional: true
@@ -28,7 +28,7 @@ appId: {{appId}}
     timeout: 120000
 - assertVisible:
     text: "LIVE"
-{{beforeExternalLink}}- openLink: "{{scheme}}://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
+- openLink: "{{scheme}}://components/separator?theme=dark&orientation=vertical&tone=accent&weight=bold"
 - tapOn:
     text: "^(Open|打开)$"
     optional: true
@@ -40,7 +40,7 @@ appId: {{appId}}
     text: "VERTICAL"
 - assertVisible:
     text: "Live separator vertical accent bold"
-{{beforeExternalLink}}- openLink: "{{scheme}}://components/switch?theme=light&state=on&size=md"
+- openLink: "{{scheme}}://components/switch?theme=light&state=on&size=md"
 - tapOn:
     text: "^(Open|打开)$"
     optional: true
@@ -56,7 +56,7 @@ appId: {{appId}}
     text: "Live switch"
 - assertVisible:
     text: "Live switch state OFF"
-{{beforeExternalLink}}- openLink: "{{scheme}}://components/dialog?theme=light&scenario=sequential"
+- openLink: "{{scheme}}://components/dialog?theme=light&scenario=sequential"
 - tapOn:
     text: "^(Open|打开)$"
     optional: true
@@ -74,7 +74,7 @@ appId: {{appId}}
     text: "FIRST DIALOG"
 - tapOn:
     text: "DONE"
-{{beforeExternalLink}}- openLink: "{{scheme}}://components/dialog?theme=dark&scenario=nested"
+- openLink: "{{scheme}}://components/dialog?theme=dark&scenario=nested"
 - tapOn:
     text: "^(Open|打开)$"
     optional: true
@@ -96,7 +96,7 @@ appId: {{appId}}
     timeout: 60000
 - tapOn:
     text: "CLOSE"
-{{beforeExternalLink}}- openLink: "{{scheme}}://components/dialog?theme=light&scenario=external"
+- openLink: "{{scheme}}://components/dialog?theme=light&scenario=external"
 - tapOn:
     text: "^(Open|打开)$"
     optional: true

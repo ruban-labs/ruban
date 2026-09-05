@@ -1,4 +1,4 @@
-appId: com.rubanlabs.mobile.debug
+appId: {{appId}}
 ---
 # The iOS 18 simulator does not reliably relaunch a stopped app through
 # Maestro's custom-scheme openLink action. Deep links remain covered by the
@@ -7,14 +7,7 @@ appId: com.rubanlabs.mobile.debug
 - launchApp:
     clearState: true
 - setOrientation: portrait
-- extendedWaitUntil:
-    visible:
-      text: "Portfolio"
-    timeout: 120000
-- assertVisible:
-    text: "Create a wallet"
-- assertVisible:
-    text: "Network, Ethereum"
+{{initialAssertions}}
 - tapOn:
     text: "Settings"
 - extendedWaitUntil:
@@ -52,14 +45,14 @@ appId: com.rubanlabs.mobile.debug
     timeout: 20000
 - scrollUntilVisible:
     element:
-      text: "Build & matrix.*"
+      text: "{{settingsBuildEntry}}.*"
     direction: DOWN
     timeout: 20000
 - tapOn:
-    text: "Build & matrix.*"
+    text: "{{settingsBuildEntry}}.*"
 - extendedWaitUntil:
     visible:
-      text: "Build & matrix"
+      text: "{{settingsBuildTitle}}"
     timeout: 20000
 - assertVisible:
     text: "HERMES"

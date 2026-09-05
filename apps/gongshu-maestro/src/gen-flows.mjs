@@ -53,13 +53,6 @@ function openPrompt(platform) {
     : '';
 }
 
-function beforeExternalLink(app, platform) {
-  // The iOS 18 simulator confirms custom-scheme URLs most reliably when the
-  // target starts cold. Exercise each latest iOS link through its launch-URL
-  // path so this smoke test does not depend on a foreground confirmation.
-  return app.era === 'latest' && platform === 'ios' ? '- stopApp\n' : '';
-}
-
 function initialAssertions(app, platform) {
   if (app.era === 'latest') {
     return `- extendedWaitUntil:
@@ -84,7 +77,7 @@ function initialAssertions(app, platform) {
 
 function openButtonShowcase(app, platform) {
   if (app.era === 'latest') {
-    return `${beforeExternalLink(app, platform)}- openLink: "${app.scheme}://components/button?theme=light&variant=primary&size=md&state=default"
+    return `- openLink: "${app.scheme}://components/button?theme=light&variant=primary&size=md&state=default"
 ${openPrompt(platform)}`.trimEnd();
   }
 
@@ -105,7 +98,7 @@ function afterButtonShowcase(app) {
 
 function openPlayground(app, platform) {
   if (app.era === 'latest') {
-    return `${beforeExternalLink(app, platform)}- openLink: "${app.scheme}://lab/design?theme=light"
+    return `- openLink: "${app.scheme}://lab/design?theme=light"
 ${openPrompt(platform)}`.trimEnd();
   }
 
@@ -120,7 +113,7 @@ ${openPrompt(platform)}- extendedWaitUntil:
 
 function openSettings(app, platform) {
   if (app.era === 'latest') {
-    return `${beforeExternalLink(app, platform)}- openLink: "${app.scheme}://settings"
+    return `- openLink: "${app.scheme}://settings"
 ${openPrompt(platform)}`.trimEnd();
   }
 
@@ -129,8 +122,12 @@ ${openPrompt(platform)}`.trimEnd();
 }
 
 for (const platform of TEMPLATES) {
-  const template = fs.readFileSync(path.join(harnessRoot, 'templates', `demo-smoke.${platform}.yaml.tpl`), 'utf8');
   for (const app of APPS) {
+    const templateName =
+      platform === 'ios' && app.era === 'latest'
+        ? 'demo-smoke.ios-latest.yaml.tpl'
+        : `demo-smoke.${platform}.yaml.tpl`;
+    const template = fs.readFileSync(path.join(harnessRoot, 'templates', templateName), 'utf8');
     const rendered = template
       .replaceAll('{{appId}}', app[platform])
       .replaceAll('{{era}}', app.era)
@@ -143,7 +140,6 @@ for (const platform of TEMPLATES) {
       .replaceAll('{{afterButtonShowcase}}', afterButtonShowcase(app))
       .replaceAll('{{openPlayground}}', openPlayground(app, platform))
       .replaceAll('{{openSettings}}', openSettings(app, platform))
-      .replaceAll('{{beforeExternalLink}}', beforeExternalLink(app, platform))
       .replaceAll('{{buttonShowcaseReady}}', 'Button')
       .replaceAll('{{badgeShowcaseReady}}', 'LIVE')
       .replaceAll('{{buttonSelector}}', platform === 'ios' ? '01.*Button.*' : 'Button');
