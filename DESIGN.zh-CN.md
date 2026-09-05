@@ -218,6 +218,16 @@ Android 提供的 Window Insets 是唯一事实来源，导航模式变化后直
 
 - latest App 的链选择器与地址选择器都使用同一 App 适配层，保持一个活动选择面，不叠加
   平台 Modal。
+- Portfolio 左上角放链选择器，右上角放地址选择器。添加地址不占用 Home 的动作栏；地址
+  列表在右上角提供添加入口。
+- 多步 Bottom Sheet 始终复用一个弹窗实例，在内部维护轻量页面栈。进入下一级时替换当前
+  内容，只显示返回图标和定位所必需的标题；关闭后重置到根页面。Native 安全钱包输入必须
+  等 Sheet 开始关闭后再出现，不得在 Sheet 上叠加。
+- App 自有的 Bottom Sheet Root 统一接管 Android 系统返回。多步 Sheet 先退内部页面栈，
+  仅在根页面关闭；普通 Sheet 直接关闭。关闭动画期间持续消费返回事件，直到原生
+  `onDismiss` 确认关闭；未激活的 Sheet 才把事件交还 App 导航。
+- 地址选择器使用一个稳定的 snap point，不按地址数量或滚动内容测量结果推导 Sheet
+  高度。地址区域使用与 Bottom Sheet 集成的虚拟列表，溢出内容始终在 Sheet 内部滚动。
 - 链选择器只展示钱包 RPC 层已经真实支持的网络。名称、链 ID 与图标来自固定版本的
   `@ruban-labs/web-assets` 本地资产；PNG 通过 Metro 静态映射进入 App 包，禁止运行时
   URL fallback。

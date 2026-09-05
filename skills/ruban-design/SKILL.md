@@ -44,6 +44,21 @@ selected check on the right. Use attached, dense rows only for genuinely long
 lists such as chain selectors, and reserve tall rows for meaningful supporting
 detail.
 
+Multi-step Bottom Sheets keep one modal instance and a small internal route
+stack. Replace the current content instead of opening another Sheet, use a back
+icon on deeper pages, omit root-level titles that merely repeat the trigger,
+and reset the stack after dismissal. Close the Sheet before starting a secure
+Native prompt.
+
+The app-owned Bottom Sheet root handles Android Back. Pop an internal route
+before dismissing a multi-step Sheet, dismiss a simple or root-level Sheet, and
+keep consuming Back until native dismissal completes. Inactive Sheets must let
+the event continue to app navigation.
+
+Address selection uses one stable Sheet snap point and a Bottom Sheet-integrated
+virtualized list. Do not derive selector height from account count or dynamic
+scroll-content measurement; overflow scrolls inside the Sheet.
+
 Settings rows use a quiet semantic icon on the left when the row represents a
 recognizable object or category. Icons support scanning; they do not replace a
 label whose meaning would otherwise be ambiguous.

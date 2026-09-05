@@ -280,6 +280,23 @@ handled by consuming the new `insets.bottom`.
 - The latest App uses the same app-owned Bottom Sheet adapter for both network
   and address selection, with only one active choice surface and no stacked
   platform Modal.
+- Portfolio keeps network selection at the top-left and address selection at
+  the top-right. Address creation does not occupy a Home action row: the
+  address list owns a top-right add action.
+- A multi-step Bottom Sheet keeps one modal instance and manages its own small
+  route stack. Deeper content replaces the current page, uses a back icon and
+  only the title needed for orientation, and resets to its root whenever the
+  Sheet closes. Secure Native wallet prompts begin only after the Sheet starts
+  closing; they are never stacked inside it.
+- The app-owned Bottom Sheet root handles Android Back for every Sheet. A
+  multi-step Sheet pops its internal route first and dismisses only from its
+  root; a simple Sheet dismisses immediately. The handler keeps consuming Back
+  until the native `onDismiss` confirms closure, and an inactive Sheet lets the
+  event continue to app navigation.
+- The address selector uses one stable snap point rather than deriving Sheet
+  height from account count or scroll-content measurement. Its account surface
+  is a Bottom Sheet-integrated virtualized list; overflow always scrolls inside
+  the Sheet.
 - The network selector lists only networks that the wallet RPC layer actually
   supports. Names, chain IDs, and logos come from a pinned
   `@ruban-labs/web-assets` package; Metro statically bundles the PNGs and must
