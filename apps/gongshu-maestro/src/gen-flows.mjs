@@ -195,20 +195,20 @@ for (const platform of TEMPLATES) {
     fs.writeFileSync(outFile, rendered);
     console.log(`gen-flows: wrote ${path.relative(harnessRoot, outFile)}`);
 
-    if (platform === 'ios' && app.era === 'latest') {
+    if (platform === 'ios') {
       const launchTemplate = fs.readFileSync(
-        path.join(harnessRoot, 'templates', 'demo-smoke.ios-latest-launch.yaml.tpl'),
+        path.join(harnessRoot, 'templates', 'launch-smoke.ios.yaml.tpl'),
         'utf8',
       );
-      const launchOutFile = path.join(flowsDir, 'ios-latest-launch-smoke.yaml');
+      const launchOutFile = path.join(flowsDir, `ios-${app.era}-launch-smoke.yaml`);
       fs.writeFileSync(launchOutFile, renderTemplate(launchTemplate, app, platform));
       console.log(`gen-flows: wrote ${path.relative(harnessRoot, launchOutFile)}`);
 
       const permissionTemplate = fs.readFileSync(
-        path.join(harnessRoot, 'templates', 'deeplink-permission.ios-latest.yaml.tpl'),
+        path.join(harnessRoot, 'templates', 'deeplink-permission.ios.yaml.tpl'),
         'utf8',
       );
-      const permissionOutFile = path.join(flowsDir, 'ios-latest-deeplink-permission.yaml');
+      const permissionOutFile = path.join(flowsDir, `ios-${app.era}-deeplink-permission.yaml`);
       fs.writeFileSync(permissionOutFile, renderTemplate(permissionTemplate, app, platform));
       console.log(`gen-flows: wrote ${path.relative(harnessRoot, permissionOutFile)}`);
     }

@@ -1,4 +1,4 @@
-appId: com.rubanlabs.mobile.debug
+appId: com.rubanlabs.mobile.gongshu.rn066.debug
 ---
 # Cold-launch phase for iOS. The CI harness follows this with a system-level
 # custom-scheme open and a separate permission-handshake flow.
@@ -7,9 +7,9 @@ appId: com.rubanlabs.mobile.debug
 - setOrientation: portrait
 - extendedWaitUntil:
     visible:
-      text: "Portfolio"
+      text: "Components"
     timeout: 120000
 - assertVisible:
-    text: "Create a wallet"
+    text: "01.*Button.*"
 - assertVisible:
-    text: "Network, Ethereum"
+    text: "Playground"

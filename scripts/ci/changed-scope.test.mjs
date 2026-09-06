@@ -104,3 +104,17 @@ test("manual runs force every matrix", () => {
   assert.equal(JSON.parse(outputs.ios_matrix).include.length, 3);
   assert.equal(JSON.parse(outputs.android_matrix).include.length, 3);
 });
+
+test("iOS matrix carries the package-specific deeplink handshake", () => {
+  const outputs = buildWorkflowOutputs(classifyChangedPaths([], { forceFull: true }));
+  const handshakes = JSON.parse(outputs.ios_matrix).include.map((entry) => [
+    entry.era,
+    entry["deeplink-handshake"],
+  ]);
+
+  assert.deepEqual(handshakes, [
+    ["latest", "ruban-debug://settings"],
+    ["0.77", "ruban-rn077-debug://home"],
+    ["0.66", "ruban-rn066-debug://home"],
+  ]);
+});

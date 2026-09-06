@@ -1,4 +1,4 @@
-appId: com.rubanlabs.mobile.debug
+appId: {{appId}}
 ---
 # A fresh iOS simulator asks before opening a custom URL scheme. Starting a
 # separate Maestro flow after the system prompt appears makes the Open button
