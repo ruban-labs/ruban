@@ -60,11 +60,20 @@ for (const packageDirectory of packageDirectories) {
   }
 
   if (manifest.ruban?.nativeCode) {
-    for (const entry of ['android', 'ios']) {
-      if (!hasFileEntry(manifest, entry)) fail(`${label}: native package files must include ${entry}`);
+    const nativeDirectory =
+      manifest.ruban.nativeLanguage === 'rust'
+        ? 'rust'
+        : manifest.ruban.nativeLanguage === 'cxx'
+          ? 'native'
+          : null;
+    if (!nativeDirectory) {
+      fail(`${label}: native package must declare ruban.nativeLanguage as rust or cxx`);
     }
-    if (!hasFileEntry(manifest, 'rust') && !hasFileEntry(manifest, 'cpp')) {
-      fail(`${label}: native package files must include rust or cpp core sources`);
+    if (typeof manifest.ruban.nativeArtifacts !== 'boolean') {
+      fail(`${label}: native package must declare ruban.nativeArtifacts`);
+    }
+    for (const entry of ['android', 'ios', nativeDirectory].filter(Boolean)) {
+      if (!hasFileEntry(manifest, entry)) fail(`${label}: native package files must include ${entry}`);
     }
   }
 

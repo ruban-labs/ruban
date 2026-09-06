@@ -27,6 +27,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { architectureLabel, buildInfo } from '../buildInfo';
+import { chainRegistry } from '../chains/chainRegistry';
 import { RubanScreen } from '../components/RubanPrimitives';
 import {
   BottomSheetModal,
@@ -375,6 +376,14 @@ export default function SettingsScreen({
           value={appearance.toUpperCase()}
           icon={ThemeModeIcon}
           onPress={() => navigation.setParams({ sheet: 'appearance' })}
+        />
+        <SettingsRow
+          testID="settings-networks"
+          label="Networks"
+          value={`${chainRegistry.length} CHAINS`}
+          icon={GlobeIcon}
+          action="navigate"
+          onPress={() => rootNavigation?.navigate('NetworkSettings')}
         />
       </SettingsGroup>
 

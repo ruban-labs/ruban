@@ -215,8 +215,8 @@ export const defaultEvmChains: readonly EvmChain[] = [
     nativeDecimals: 18,
     nativePriceId: "ethereum",
     rpcUrls: [
-      "https://mainnet.optimism.io",
       "https://optimism-rpc.publicnode.com",
+      "https://mainnet.optimism.io",
     ],
     tokens: [
       {
@@ -237,6 +237,7 @@ export const defaultEvmChains: readonly EvmChain[] = [
     nativeDecimals: 18,
     nativePriceId: "matic-network",
     rpcUrls: [
+      "https://polygon.drpc.org",
       "https://polygon-bor-rpc.publicnode.com",
       "https://polygon-rpc.com",
     ],

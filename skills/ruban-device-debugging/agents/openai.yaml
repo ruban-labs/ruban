@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ruban Device Debugging"
+  short_description: "Build deterministic non-production deep-link device workflows"
+  default_prompt: "Use Ruban non-production deep links to reproduce and verify a device workflow."

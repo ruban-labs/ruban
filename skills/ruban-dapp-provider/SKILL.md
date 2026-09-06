@@ -29,10 +29,11 @@ WebView, so a visual redesign cannot break the RPC regression suite.
 
 ## Deep Link Contract
 
-The latest Debug and Regression apps expose one dedicated path:
+The latest Debug and Regression apps expose one action under the shared
+development namespace:
 
 ```text
-<environment-scheme>://dapp-test
+<environment-scheme>://dev/dapp-provider
 ```
 
 Query fields:
@@ -48,13 +49,16 @@ Query fields:
 Example:
 
 ```text
-ruban-debug://dapp-test?dapp=metamask&method=eth_chainId&params=%5B%5D&runId=chain-id-1
+ruban-debug://dev/dapp-provider?dapp=metamask&method=eth_chainId&params=%5B%5D&runId=chain-id-1
 ```
 
 The query never contains arbitrary JavaScript. It describes one bounded
 `window.ethereum.request({method, params})` call. Production builds reject the
 test route even though their scheme remains registered for ordinary product
 Deep Links.
+
+Follow `skills/ruban-device-debugging/SKILL.md` for the shared namespace,
+validation, idempotency, and device-runner rules.
 
 ## Runtime Contract
 

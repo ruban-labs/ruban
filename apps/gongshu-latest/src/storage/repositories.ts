@@ -1,15 +1,39 @@
-import type { PortfolioSnapshot } from '@ruban-labs/react-native-evm-client';
-import type { WalletAccount } from '@ruban-labs/react-native-wallet-core';
 import {
+  defaultEvmChains,
+  type PortfolioSnapshot,
+} from '@ruban-labs/react-native-evm-client';
+import type {
+  PortfolioDataSource,
+  PortfolioSyncState,
+} from '@ruban-labs/react-native-data-engine';
+import type { WalletAccount } from '@ruban-labs/react-native-wallet-core';
+import type { AppIntentReceipt } from '../application/appIntent';
+import {
+  AppIntentReceiptEntity,
   AppStateEntity,
-  PortfolioCacheEntity,
+  PortfolioAccountSnapshotEntity,
+  PortfolioChainSnapshotEntity,
+  PortfolioDataSourceEntity,
+  PortfolioProtocolPositionEntity,
+  PortfolioSyncStateEntity,
+  PortfolioTokenBalanceEntity,
   WalletAccountEntity,
+  type PortfolioProtocolPositionRow,
   type WalletAccountRow,
 } from './entities';
 import { getDataSource } from './dataSource';
 
 const selectedAccountKey = 'wallet.selected-account';
 const selectedChainKey = 'wallet.selected-chain';
+const portfolioProviderId = 'debank';
+const appIntentReceiptLimit = 256;
+
+function toSqliteInteger(value: number, field: string): number {
+  if (!Number.isFinite(value)) {
+    throw new Error(`${field} must be finite`);
+  }
+  return Math.trunc(value);
+}
 
 function toWalletAccount(row: WalletAccountRow): WalletAccount {
   return {
@@ -23,6 +47,52 @@ function toWalletAccount(row: WalletAccountRow): WalletAccount {
 }
 
 export const repositories = {
+  async getAppIntentReceipt(runId: string): Promise<AppIntentReceipt | null> {
+    const dataSource = await getDataSource();
+    const row = await dataSource
+      .getRepository(AppIntentReceiptEntity)
+      .findOneBy({ runId });
+    if (!row) return null;
+    const result = row.resultJson
+      ? (JSON.parse(row.resultJson) as AppIntentReceipt['result'])
+      : undefined;
+    return {
+      runId: row.runId,
+      action: row.action as AppIntentReceipt['action'],
+      source: row.source,
+      status: row.status,
+      ...(result ? { result } : {}),
+      ...(row.errorCode ? { errorCode: row.errorCode } : {}),
+      completedAt: row.completedAt,
+    };
+  },
+
+  async saveAppIntentReceipt(receipt: AppIntentReceipt): Promise<void> {
+    const dataSource = await getDataSource();
+    await dataSource.transaction(async manager => {
+      await manager.getRepository(AppIntentReceiptEntity).upsert(
+        {
+          runId: receipt.runId,
+          action: receipt.action,
+          source: receipt.source,
+          status: receipt.status,
+          resultJson: receipt.result ? JSON.stringify(receipt.result) : null,
+          errorCode: receipt.errorCode || null,
+          completedAt: receipt.completedAt,
+        },
+        ['runId'],
+      );
+      await manager.query(
+        `DELETE FROM "app_intent_receipts"
+         WHERE "run_id" IN (
+           SELECT "run_id" FROM "app_intent_receipts"
+           ORDER BY "completed_at" DESC, "run_id" DESC
+           LIMIT -1 OFFSET ${appIntentReceiptLimit}
+         )`,
+      );
+    });
+  },
+
   async listWalletAccounts(): Promise<WalletAccount[]> {
     const dataSource = await getDataSource();
     const rows = await dataSource.getRepository(WalletAccountEntity).find({
@@ -41,7 +111,7 @@ export const repositories = {
           address: account.address,
           kind: account.kind,
           derivationPath: account.derivationPath || null,
-          createdAt: account.createdAt,
+          createdAt: toSqliteInteger(account.createdAt, 'account.createdAt'),
         },
         ['id'],
       );
@@ -117,27 +187,118 @@ export const repositories = {
   ): Promise<PortfolioSnapshot | null> {
     const normalizedAddress = address.toLowerCase();
     const dataSource = await getDataSource();
-    const row = await dataSource
-      .getRepository(PortfolioCacheEntity)
-      .findOneBy({ address: normalizedAddress });
-    if (!row) return null;
-    const snapshot = JSON.parse(row.snapshotJson) as PortfolioSnapshot;
-    return snapshot.address.toLowerCase() === normalizedAddress
-      ? snapshot
-      : null;
+    const [account, chains, tokens] = await Promise.all([
+      dataSource.getRepository(PortfolioAccountSnapshotEntity).findOneBy({
+        providerId: portfolioProviderId,
+        address: normalizedAddress,
+      }),
+      dataSource.getRepository(PortfolioChainSnapshotEntity).find({
+        where: {
+          providerId: portfolioProviderId,
+          address: normalizedAddress,
+        },
+        order: { valueUsd: 'DESC', chainId: 'ASC' },
+      }),
+      dataSource.getRepository(PortfolioTokenBalanceEntity).find({
+        where: {
+          providerId: portfolioProviderId,
+          address: normalizedAddress,
+        },
+        order: { valueUsd: 'DESC', chainId: 'ASC', assetId: 'ASC' },
+      }),
+    ]);
+    if (!account) return null;
+
+    const assets = tokens.map(token => ({
+      chainId: token.chainId,
+      chainName: chains.find(chain => chain.chainId === token.chainId)
+        ?.chainName || String(token.chainId),
+      symbol: token.symbol,
+      name: token.name,
+      ...(token.contractAddress
+        ? { contractAddress: token.contractAddress }
+        : {}),
+      balance: token.balance,
+      displayBalance: token.displayBalance,
+      priceUsd: token.priceUsd,
+      valueUsd: token.valueUsd,
+    }));
+
+    return {
+      address: normalizedAddress,
+      chains: chains.flatMap(chain => {
+        const registryChain = defaultEvmChains.find(
+          candidate => candidate.id === chain.chainId,
+        );
+        return registryChain
+          ? [
+              {
+                chain: registryChain,
+                assets: assets.filter(asset => asset.chainId === chain.chainId),
+                latencyMs: chain.latencyMs,
+                source: chain.source,
+                updatedAt: chain.observedAt,
+              },
+            ]
+          : [];
+      }),
+      assets,
+      totalValueUsd: account.totalValueUsd,
+      updatedAt: account.observedAt,
+    };
   },
 
-  async savePortfolioSnapshot(snapshot: PortfolioSnapshot): Promise<void> {
+  async getPortfolioDataSource(): Promise<PortfolioDataSource | null> {
     const dataSource = await getDataSource();
-    await dataSource.transaction(async manager => {
-      await manager.getRepository(PortfolioCacheEntity).upsert(
-        {
-          address: snapshot.address.toLowerCase(),
-          snapshotJson: JSON.stringify(snapshot),
-          updatedAt: Date.now(),
-        },
-        ['address'],
-      );
+    const row = await dataSource
+      .getRepository(PortfolioDataSourceEntity)
+      .findOneBy({ providerId: portfolioProviderId });
+    if (!row) return null;
+    return {
+      providerId: 'debank',
+      mode: row.mode,
+      credentialState: row.credentialState,
+      enabled: row.enabled === 1,
+      updatedAt: row.updatedAt,
+    };
+  },
+
+  async getPortfolioSyncState(
+    address: string,
+  ): Promise<PortfolioSyncState | null> {
+    const dataSource = await getDataSource();
+    const row = await dataSource
+      .getRepository(PortfolioSyncStateEntity)
+      .findOneBy({
+        providerId: portfolioProviderId,
+        address: address.toLowerCase(),
+      });
+    if (!row) return null;
+    return {
+      providerId: 'debank',
+      address: row.address,
+      runId: row.runId,
+      state: row.state,
+      stage: row.stage,
+      completedChains: row.completedChains,
+      totalChains: row.totalChains,
+      updatedAt: row.updatedAt,
+      ...(row.errorCode ? { errorCode: row.errorCode } : {}),
+    };
+  },
+
+  async listPortfolioProtocolPositions(
+    address: string,
+    chainId?: number,
+  ): Promise<PortfolioProtocolPositionRow[]> {
+    const dataSource = await getDataSource();
+    return dataSource.getRepository(PortfolioProtocolPositionEntity).find({
+      where: {
+        providerId: portfolioProviderId,
+        address: address.toLowerCase(),
+        ...(chainId == null ? {} : { chainId }),
+      },
+      order: { netValueUsd: 'DESC', protocolId: 'ASC', positionId: 'ASC' },
     });
   },
 };

@@ -5,6 +5,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { enableScreens } from 'react-native-screens';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OverlayProvider } from '@ruban-labs/react-native-ui-overlay';
+import { DataEngineProvider } from './src/data/DataEngineContext';
+import { AppIntentRuntime } from './src/application/AppIntentRuntime';
 import { RpcRequestReviewProvider } from './src/dapp/RpcRequestReviewProvider';
 import { RubanThemeProvider, useRubanColors } from './src/design/tokens';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -60,9 +62,12 @@ function App(): React.ReactElement {
       <SafeAreaProvider>
         <BottomSheetModalProvider>
           <AppPreferencesProvider>
-            <WalletProvider>
-              <ThemedApp />
-            </WalletProvider>
+            <DataEngineProvider>
+              <WalletProvider>
+                <AppIntentRuntime />
+                <ThemedApp />
+              </WalletProvider>
+            </DataEngineProvider>
           </AppPreferencesProvider>
         </BottomSheetModalProvider>
       </SafeAreaProvider>

@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <receiver
+      android:name="com.rubanlabs.dataengine.RubanDeBankCredentialBootstrapReceiver"
+      android:enabled="true"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="com.rubanlabs.mobile.debug.action.IMPORT_DEBANK_ACCESS_KEY" />
+      </intent-filter>
+    </receiver>
+  </application>
+</manifest>

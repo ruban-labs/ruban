@@ -37,6 +37,13 @@ type TypeOrmConnection = {
   detach: (alias: string, success: () => void) => void;
 };
 
+let activeDatabase: DB | null = null;
+
+export function getOpSqliteDatabasePath(): string {
+  if (!activeDatabase) throw new Error('Ruban database is not initialized');
+  return activeDatabase.getDbPath();
+}
+
 function enhanceQueryResult(result: QueryResult): void {
   const rows = result.rows as TypeOrmRows;
   rows.item = (index: number) => rows[index];
@@ -61,6 +68,7 @@ export const opSqliteTypeOrmDriver = {
           ? { encryptionKey: options.encryptionKey }
           : {}),
       });
+      activeDatabase = database;
       const connection: TypeOrmConnection = {
         getDb: () => database,
         async executeSql<Result = QueryResult>(
@@ -83,6 +91,7 @@ export const opSqliteTypeOrmDriver = {
         close(onSuccess, onFailure) {
           try {
             database.close();
+            if (activeDatabase === database) activeDatabase = null;
             onSuccess();
           } catch (error) {
             onFailure(error);

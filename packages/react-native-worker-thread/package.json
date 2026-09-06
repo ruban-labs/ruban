@@ -45,7 +45,7 @@
     "lib",
     "android",
     "ios",
-    "cpp",
+    "native",
     "examples",
     "worker.js",
     "worker.d.ts",
@@ -53,7 +53,7 @@
     "testing.d.ts",
     "NOTICE",
     "react-native.config.js",
-    "!cpp/tests",
+    "!native/tests",
     "!**/__tests__"
   ],
   "publishConfig": {
@@ -74,7 +74,9 @@
   "ruban": {
     "reactNativeFloor": "0.66.0",
     "runtimePolicy": "bare-react-native",
-    "nativeCode": true
+    "nativeCode": true,
+    "nativeLanguage": "cxx",
+    "nativeArtifacts": false
   },
   "devDependencies": {
     "@react-native/babel-preset": "0.87.0",

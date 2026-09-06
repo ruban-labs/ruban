@@ -259,7 +259,7 @@ export function DAppBrowserView({
           approveLabel: 'SWITCH',
         });
         setChainId(nextChainId);
-        wallet.selectChain(nextChainId);
+        await wallet.selectChain(nextChainId);
         webView.current?.injectJavaScript(
           createBridgeEventScript(request, 'chainChanged', [
             `0x${nextChainId.toString(16)}`,

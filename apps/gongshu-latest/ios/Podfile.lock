@@ -2024,6 +2024,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RubanDataEngine (0.1.0):
+    - React-Core
   - RubanWalletCore (0.1.0):
     - React-Core
   - SocketRocket (0.7.1):
@@ -2125,6 +2127,7 @@ DEPENDENCIES:
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
+  - "RubanDataEngine (from `../node_modules/@ruban-labs/react-native-data-engine`)"
   - "RubanWalletCore (from `../node_modules/@ruban-labs/react-native-wallet-core`)"
   - SocketRocket (from `build/rndeps-facades/SocketRocket`)
   - Yoga (from `build/rncore-facades/Yoga`)
@@ -2315,6 +2318,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-svg"
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
+  RubanDataEngine:
+    :path: "../node_modules/@ruban-labs/react-native-data-engine"
   RubanWalletCore:
     :path: "../node_modules/@ruban-labs/react-native-wallet-core"
   SocketRocket:
@@ -2415,6 +2420,7 @@ SPEC CHECKSUMS:
   RNScreens: a2103f13fa603c405092daf70ca4eb3a6291fd6d
   RNSVG: 6c9bcbf53822153be6f6c1484f6b0b57c0040d21
   RNWorklets: a140b8a8c63ab3f1ac247f5c6e8ae192bf70b0a0
+  RubanDataEngine: 575324272638e9dbcc6e00c1ea6fa3c8abe0ca28
   RubanWalletCore: 358af798e12253ef5942778f3e00bd78c91cb2c5
   SocketRocket: 37aec555668fb852ec12e3c0de59a86ca58f0871
   Yoga: d1c536142c5ff8ec8cd856ab2a7c227a1d875c8e

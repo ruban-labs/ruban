@@ -103,7 +103,7 @@ appId: com.rubanlabs.mobile.debug
     timeout: 20000
 - tapOn:
     text: "DONE"
-- openLink: "ruban-debug://lab/design?theme=light"
+- openLink: "ruban-debug://dev/lab/design?theme=light"
 - extendedWaitUntil:
     visible:
       text: "PLAYGROUND"

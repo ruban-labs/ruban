@@ -2,8 +2,8 @@
 
 [English](./wallet-v1-roadmap.md)
 
-这份路线图用于把 Ruban 做成真正可用的、自托管 EVM DApp 工作台，同时产出一个支持
-bare React Native 的独立钱包包。进度按能力与安全门槛推进，不按日期或页面数量推进。
+这份路线图用于把 Ruban 做成快速的 EVM 资产查看器与 DApp 工作台，同时产出一组支持
+bare React Native 的独立能力包。进度按能力与安全门槛推进，不按日期或页面数量推进。
 不同阶段可以并行探索，但只有通过退出门槛，才能宣布该阶段完成。
 
 每次发行分别记录构建、运行和数据同步三套性能预算。任何一项的优化，都不能掩盖另外两项
@@ -22,8 +22,9 @@ V1 包含：
 - 按来源隔离账户与网络权限；
 - 对支持的消息和交易提供人类可读的确认界面；
 - 可配置 EVM 网络与 RPC；
-- cache-first Portfolio：展示原生资产和经过选择的 ERC-20 资产，并提供法币估值、
+- cache-first Portfolio：展示 Token 与协议仓位，并提供法币估值、
   数据来源、新鲜度和增量刷新；
+- 首个发现适配器采用 DeBank Cloud BYOK，开发阶段使用显式、确定性的 Mock；
 - 本地活动记录和用于测试的确定性 deep link。
 
 账户能力一致性属于 V1 产品约束。观察地址、私钥账户和助记词派生账户共用完全一致的
@@ -37,16 +38,16 @@ V1 不包含：
 - 智能账户与账户抽象；
 - 硬件钱包；
 - 云端助记词备份或账户恢复服务；
-- Swap、Bridge、质押、法币入口、交易所、DeFi 仓位、盈亏分析和 NFT 产品；
+- Swap、Bridge、质押、法币入口、交易所、盈亏分析和 NFT 产品；
 - 盲签以及语义模糊的 `eth_sign`；
 - 向加载的 DApp 暴露任意 Native 能力。
 
-第一版采用直接发行和受控测试名单。App Store 与 Google Play 上架可以作为独立工作继续，
-但商店审核不是 V1 架构成立的前置条件。
+商店产品只开放观察地址导入和资产查看，不宣称托管资产。Android 官网分发版可以额外开放
+本地签名账户导入。两类产品共用账户模型和能力栈，只在产品策略层控制入口。
 
 ## 目标包结构
 
-实现分成三道边界：
+实现包含两条互相独立的 Native 边界：
 
 ```text
 Rust Wallet Core
@@ -56,6 +57,12 @@ iOS / Android Vault 与平台包装层
 @ruban-labs/react-native-wallet-core
     ↓ 只返回不透明标识和公开结果
 Ruban App 与 DApp Runtime
+
+C++ Provider Adapter 与规范化投影
+    ↓ 平台串行写入 + WAL
+@ruban-labs/react-native-data-engine
+    ↓ TypeORM 读取模型与同步状态事件
+Ruban Portfolio 界面
 ```
 
 - Rust Core 不依赖 React Native。
@@ -66,23 +73,25 @@ Ruban App 与 DApp Runtime
 
 ## App 结构化数据层
 
-Ruban App 使用 `@op-engineering/op-sqlite` 作为唯一 SQLite 连接实现，并在 TypeScript
-查询层使用 TypeORM。一个 App 进程只允许存在一个全局 `DataSource` 和一个初始化
-Promise；Fast Refresh 也不得重复打开同一个数据库。
+Ruban App 使用 `@op-engineering/op-sqlite` 和 TypeORM 完成 TypeScript 侧查询。一个 App
+进程只允许存在一个全局 `DataSource` 和一个初始化 Promise；Fast Refresh 也不得重复打开
+第二个 JavaScript 连接。Native 同步器通过独立串行写入器访问同一个 WAL 文件。
 
 - 首个版本发布前只维护一份可直接修改的基线 schema，不创建 migration class 或
   migration 表；测试数据在基线变化后直接重置。
 - 某个版本真实发布并冻结 schema 后，后续 schema 变更才允许以该已发布版本为起点
   添加 TypeORM Migration。生产代码始终关闭 `synchronize`。
-- 账户公开元数据、当前账户、Portfolio 缓存、DApp 权限和活动索引进入结构化表；查询、
+- 账户公开元数据、当前账户、Portfolio 投影、DApp 权限和活动索引进入结构化表；查询、
   排序和筛选走 Repository 或 QueryBuilder，不退回 KV JSON 列表。
 - 助记词、私钥和派生种子仍由 Native Vault 持有；SQLite 不保存这些明文，也不成为
   Keychain/Keystore 的替代品。
-- 默认使用 WAL、`synchronous=NORMAL` 和有限 `busy_timeout`。单条用户写入使用事务；
-  后续批量同步必须具备合并、取消、批次边界和耗时观测。
-- 后续 C++ 数据同步器可以通过 OP-SQLite 的 Native 接口直接写同一数据库，但只能消费
-  已发布 schema，必须检查版本、使用事务，并在提交后通知 JS 查询层失效；Native 不得
-  私自迁移 schema。
+- 默认使用 WAL、`synchronous=NORMAL` 和有限 `busy_timeout`。Native 同步只有一个写入
+  队列，并在发布成功状态前，以事务原子替换一个 Provider/Address 的完整投影。
+- C++ 持有与数据供应商无关的投影类型。平台适配器写入同一数据库，并在提交后发出事件；
+  JavaScript 与 Worker 通过 TypeORM 重新查询，不在 Bridge 上传输大块 Portfolio 数据。
+- Provider 凭据只进入 Keychain 或 Keystore。SQLite 只保存非敏感来源元数据、规范化投影
+  和脱敏同步状态。
+- Schema 只由 App 基线和后续 Migration 管理；Native 只校验和消费，不创建或迁移表。
 
 ## 阶段 0：冻结边界
 

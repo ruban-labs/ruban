@@ -1,6 +1,4 @@
-import { Dialog } from '@ruban-labs/react-native-ui-dialog';
-import { Input } from '@ruban-labs/react-native-ui-form/input';
-import { CaretDownIcon, RefreshIcon } from '@ruban-labs/react-native-ui-icons';
+import { RefreshIcon, WalletIcon } from '@ruban-labs/react-native-ui-icons';
 import * as React from 'react';
 import {
   ActivityIndicator,
@@ -11,18 +9,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { ChainSelectorSheet } from '../chains/ChainSelectorSheet';
+import { chainRegistry, getChainRegistryEntry } from '../chains/chainRegistry';
 import { RubanScreen } from '../components/RubanPrimitives';
 import { spacing, useRubanColors } from '../design/tokens';
 import { usePortfolio } from '../portfolio/usePortfolio';
-import {
-  getPortfolioChain,
-  portfolioChainCatalog,
-} from '../portfolio/chainCatalog';
 import { useWallet } from '../wallet/WalletContext';
-import {
-  AddressSelectorSheet,
-  ChainSelectorSheet,
-} from '../wallet/WalletSelectors';
+import { AddressSelectorSheet } from '../wallet/WalletSelectors';
 
 function shortAddress(address: string): string {
   return `${address.slice(0, 7)}…${address.slice(-5)}`;
@@ -40,9 +33,6 @@ export default function HomeScreen(): React.ReactElement {
   const colors = useRubanColors();
   const wallet = useWallet();
   const portfolio = usePortfolio(wallet.selectedAccount?.address);
-  const [watchOpen, setWatchOpen] = React.useState(false);
-  const [watchAddress, setWatchAddress] = React.useState('');
-  const [watchLabel, setWatchLabel] = React.useState('Watch account');
   const [busy, setBusy] = React.useState(false);
   const [activeSelector, setActiveSelector] = React.useState<
     'chain' | 'address' | null
@@ -60,15 +50,7 @@ export default function HomeScreen(): React.ReactElement {
     }
   }, []);
 
-  const addWatch = React.useCallback(() => {
-    run(async () => {
-      await wallet.addWatchAccount(watchLabel, watchAddress);
-      setWatchAddress('');
-      setWatchOpen(false);
-    });
-  }, [run, wallet, watchAddress, watchLabel]);
-
-  const selectedChain = getPortfolioChain(wallet.selectedChainId);
+  const selectedChain = getChainRegistryEntry(wallet.selectedChainId);
   const selectedChainPortfolio = portfolio.snapshot?.chains.find(
     chain => chain.chain.id === wallet.selectedChainId,
   );
@@ -92,69 +74,59 @@ export default function HomeScreen(): React.ReactElement {
       scrollProps={{ refreshControl: undefined }}
     >
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.ink }]}>Portfolio</Text>
         <TouchableOpacity
-          disabled={portfolio.refreshing}
-          onPress={portfolio.refresh}
-          activeOpacity={0.7}
+          testID="open-chain-selector"
           accessibilityRole="button"
-          accessibilityLabel={portfolio.refreshing ? 'Syncing' : 'Refresh'}
-          style={styles.refreshButton}
+          accessibilityLabel={`Network, ${selectedChain.displayName}`}
+          onPress={() => setActiveSelector('chain')}
+          activeOpacity={0.68}
+          style={[styles.headerAction, styles.headerActionLeft]}
         >
-          <RefreshIcon size={28} color={colors.accent} />
+          <View style={styles.headerIconFrame}>
+            <Image
+              source={
+                colors.mode === 'dark'
+                  ? selectedChain.whiteLogo
+                  : selectedChain.logo
+              }
+              resizeMode="contain"
+              style={styles.chainLogo}
+            />
+          </View>
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.ink }]}>
+          Portfolio
+        </Text>
+        <TouchableOpacity
+          testID="open-address-selector"
+          accessibilityRole="button"
+          accessibilityLabel={
+            wallet.selectedAccount
+              ? `Address, ${wallet.selectedAccount.label}`
+              : 'Select address'
+          }
+          onPress={() => setActiveSelector('address')}
+          activeOpacity={0.68}
+          style={[styles.headerAction, styles.headerActionRight]}
+        >
+          <View style={[styles.headerIconFrame, styles.walletIconFrame]}>
+            <WalletIcon size={25} color={colors.accent} />
+          </View>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        testID="open-chain-selector"
-        accessibilityRole="button"
-        accessibilityLabel={`Network, ${selectedChain.displayName}`}
-        onPress={() => setActiveSelector('chain')}
-        activeOpacity={0.68}
-        style={[styles.networkSelector, { borderColor: colors.borderStrong }]}
-      >
-        <View style={styles.networkLogoFrame}>
-          <Image
-            source={
-              colors.mode === 'dark'
-                ? selectedChain.whiteLogo
-                : selectedChain.logo
-            }
-            resizeMode="contain"
-            style={styles.networkLogo}
-          />
-        </View>
-        <View style={styles.networkIdentity}>
-          <Text style={[styles.networkName, { color: colors.ink }]}>
-            {selectedChain.displayName}
-          </Text>
-        </View>
-        <CaretDownIcon size={12} color={colors.faint} />
-      </TouchableOpacity>
 
       {wallet.selectedAccount ? (
         <>
           <Text style={[styles.balance, { color: colors.ink }]}>
             {money(selectedValue)}
           </Text>
-          <TouchableOpacity
-            testID="open-address-selector"
-            accessibilityRole="button"
-            accessibilityLabel={`Address, ${wallet.selectedAccount.label}`}
-            onPress={() => setActiveSelector('address')}
-            activeOpacity={0.68}
-            style={styles.accountRow}
+          <Text
+            numberOfLines={1}
+            style={[styles.accountMeta, { color: colors.faint }]}
           >
-            <View>
-              <Text style={[styles.accountName, { color: colors.ink }]}>
-                {wallet.selectedAccount.label}
-              </Text>
-              <Text style={[styles.address, { color: colors.faint }]}>
-                {shortAddress(wallet.selectedAccount.address)}
-              </Text>
-            </View>
-            <CaretDownIcon size={12} color={colors.faint} />
-          </TouchableOpacity>
+            {wallet.selectedAccount.label} ·{' '}
+            {shortAddress(wallet.selectedAccount.address)}
+          </Text>
         </>
       ) : (
         <View style={[styles.emptyHero, { backgroundColor: colors.contrast }]}>
@@ -167,41 +139,31 @@ export default function HomeScreen(): React.ReactElement {
         </View>
       )}
 
-      <View style={styles.actions}>
-        <Action
-          label="CREATE"
-          onPress={() => run(wallet.createMnemonic)}
-          disabled={busy || !wallet.available}
-        />
-        <Action
-          label="PHRASE"
-          onPress={() => run(wallet.importMnemonic)}
-          disabled={busy || !wallet.available}
-        />
-        <Action
-          label="KEY"
-          onPress={() => run(wallet.importPrivateKey)}
-          disabled={busy || !wallet.available}
-        />
-        <Action
-          label="WATCH"
-          onPress={() => setWatchOpen(true)}
-          disabled={busy || !wallet.available}
-        />
-      </View>
-
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionLabel, { color: colors.faint }]}>
           ASSETS
         </Text>
-        {portfolio.refreshing ? (
-          <ActivityIndicator size="small" color={colors.accent} />
-        ) : (
-          <Text style={[styles.syncMeta, { color: colors.faint }]}>
-            {portfolio.completedChains}/{portfolioChainCatalog.length}
-            {maxLatency ? ` · ${maxLatency} MS` : ''}
-          </Text>
-        )}
+        <TouchableOpacity
+          testID="refresh-portfolio"
+          disabled={portfolio.refreshing}
+          onPress={portfolio.refresh}
+          activeOpacity={0.68}
+          accessibilityRole="button"
+          accessibilityLabel={portfolio.refreshing ? 'Syncing' : 'Refresh'}
+          style={styles.syncControl}
+        >
+          {portfolio.refreshing ? (
+            <ActivityIndicator size="small" color={colors.accent} />
+          ) : (
+            <>
+              <Text style={[styles.syncMeta, { color: colors.faint }]}>
+                {portfolio.completedChains}/{chainRegistry.length}
+                {maxLatency ? ` · ${maxLatency} MS` : ''}
+              </Text>
+              <RefreshIcon size={17} color={colors.faint} />
+            </>
+          )}
+        </TouchableOpacity>
       </View>
 
       <View style={[styles.assetList, { borderColor: colors.border }]}>
@@ -261,7 +223,7 @@ export default function HomeScreen(): React.ReactElement {
 
       <ChainSelectorSheet
         visible={activeSelector === 'chain'}
-        chains={portfolioChainCatalog}
+        chains={chainRegistry}
         selectedChainId={wallet.selectedChainId}
         onSelect={wallet.selectChain}
         onDismiss={() => setActiveSelector(null)}
@@ -270,77 +232,15 @@ export default function HomeScreen(): React.ReactElement {
         visible={activeSelector === 'address'}
         accounts={wallet.accounts}
         selectedAccountId={wallet.selectedAccount?.id || null}
+        available={wallet.available && !busy}
         onSelect={wallet.selectAccount}
+        onCreateWallet={() => run(wallet.createMnemonic)}
+        onImportMnemonic={() => run(wallet.importMnemonic)}
+        onImportPrivateKey={() => run(wallet.importPrivateKey)}
+        onAddWatch={wallet.addWatchAccount}
         onDismiss={() => setActiveSelector(null)}
       />
-
-      <Dialog.Root open={watchOpen} onOpenChange={setWatchOpen}>
-        <Dialog.Content accessibilityLabel="Add watch account">
-          <Dialog.Header>
-            <Dialog.Title>Watch account</Dialog.Title>
-          </Dialog.Header>
-          <Input
-            value={watchLabel}
-            onChangeText={setWatchLabel}
-            placeholder="Label"
-          />
-          <Input
-            value={watchAddress}
-            onChangeText={setWatchAddress}
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholder="0x…"
-            style={styles.watchAddress}
-          />
-          <Dialog.Footer>
-            <TouchableOpacity
-              onPress={() => setWatchOpen(false)}
-              style={styles.dialogButton}
-            >
-              <Text style={[styles.dialogButtonText, { color: colors.faint }]}>
-                CANCEL
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={addWatch}
-              style={[styles.dialogButton, { backgroundColor: colors.ink }]}
-            >
-              <Text
-                style={[styles.dialogButtonText, { color: colors.inverse }]}
-              >
-                ADD
-              </Text>
-            </TouchableOpacity>
-          </Dialog.Footer>
-        </Dialog.Content>
-      </Dialog.Root>
     </RubanScreen>
-  );
-}
-
-function Action({
-  label,
-  onPress,
-  disabled,
-}: {
-  label: string;
-  onPress: () => void;
-  disabled: boolean;
-}): React.ReactElement {
-  const colors = useRubanColors();
-  return (
-    <TouchableOpacity
-      disabled={disabled}
-      onPress={onPress}
-      activeOpacity={0.72}
-      style={[
-        styles.action,
-        { borderColor: colors.borderStrong },
-        disabled && styles.disabled,
-      ]}
-    >
-      <Text style={[styles.actionText, { color: colors.ink }]}>{label}</Text>
-    </TouchableOpacity>
   );
 }
 
@@ -358,39 +258,36 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.45,
   },
-  refreshButton: {
+  headerAction: {
     width: 44,
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerActionLeft: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    alignItems: 'flex-start',
+  },
+  headerActionRight: {
     position: 'absolute',
     top: 0,
     right: 0,
+    alignItems: 'flex-end',
   },
-  networkSelector: {
-    marginTop: 22,
-    minHeight: 58,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  networkLogoFrame: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'transparent',
-    overflow: 'hidden',
+  headerIconFrame: {
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  networkLogo: { width: 38, height: 38, borderRadius: 19 },
-  networkIdentity: { flex: 1, marginLeft: 11 },
-  networkName: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: '800',
+  chainLogo: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
   },
+  walletIconFrame: { transform: [{ translateY: 1 }] },
   balance: {
     marginTop: 30,
     fontSize: 48,
@@ -398,15 +295,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -2.4,
   },
-  accountRow: {
-    marginTop: 6,
-    minHeight: 42,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  accountName: { fontSize: 14, lineHeight: 20, fontWeight: '800' },
-  address: {
+  accountMeta: {
+    marginTop: 7,
     fontSize: 11,
     lineHeight: 15,
     fontWeight: '700',
@@ -425,22 +315,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -1.8,
   },
-  actions: { marginTop: 16, flexDirection: 'row' },
-  action: {
-    flex: 1,
-    minHeight: 46,
-    marginRight: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionText: {
-    fontSize: 10,
-    lineHeight: 14,
-    fontWeight: '900',
-    letterSpacing: 1,
-  },
-  disabled: { opacity: 0.4 },
   sectionHeader: {
     marginTop: 30,
     marginBottom: 10,
@@ -455,10 +329,18 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
   },
   syncMeta: {
+    marginRight: 8,
     fontSize: 9,
     lineHeight: 12,
     fontWeight: '800',
     letterSpacing: 0.55,
+  },
+  syncControl: {
+    minWidth: 44,
+    minHeight: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   assetList: { borderWidth: 1 },
   assetRow: {
@@ -504,13 +386,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.55,
   },
-  watchAddress: { marginTop: 10 },
-  dialogButton: {
-    minWidth: 82,
-    minHeight: 42,
-    marginLeft: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dialogButtonText: { fontSize: 10, fontWeight: '900', letterSpacing: 1 },
 });
