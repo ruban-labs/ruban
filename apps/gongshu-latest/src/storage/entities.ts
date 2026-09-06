@@ -37,7 +37,7 @@ export type PortfolioSyncStateRow = {
   providerId: string;
   address: string;
   runId: string;
-  state: 'idle' | 'queued' | 'running' | 'succeeded' | 'failed';
+  state: 'idle' | 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled';
   stage: string;
   completedChains: number;
   totalChains: number;
@@ -74,6 +74,7 @@ export type PortfolioTokenBalanceRow = {
   assetId: string;
   symbol: string;
   name: string;
+  logoUrl: string | null;
   contractAddress: string | null;
   decimals: number;
   balance: string;
@@ -90,6 +91,7 @@ export type PortfolioProtocolPositionRow = {
   protocolId: string;
   positionId: string;
   protocolName: string;
+  logoUrl: string | null;
   category: string;
   assetValueUsd: number;
   debtValueUsd: number;
@@ -130,20 +132,19 @@ export const WalletAccountEntity = new EntitySchema<WalletAccountRow>({
   ],
 });
 
-export const AppIntentReceiptEntity =
-  new EntitySchema<AppIntentReceiptRow>({
-    name: 'AppIntentReceipt',
-    tableName: 'app_intent_receipts',
-    columns: {
-      runId: { name: 'run_id', type: 'text', primary: true },
-      action: { type: 'text' },
-      source: { type: 'text' },
-      status: { type: 'text' },
-      resultJson: { name: 'result_json', type: 'text', nullable: true },
-      errorCode: { name: 'error_code', type: 'text', nullable: true },
-      completedAt: { name: 'completed_at', type: 'integer' },
-    },
-  });
+export const AppIntentReceiptEntity = new EntitySchema<AppIntentReceiptRow>({
+  name: 'AppIntentReceipt',
+  tableName: 'app_intent_receipts',
+  columns: {
+    runId: { name: 'run_id', type: 'text', primary: true },
+    action: { type: 'text' },
+    source: { type: 'text' },
+    status: { type: 'text' },
+    resultJson: { name: 'result_json', type: 'text', nullable: true },
+    errorCode: { name: 'error_code', type: 'text', nullable: true },
+    completedAt: { name: 'completed_at', type: 'integer' },
+  },
+});
 
 export const PortfolioDataSourceEntity =
   new EntitySchema<PortfolioDataSourceRow>({
@@ -158,8 +159,8 @@ export const PortfolioDataSourceEntity =
     },
   });
 
-export const PortfolioSyncStateEntity =
-  new EntitySchema<PortfolioSyncStateRow>({
+export const PortfolioSyncStateEntity = new EntitySchema<PortfolioSyncStateRow>(
+  {
     name: 'PortfolioSyncState',
     tableName: 'portfolio_sync_state',
     columns: {
@@ -176,7 +177,8 @@ export const PortfolioSyncStateEntity =
       updatedAt: { name: 'updated_at', type: 'integer' },
       errorCode: { name: 'error_code', type: 'text', nullable: true },
     },
-  });
+  },
+);
 
 export const PortfolioAccountSnapshotEntity =
   new EntitySchema<PortfolioAccountSnapshotRow>({
@@ -218,6 +220,7 @@ export const PortfolioTokenBalanceEntity =
       assetId: { name: 'asset_id', type: 'text', primary: true },
       symbol: { type: 'text' },
       name: { type: 'text' },
+      logoUrl: { name: 'logo_url', type: 'text', nullable: true },
       contractAddress: {
         name: 'contract_address',
         type: 'text',
@@ -243,6 +246,7 @@ export const PortfolioProtocolPositionEntity =
       protocolId: { name: 'protocol_id', type: 'text', primary: true },
       positionId: { name: 'position_id', type: 'text', primary: true },
       protocolName: { name: 'protocol_name', type: 'text' },
+      logoUrl: { name: 'logo_url', type: 'text', nullable: true },
       category: { type: 'text' },
       assetValueUsd: { name: 'asset_value_usd', type: 'real' },
       debtValueUsd: { name: 'debt_value_usd', type: 'real' },

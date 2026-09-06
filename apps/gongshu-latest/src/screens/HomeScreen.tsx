@@ -1,18 +1,22 @@
-import { RefreshIcon, WalletIcon } from '@ruban-labs/react-native-ui-icons';
+import { WalletIcon } from '@ruban-labs/react-native-ui-icons';
+import { useIsFocused } from '@react-navigation/native';
 import * as React from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ChainSelectorSheet } from '../chains/ChainSelectorSheet';
 import { chainRegistry, getChainRegistryEntry } from '../chains/chainRegistry';
 import { RubanScreen } from '../components/RubanPrimitives';
 import { spacing, useRubanColors } from '../design/tokens';
+import {
+  PortfolioItemSheet,
+  type PortfolioItemSelection,
+} from '../portfolio/PortfolioItemSheet';
+import { PortfolioList } from '../portfolio/PortfolioList';
+import {
+  buildChainAllocations,
+  formatPortfolioAge,
+  formatUsd,
+  selectPortfolioChain,
+} from '../portfolio/presentation';
 import { usePortfolio } from '../portfolio/usePortfolio';
 import { useWallet } from '../wallet/WalletContext';
 import { AddressSelectorSheet } from '../wallet/WalletSelectors';
@@ -21,205 +25,281 @@ function shortAddress(address: string): string {
   return `${address.slice(0, 7)}…${address.slice(-5)}`;
 }
 
-function money(value: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 2,
-  }).format(value);
+function percent(value: number): string {
+  if (value <= 0) return '0%';
+  if (value < 0.01) return '<1%';
+  return `${Math.round(value * 100)}%`;
 }
 
 export default function HomeScreen(): React.ReactElement {
   const colors = useRubanColors();
   const wallet = useWallet();
-  const portfolio = usePortfolio(wallet.selectedAccount?.address);
+  const isFocused = useIsFocused();
+  const portfolio = usePortfolio(wallet.selectedAccount?.address, isFocused);
   const [busy, setBusy] = React.useState(false);
   const [activeSelector, setActiveSelector] = React.useState<
     'chain' | 'address' | null
   >(null);
+  const [selectedItem, setSelectedItem] =
+    React.useState<PortfolioItemSelection | null>(null);
+  const selectItem = React.useCallback(
+    (selection: PortfolioItemSelection) => setSelectedItem(selection),
+    [],
+  );
 
   const run = React.useCallback(async (action: () => Promise<void>) => {
     setBusy(true);
     try {
       await action();
     } catch (error) {
-      if (error instanceof Error && !/cancel/i.test(error.message))
+      if (error instanceof Error && !/cancel/i.test(error.message)) {
         Alert.alert('Wallet', error.message);
+      }
     } finally {
       setBusy(false);
     }
   }, []);
 
   const selectedChain = getChainRegistryEntry(wallet.selectedChainId);
-  const selectedChainPortfolio = portfolio.snapshot?.chains.find(
-    chain => chain.chain.id === wallet.selectedChainId,
+  const selectedPortfolio = React.useMemo(
+    () =>
+      selectPortfolioChain(
+        portfolio.snapshot,
+        portfolio.chains,
+        portfolio.protocols,
+        wallet.selectedChainId,
+      ),
+    [
+      portfolio.chains,
+      portfolio.protocols,
+      portfolio.snapshot,
+      wallet.selectedChainId,
+    ],
   );
-  const visibleAssets =
-    portfolio.snapshot?.assets.filter(
-      asset =>
-        asset.chainId === wallet.selectedChainId &&
-        Number(asset.displayBalance) > 0,
-    ) || [];
-  const selectedValue =
-    selectedChainPortfolio?.assets.reduce(
-      (total, asset) => total + (asset.valueUsd || 0),
-      0,
-    ) || 0;
-  const maxLatency = selectedChainPortfolio?.latencyMs || 0;
+  const allocations = React.useMemo(
+    () =>
+      buildChainAllocations(
+        portfolio.chains,
+        portfolio.snapshot?.totalValueUsd || 0,
+      ),
+    [portfolio.chains, portfolio.snapshot?.totalValueUsd],
+  );
+  const allocationByChain = React.useMemo(
+    () => new Map(allocations.map(item => [item.chainId, item])),
+    [allocations],
+  );
+  const supportedValue = chainRegistry.reduce(
+    (total, entry) =>
+      total + (allocationByChain.get(entry.chain.id)?.valueUsd || 0),
+    0,
+  );
+  const otherValue = Math.max(
+    0,
+    (portfolio.snapshot?.totalValueUsd || 0) - supportedValue,
+  );
+  const otherShare = portfolio.snapshot?.totalValueUsd
+    ? otherValue / portfolio.snapshot.totalValueUsd
+    : 0;
+  const syncLabel = portfolio.snapshot
+    ? formatPortfolioAge(portfolio.snapshot.updatedAt)
+    : '';
 
   return (
     <RubanScreen
       testID="screen-home"
       contentStyle={styles.screen}
-      scrollProps={{ refreshControl: undefined }}
+      scroll={false}
     >
-      <View style={styles.header}>
-        <TouchableOpacity
-          testID="open-chain-selector"
-          accessibilityRole="button"
-          accessibilityLabel={`Network, ${selectedChain.displayName}`}
-          onPress={() => setActiveSelector('chain')}
-          activeOpacity={0.68}
-          style={[styles.headerAction, styles.headerActionLeft]}
-        >
-          <View style={styles.headerIconFrame}>
-            <Image
-              source={
-                colors.mode === 'dark'
-                  ? selectedChain.whiteLogo
-                  : selectedChain.logo
-              }
-              resizeMode="contain"
-              style={styles.chainLogo}
-            />
-          </View>
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.ink }]}>
-          Portfolio
-        </Text>
-        <TouchableOpacity
-          testID="open-address-selector"
-          accessibilityRole="button"
-          accessibilityLabel={
-            wallet.selectedAccount
-              ? `Address, ${wallet.selectedAccount.label}`
-              : 'Select address'
-          }
-          onPress={() => setActiveSelector('address')}
-          activeOpacity={0.68}
-          style={[styles.headerAction, styles.headerActionRight]}
-        >
-          <View style={[styles.headerIconFrame, styles.walletIconFrame]}>
-            <WalletIcon size={25} color={colors.accent} />
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {wallet.selectedAccount ? (
-        <>
-          <Text style={[styles.balance, { color: colors.ink }]}>
-            {money(selectedValue)}
-          </Text>
-          <Text
-            numberOfLines={1}
-            style={[styles.accountMeta, { color: colors.faint }]}
-          >
-            {wallet.selectedAccount.label} ·{' '}
-            {shortAddress(wallet.selectedAccount.address)}
-          </Text>
-        </>
-      ) : (
-        <View style={[styles.emptyHero, { backgroundColor: colors.contrast }]}>
-          <Text style={[styles.emptyMark, { color: colors.contrastAccent }]}>
-            01
-          </Text>
-          <Text style={[styles.emptyTitle, { color: colors.inverse }]}>
-            Create a wallet
-          </Text>
-        </View>
-      )}
-
-      <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionLabel, { color: colors.faint }]}>
-          ASSETS
-        </Text>
-        <TouchableOpacity
-          testID="refresh-portfolio"
-          disabled={portfolio.refreshing}
-          onPress={portfolio.refresh}
-          activeOpacity={0.68}
-          accessibilityRole="button"
-          accessibilityLabel={portfolio.refreshing ? 'Syncing' : 'Refresh'}
-          style={styles.syncControl}
-        >
-          {portfolio.refreshing ? (
-            <ActivityIndicator size="small" color={colors.accent} />
-          ) : (
-            <>
-              <Text style={[styles.syncMeta, { color: colors.faint }]}>
-                {portfolio.completedChains}/{chainRegistry.length}
-                {maxLatency ? ` · ${maxLatency} MS` : ''}
-              </Text>
-              <RefreshIcon size={17} color={colors.faint} />
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <View style={[styles.assetList, { borderColor: colors.border }]}>
-        {visibleAssets.length > 0 ? (
-          visibleAssets.map((asset, index) => (
-            <View
-              key={`${asset.chainId}:${asset.contractAddress || 'native'}`}
-              style={[
-                styles.assetRow,
-                index > 0 && {
-                  borderTopColor: colors.border,
-                  borderTopWidth: StyleSheet.hairlineWidth,
-                },
-              ]}
-            >
-              <View
-                style={[
-                  styles.assetMark,
-                  { backgroundColor: colors.accentSoft },
+      <PortfolioList
+        enabled={Boolean(wallet.selectedAccount)}
+        header={
+          <>
+            <View style={styles.header}>
+              <Pressable
+                testID="open-chain-selector"
+                accessibilityRole="button"
+                accessibilityLabel={`Network, ${selectedChain.displayName}`}
+                onPress={() => setActiveSelector('chain')}
+                style={({ pressed }) => [
+                  styles.headerAction,
+                  styles.headerActionLeft,
+                  pressed ? styles.pressed : undefined,
                 ]}
               >
-                <Text style={[styles.assetMarkText, { color: colors.accent }]}>
-                  {asset.symbol.slice(0, 1)}
-                </Text>
-              </View>
-              <View style={styles.assetIdentity}>
-                <Text style={[styles.assetSymbol, { color: colors.ink }]}>
-                  {asset.symbol}
-                </Text>
-                <Text style={[styles.assetChain, { color: colors.faint }]}>
-                  {asset.chainName.toUpperCase()}
-                </Text>
-              </View>
-              <View>
-                <Text style={[styles.assetValue, { color: colors.ink }]}>
-                  {asset.valueUsd == null ? '—' : money(asset.valueUsd)}
-                </Text>
-                <Text style={[styles.assetBalance, { color: colors.faint }]}>
-                  {asset.displayBalance}
-                </Text>
-              </View>
-            </View>
-          ))
-        ) : (
-          <View style={styles.noAssets}>
-            <Text style={[styles.noAssetsValue, { color: colors.ink }]}>
-              {portfolio.refreshing ? 'SYNCING' : 'NO BALANCES'}
-            </Text>
-            {portfolio.error ? (
-              <Text style={[styles.noAssetsMeta, { color: colors.alert }]}>
-                {portfolio.error}
+                <Image
+                  source={
+                    colors.mode === 'dark'
+                      ? selectedChain.whiteLogo
+                      : selectedChain.logo
+                  }
+                  resizeMode="contain"
+                  style={styles.chainLogo}
+                />
+              </Pressable>
+              <Text style={[styles.headerTitle, { color: colors.ink }]}>
+                Portfolio
               </Text>
-            ) : null}
-          </View>
-        )}
-      </View>
+              <Pressable
+                testID="open-address-selector"
+                accessibilityRole="button"
+                accessibilityLabel={
+                  wallet.selectedAccount
+                    ? `Address, ${wallet.selectedAccount.label}`
+                    : 'Select address'
+                }
+                onPress={() => setActiveSelector('address')}
+                style={({ pressed }) => [
+                  styles.headerAction,
+                  styles.headerActionRight,
+                  pressed ? styles.pressed : undefined,
+                ]}
+              >
+                <WalletIcon size={28} color={colors.accent} />
+              </Pressable>
+            </View>
+
+            {wallet.selectedAccount ? (
+              <>
+                <Text style={[styles.balance, { color: colors.ink }]}>
+                  {portfolio.snapshot
+                    ? formatUsd(portfolio.snapshot.totalValueUsd)
+                    : '—'}
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={[styles.accountMeta, { color: colors.faint }]}
+                >
+                  {wallet.selectedAccount.label} ·{' '}
+                  {shortAddress(wallet.selectedAccount.address)}
+                </Text>
+
+                <View
+                  testID="portfolio-network-allocation"
+                  style={[
+                    styles.networkCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <View style={styles.networkSummary}>
+                    <Text
+                      style={[styles.sectionLabel, { color: colors.faint }]}
+                    >
+                      NETWORKS
+                    </Text>
+                    <Text style={[styles.networkValue, { color: colors.ink }]}>
+                      {formatUsd(selectedPortfolio.chainValueUsd)}
+                    </Text>
+                  </View>
+                  <View style={styles.networks}>
+                    {chainRegistry.map(entry => {
+                      const allocation = allocationByChain.get(entry.chain.id);
+                      const selected =
+                        entry.chain.id === wallet.selectedChainId;
+                      const logo =
+                        colors.mode === 'dark' ? entry.whiteLogo : entry.logo;
+
+                      return (
+                        <Pressable
+                          key={entry.chain.id}
+                          testID={`portfolio-network-${entry.chain.id}`}
+                          accessibilityRole="radio"
+                          accessibilityState={{ selected }}
+                          accessibilityLabel={`${entry.displayName}, ${percent(
+                            allocation?.share || 0,
+                          )}`}
+                          onPress={() =>
+                            run(() => wallet.selectChain(entry.chain.id))
+                          }
+                          style={({ pressed }) => [
+                            styles.network,
+                            selected
+                              ? { backgroundColor: colors.accentSoft }
+                              : undefined,
+                            pressed ? styles.pressed : undefined,
+                          ]}
+                        >
+                          <Image
+                            source={logo}
+                            resizeMode="contain"
+                            style={styles.networkLogo}
+                          />
+                          <Text
+                            style={[
+                              styles.networkShare,
+                              { color: colors.faint },
+                            ]}
+                          >
+                            {percent(allocation?.share || 0)}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                    {otherValue >= 0.01 ? (
+                      <View
+                        accessibilityLabel={`Other networks, ${percent(
+                          otherShare,
+                        )}`}
+                        style={styles.network}
+                      >
+                        <View
+                          style={[
+                            styles.otherNetwork,
+                            { backgroundColor: colors.choiceSurface },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.otherNetworkText,
+                              { color: colors.muted },
+                            ]}
+                          >
+                            ···
+                          </Text>
+                        </View>
+                        <Text
+                          style={[styles.networkShare, { color: colors.faint }]}
+                        >
+                          {percent(otherShare)}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                </View>
+              </>
+            ) : (
+              <Pressable
+                testID="empty-portfolio-add-address"
+                accessibilityRole="button"
+                accessibilityLabel="Add address"
+                onPress={() => setActiveSelector('address')}
+                style={({ pressed }) => [
+                  styles.emptyHero,
+                  { backgroundColor: colors.contrast },
+                  pressed ? styles.pressed : undefined,
+                ]}
+              >
+                <WalletIcon size={26} color={colors.contrastAccent} />
+                <Text style={[styles.emptyTitle, { color: colors.inverse }]}>
+                  Add address
+                </Text>
+              </Pressable>
+            )}
+          </>
+        }
+        assets={selectedPortfolio.assets}
+        protocols={selectedPortfolio.protocols}
+        refreshing={portfolio.refreshing}
+        error={portfolio.error}
+        syncLabel={syncLabel}
+        address={wallet.selectedAccount?.address}
+        fallbackTotalChains={chainRegistry.length}
+        latencyMs={selectedPortfolio.latencyMs}
+        onRefresh={portfolio.refresh}
+        onSelectItem={selectItem}
+      />
 
       <ChainSelectorSheet
         visible={activeSelector === 'chain'}
@@ -240,12 +320,16 @@ export default function HomeScreen(): React.ReactElement {
         onAddWatch={wallet.addWatchAccount}
         onDismiss={() => setActiveSelector(null)}
       />
+      <PortfolioItemSheet
+        selection={selectedItem}
+        onDismiss={() => setSelectedItem(null)}
+      />
     </RubanScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { paddingBottom: spacing.xxl },
+  screen: { paddingBottom: 0 },
   header: {
     minHeight: 44,
     alignItems: 'center',
@@ -263,33 +347,14 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerActionLeft: {
     position: 'absolute',
     top: 0,
-    left: 0,
-    alignItems: 'flex-start',
   },
-  headerActionRight: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    alignItems: 'flex-end',
-  },
-  headerIconFrame: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chainLogo: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-  },
-  walletIconFrame: { transform: [{ translateY: 1 }] },
+  headerActionLeft: { left: 0, alignItems: 'flex-start' },
+  headerActionRight: { right: 0, alignItems: 'flex-end' },
+  chainLogo: { width: 28, height: 28, borderRadius: 14 },
   balance: {
-    marginTop: 30,
+    marginTop: 28,
     fontSize: 48,
     lineHeight: 54,
     fontWeight: '800',
@@ -302,25 +367,52 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.3,
   },
+  networkCard: {
+    marginTop: spacing.lg,
+    padding: 12,
+    borderWidth: 1,
+  },
+  networkSummary: {
+    minHeight: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  networkValue: { fontSize: 12, lineHeight: 16, fontWeight: '800' },
+  networks: { marginTop: 8, flexDirection: 'row' },
+  network: {
+    flex: 1,
+    minHeight: 58,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  networkLogo: { width: 27, height: 27, borderRadius: 14 },
+  networkShare: {
+    marginTop: 5,
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  otherNetwork: {
+    width: 27,
+    height: 27,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  otherNetworkText: { fontSize: 11, lineHeight: 13, fontWeight: '900' },
   emptyHero: {
     marginTop: 28,
     height: 174,
     padding: 18,
     justifyContent: 'space-between',
   },
-  emptyMark: { fontSize: 12, fontWeight: '900', letterSpacing: 1.2 },
   emptyTitle: {
     fontSize: 38,
     lineHeight: 42,
     fontWeight: '800',
     letterSpacing: -1.8,
-  },
-  sectionHeader: {
-    marginTop: 30,
-    marginBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   sectionLabel: {
     fontSize: 9,
@@ -328,62 +420,5 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1.4,
   },
-  syncMeta: {
-    marginRight: 8,
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: '800',
-    letterSpacing: 0.55,
-  },
-  syncControl: {
-    minWidth: 44,
-    minHeight: 36,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  assetList: { borderWidth: 1 },
-  assetRow: {
-    minHeight: 72,
-    paddingHorizontal: 13,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  assetMark: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  assetMarkText: { fontSize: 15, fontWeight: '900' },
-  assetIdentity: { flex: 1, marginLeft: 12 },
-  assetSymbol: { fontSize: 14, lineHeight: 18, fontWeight: '900' },
-  assetChain: {
-    marginTop: 2,
-    fontSize: 8,
-    lineHeight: 11,
-    fontWeight: '800',
-    letterSpacing: 0.7,
-  },
-  assetValue: {
-    textAlign: 'right',
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '800',
-  },
-  assetBalance: {
-    textAlign: 'right',
-    fontSize: 10,
-    lineHeight: 14,
-    fontWeight: '700',
-  },
-  noAssets: { minHeight: 82, padding: 16, justifyContent: 'center' },
-  noAssetsValue: { fontSize: 18, lineHeight: 24, fontWeight: '800' },
-  noAssetsMeta: {
-    marginTop: 8,
-    fontSize: 8,
-    lineHeight: 12,
-    fontWeight: '800',
-    letterSpacing: 0.55,
-  },
+  pressed: { opacity: 0.62 },
 });

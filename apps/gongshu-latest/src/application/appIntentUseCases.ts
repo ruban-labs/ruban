@@ -14,7 +14,7 @@ import {
   type RpcReviewRequest,
 } from '../dapp/rpcReviewQueue';
 import { ensureDataEngine } from '../data/DataEngineContext';
-import { checkpointDataSourceForNativeWrite } from '../storage/dataSource';
+import { prepareDataSourceForNativeWrite } from '../storage/dataSource';
 import { repositories } from '../storage/repositories';
 import {
   AppIntentFailure,
@@ -27,9 +27,10 @@ function isSupportedChain(chainId: number): boolean {
   return defaultEvmChains.some(chain => chain.id === chainId);
 }
 
-async function findAccount(
-  selector: { accountId?: string; address?: string },
-): Promise<WalletAccount> {
+async function findAccount(selector: {
+  accountId?: string;
+  address?: string;
+}): Promise<WalletAccount> {
   const hasAccountId = !!selector.accountId;
   const hasAddress = !!selector.address;
   if (hasAccountId === hasAddress) {
@@ -155,7 +156,9 @@ async function execute(intent: AppIntent): Promise<AppIntentResult> {
         await presentImportMnemonic('Imported phrase'),
       );
     case 'wallet.import-private-key':
-      return saveAndSelectAccount(await presentImportPrivateKey('Imported key'));
+      return saveAndSelectAccount(
+        await presentImportPrivateKey('Imported key'),
+      );
     case 'wallet.select-chain':
       if (!isSupportedChain(intent.chainId)) {
         throw new AppIntentFailure('unsupported_chain');
@@ -164,7 +167,7 @@ async function execute(intent: AppIntent): Promise<AppIntentResult> {
       return { chainId: intent.chainId };
     case 'portfolio.sync': {
       await ensureDataEngine();
-      await checkpointDataSourceForNativeWrite();
+      await prepareDataSourceForNativeWrite();
       const result =
         intent.providerMode === 'mock'
           ? await dataEngine.syncMockPortfolio(intent.address)

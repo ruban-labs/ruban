@@ -308,6 +308,14 @@ handled by consuming the new `insets.bottom`.
 - The selected network and address live in the global SQLite `app_state` table
   as the shared choice for Portfolio, DApp Provider, and signing context. Before
   the first release, update the baseline schema directly and add no migration.
+- Portfolio renders the latest complete SQLite snapshot before any network work
+  and never clears cached assets while synchronizing. Total value and account
+  identity own the primary hierarchy; network allocation, selected-chain tokens,
+  and DeFi positions are value-sorted. Refresh feedback stays compact: progress,
+  snapshot age, and selected-chain latency instead of explanatory copy.
+- Token and DeFi rows share one app-owned Bottom Sheet detail surface. Keep only
+  the balance, price, assets, debt, net value, and contract fields needed to
+  inspect the item; the Sheet remains scrollable and dismissible by dragging down.
 
 ### Deep Link Identity
 

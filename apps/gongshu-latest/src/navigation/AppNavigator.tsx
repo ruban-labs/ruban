@@ -204,7 +204,7 @@ function MainTabs(): React.ReactElement {
       <Tab.Navigator
         initialRouteName="Home"
         tabBar={renderRubanTabBar}
-        screenOptions={{ headerShown: false, lazy: false }}
+        screenOptions={{ headerShown: false, lazy: true }}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="DApps" component={DAppsScreen} />

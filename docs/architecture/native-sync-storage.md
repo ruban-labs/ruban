@@ -14,9 +14,10 @@
 ```text
 Provider adapter (deterministic mock or DeBank BYOK)
     -> fixed native HTTP request plan
+    -> bounded parallel endpoint reads
     -> normalized C++ projection
     -> serial native writer
-    -> one WAL transaction per provider/address
+    -> one rollback-journal transaction per provider/address
     -> post-commit sync-state event
     -> TypeORM repository re-query
     -> React Native screen
@@ -45,8 +46,13 @@ results.
   failure code;
 - `portfolio_account_snapshots`: account-level total at one observation time;
 - `portfolio_chain_snapshots`: chain summaries and source latency;
-- `portfolio_token_balances`: normalized token balances and valuation;
-- `portfolio_protocol_positions`: normalized protocol-level positions.
+- `portfolio_token_balances`: normalized token balances, valuation, and the
+  provider's nullable HTTPS logo URL. SQLite stores the URL rather than image
+  bytes; the platform image loader owns disk caching and the UI keeps an
+  initials fallback;
+- `portfolio_protocol_positions`: normalized protocol-level positions and the
+  provider's nullable HTTPS protocol logo URL, with the same image-cache and
+  initials-fallback policy as token logos.
 
 Provider credentials never enter these tables. A DeBank AccessKey is imported
 directly into iOS Keychain or an Android Keystore-backed private value. It is
@@ -72,6 +78,9 @@ One sync permits exactly three logical requests, up to three attempts per
 request, a 30-second total wall-clock budget, seven-second per-attempt timeout,
 and four MiB per response. Only transport failures, HTTP 408, 429, and 5xx are
 retryable. `Retry-After` and exponential backoff are capped at five seconds.
+The three endpoint reads may run concurrently, but transport concurrency is
+fixed at three and request starts retain the minimum spacing. Cancellation
+interrupts retry waits and aborts active platform requests.
 Local request and attempt counts are diagnostics; they are not presented as
 DeBank billing units because the public Units documentation does not define a
 stable per-endpoint cost table.
@@ -79,20 +88,32 @@ stable per-endpoint cost table.
 ## Write policy
 
 - One native queue serializes synchronization writes.
-- WAL and a bounded busy timeout coordinate the native writer with OP-SQLite
-  readers and ordinary TypeORM transactions.
+- Identical provider/address/options requests coalesce onto one native run.
+  A new request with different options supersedes and cancels the prior run for
+  that provider/address.
+- Rollback-journal file locks and a bounded busy timeout coordinate the native
+  writer with OP-SQLite readers and ordinary TypeORM transactions. Do not use
+  WAL while the platform writer and OP-SQLite are backed by different SQLite
+  implementations: one implementation may remove WAL/SHM files that the other
+  still has open.
 - A sync records `queued`, then `running`, then deletes and replaces the
   provider/address projection inside `BEGIN IMMEDIATE` / `COMMIT`.
 - Full sync deletes all chain projections for that provider/address. Incremental
   sync deletes only explicitly selected chain IDs, including a selected chain
   that returns no assets, so stale rows cannot survive.
 - `succeeded` is committed in the same transaction as the projection.
+- Before replacement, the transaction rejects a projection whose `observed_at`
+  is older than the last committed account snapshot.
 - Failure rolls back the projection and writes only a redacted failed state.
+  Explicit cancellation records `cancelled`; a superseded run never replaces
+  the newer run's durable state.
 - The native module emits an event only after the final state is durable.
 - Initialization converts any persisted `queued` or `running` state into
   `failed/sync_interrupted` without touching the last committed projection.
-- Concurrent refreshes of the same provider/address are rejected; different
-  addresses remain serialized by the single platform writer.
+- JavaScript ignores terminal events from a superseded run after a newer run
+  becomes active. Different addresses remain serialized by the single platform
+  writer, while the fixed requests inside the active run may execute in
+  parallel.
 
 ## Schema lifecycle
 

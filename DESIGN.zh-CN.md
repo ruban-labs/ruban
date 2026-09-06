@@ -236,6 +236,11 @@ Android 提供的 Window Insets 是唯一事实来源，导航模式变化后直
   进入展示模型。
 - 当前链和当前地址都写入全局 SQLite `app_state`，作为 Portfolio、DApp Provider 与签名
   上下文共享的唯一选择状态；预发布阶段继续直接维护基线 schema，不新增迁移。
+- Portfolio 首屏先呈现 SQLite 中最后一份完整快照，不因网络同步清空已有资产。总资产与
+  地址构成主层级；网络占比、当前链 Token 与 DeFi 仓位按价值降序展示。刷新只更新原生
+  同步状态和完整快照，界面用进度、快照年龄与当前链延迟做紧凑反馈，不铺同步说明。
+- Token 与 DeFi 行进入同一个 App 自有 Bottom Sheet 详情面。详情只保留完成判断所需的
+  余额、价格、资产、负债、净值和合约字段；Sheet 可下拉关闭且内容可滚动。
 
 ### Deep Link 安装身份
 
