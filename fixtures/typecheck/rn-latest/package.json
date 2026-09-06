@@ -17,6 +17,7 @@
     "@ruban-labs/react-native-ui-sheet": "file:./ruban-ui-sheet-local.tgz",
     "@ruban-labs/react-native-ui-theme": "file:./ruban-ui-theme-local.tgz",
     "@ruban-labs/react-native-wallet-core": "file:./ruban-wallet-core-local.tgz",
+    "@ruban-labs/react-native-worker-thread": "file:./ruban-worker-thread-local.tgz",
     "react": "19.2.8",
     "react-native": "^0.87.0",
     "react-native-safe-area-context": "5.5.2",

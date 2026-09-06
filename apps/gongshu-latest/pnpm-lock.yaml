@@ -62,6 +62,9 @@ importers:
       '@ruban-labs/react-native-wallet-core':
         specifier: file:ruban-wallet-core-local.tgz
         version: file:ruban-wallet-core-local.tgz(react-native@0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
+      '@ruban-labs/react-native-worker-thread':
+        specifier: file:ruban-worker-thread-local.tgz
+        version: file:ruban-worker-thread-local.tgz(react-native@0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
       '@ruban-labs/web-assets':
         specifier: 0.1.0
         version: 0.1.0
@@ -1489,7 +1492,14 @@ packages:
       react-native: '>=0.66.0'
 
   '@ruban-labs/react-native-wallet-core@file:ruban-wallet-core-local.tgz':
-    resolution: {integrity: sha512-KWraoUCxN4EFivZF30jQK9cnY6VEdBHI9CnIh/boLwwfogvlpKuz9pn6GR9ZcFaP1FtW+0dclizD9omTCL3Mfw==, tarball: file:ruban-wallet-core-local.tgz}
+    resolution: {integrity: sha512-KK788V8ydgv/g+wvJklYiwmP4QZUtmKpFiTwY+uu4wYRPbo4wWTj5zhfudjZY10SjZyyhHP2GaxFU6iOjb6vZA==, tarball: file:ruban-wallet-core-local.tgz}
+    version: 0.1.0
+    peerDependencies:
+      react: '>=17.0.0'
+      react-native: '>=0.66.0'
+
+  '@ruban-labs/react-native-worker-thread@file:ruban-worker-thread-local.tgz':
+    resolution: {integrity: sha512-AYU/VPZJCVCzn4vwEpmRSj8UgPos/gUZjor/alkVFCEhkgOusV0THswxcUvwLszRuqiZOaH3IHvy8SJKM6c8Kg==, tarball: file:ruban-worker-thread-local.tgz}
     version: 0.1.0
     peerDependencies:
       react: '>=17.0.0'
@@ -6301,6 +6311,11 @@ snapshots:
       react-native: 0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3)
 
   '@ruban-labs/react-native-wallet-core@file:ruban-wallet-core-local.tgz(react-native@0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      react: 19.2.3
+      react-native: 0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3)
+
+  '@ruban-labs/react-native-worker-thread@file:ruban-worker-thread-local.tgz(react-native@0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)':
     dependencies:
       react: 19.2.3
       react-native: 0.87.0(@babel/core@7.29.7)(@react-native-community/cli@20.2.0(typescript@6.0.3))(@react-native/metro-config@0.87.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3)

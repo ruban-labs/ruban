@@ -41,6 +41,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   ) -> Bool {
     RCTLinkingManager.application(application, open: url, options: options)
   }
+
 }
 
 class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {

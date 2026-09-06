@@ -1,12 +1,11 @@
 appId: com.rubanlabs.mobile.gongshu.rn066.debug
 ---
-# Gongshu app-shell smoke (ios, era 0.66). Maestro 2.x syntax.
+# Gongshu app-shell interaction smoke (ios, era 0.66). Maestro 2.x syntax.
+# CI runs the launch and first-use custom-scheme permission phases first so
+# this flow cannot clear the system permission it is intended to exercise.
 # Text-based selectors on purpose: RN exposes testID to the automation
 # hierarchy inconsistently across eras/architectures (Paper vs Fabric).
 # User-facing copy and explicit accessibility labels form the stable contract.
-- launchApp:
-    clearState: true
-- setOrientation: portrait
 - extendedWaitUntil:
     visible:
       text: "Components"
@@ -19,7 +18,7 @@ appId: com.rubanlabs.mobile.gongshu.rn066.debug
     text: "01.*Button.*"
 - extendedWaitUntil:
     visible:
-      text: "Back to components"
+      text: "Button"
     timeout: 20000
 - assertNotVisible:
     text: "Playground"
@@ -44,7 +43,7 @@ appId: com.rubanlabs.mobile.gongshu.rn066.debug
           timeout: 20000
 - extendedWaitUntil:
     visible:
-      text: "Back to components"
+      text: "LIVE"
     timeout: 120000
 - assertVisible:
     text: "LIVE"

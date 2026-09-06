@@ -256,7 +256,8 @@ function phaseApp(era) {
       "import { isWalletCoreAvailable as RubanWalletAvailable } from '@ruban-labs/react-native-wallet-core';",
       "import { createEvmClient as createRubanEvmClient } from '@ruban-labs/react-native-evm-client';",
       "import { createProviderContentScript as createRubanProviderScript } from '@ruban-labs/react-native-dapp-bridge';",
-      `console.log('${SMOKE_MARKER}', RubanBar && RubanCollapsible && RubanAccordion && RubanColors && RubanOverlayProvider && RubanDialog && RubanSheet && RubanInput && RubanRefreshIcon && RubanWalletAvailable && createRubanEvmClient && createRubanProviderScript ? 'ok' : 'missing');`,
+      "import { WorkerThread as RubanWorkerThread } from '@ruban-labs/react-native-worker-thread';",
+      `console.log('${SMOKE_MARKER}', RubanBar && RubanCollapsible && RubanAccordion && RubanColors && RubanOverlayProvider && RubanDialog && RubanSheet && RubanInput && RubanRefreshIcon && RubanWalletAvailable && createRubanEvmClient && createRubanProviderScript && RubanWorkerThread ? 'ok' : 'missing');`,
       "",
       original,
     ].join("\n");

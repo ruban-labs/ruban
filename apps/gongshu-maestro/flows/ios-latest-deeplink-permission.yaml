@@ -1,0 +1,9 @@
+appId: com.rubanlabs.mobile.debug
+---
+# A fresh iOS simulator asks before opening a custom URL scheme. Starting a
+# separate Maestro flow after the system prompt appears makes the Open button
+# discoverable across supported iOS/RN eras. The requested URL is sent again
+# when the consuming interaction flow needs that route as its initial state.
+- tapOn:
+    text: "^(Open|打开)$"
+    optional: true

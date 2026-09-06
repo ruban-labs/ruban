@@ -1,17 +1,16 @@
 appId: {{appId}}
 ---
-# Gongshu app-shell smoke (ios, era {{era}}). Maestro 2.x syntax.
+# Gongshu app-shell interaction smoke (ios, era {{era}}). Maestro 2.x syntax.
+# CI runs the launch and first-use custom-scheme permission phases first so
+# this flow cannot clear the system permission it is intended to exercise.
 # Text-based selectors on purpose: RN exposes testID to the automation
 # hierarchy inconsistently across eras/architectures (Paper vs Fabric).
 # User-facing copy and explicit accessibility labels form the stable contract.
-- launchApp:
-    clearState: true
-- setOrientation: portrait
 {{initialAssertions}}
 {{openButtonShowcase}}
 - extendedWaitUntil:
     visible:
-      text: "Back to components"
+      text: "{{buttonShowcaseReady}}"
     timeout: 20000
 - assertNotVisible:
     text: "Playground"
@@ -21,7 +20,7 @@ appId: {{appId}}
 {{openBadgeShowcase}}
 - extendedWaitUntil:
     visible:
-      text: "Back to components"
+      text: "{{badgeShowcaseReady}}"
     timeout: 120000
 - assertVisible:
     text: "LIVE"

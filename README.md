@@ -35,12 +35,21 @@ mnemonic-derived accounts share the same portfolio, DApp, RPC, permission, and
 review flows. Account capability diverges only when an operation must produce
 a signature.
 
+## Runtime roadmap
+
+`@ruban-labs/react-native-worker-thread` is the planned bare-React-Native
+worker runtime: named workers, isolated native threads, and deliberately small
+message/capability boundaries. Its architecture, support matrix, limits, and
+staged Hermes/Inspector delivery are documented in
+[Worker Runtime](./docs/architecture/worker-runtime.md).
+
 ## Packages
 
 | Package | Status | Description |
 | --- | --- | --- |
 | [`@ruban-labs/react-native-progress`](./packages/react-native-progress) | v6.0.0 | Progress bars, segmented rings, pies, spinners. Zero-dependency refurbishment of `react-native-progress`. |
 | [`@ruban-labs/react-native-collapsible`](./packages/react-native-collapsible) | v2.0.0 | Focused expand/collapse and accordion primitives. |
+| [`@ruban-labs/react-native-worker-thread`](./packages/react-native-worker-thread) | Foundation | Bounded native-thread worker runtime for bare React Native; Hermes execution and Inspector registration are staged separately. |
 | [`@ruban-labs/react-native-ui-theme`](./packages/react-native-ui-theme) | 0.1.0, incubating | Semantic colors, spacing, radii, provider, and hooks. |
 | [`@ruban-labs/react-native-ui-overlay`](./packages/react-native-ui-overlay) | 0.1.0, incubating | A single native Modal host with queue, stack, and replace policies. |
 | [`@ruban-labs/react-native-ui-dialog`](./packages/react-native-ui-dialog) | 0.1.0, incubating | Composable dialogs built on the Theme and Overlay peers. |
