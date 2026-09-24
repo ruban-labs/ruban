@@ -2,6 +2,10 @@
 
 Gongshu keeps distribution identity and build-cache policy as independent axes.
 
+Website deployments have a separate [release index](releases/README.md) and
+[hosting guide](releases/site-hosting.md). Publishing the website does not build
+or distribute an App package.
+
 ## Distribution Identities
 
 Every app has three co-installable identities on Android and iOS:
