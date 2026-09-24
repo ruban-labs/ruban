@@ -23,7 +23,7 @@
     "registry:sync": "node scripts/design/sync-source-registry.mjs",
     "registry:check": "node scripts/design/sync-source-registry.mjs --check",
     "site:build": "pnpm design:theme:check && pnpm --filter @ruban-labs/website build",
-    "site:check": "pnpm design:theme:check && pnpm --filter @ruban-labs/website check && pnpm --filter @ruban-labs/website build && node scripts/site/check.mjs",
+    "site:check": "node --test scripts/site/*.test.mjs && pnpm design:theme:check && pnpm --filter @ruban-labs/website check && pnpm --filter @ruban-labs/website build && node scripts/site/check.mjs",
     "site:dev": "pnpm design:theme:check && pnpm --filter @ruban-labs/website dev",
     "site:preview": "pnpm site:build && pnpm --filter @ruban-labs/website preview",
     "build": "pnpm -r run build",

@@ -13,24 +13,47 @@ on:
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
       - scripts/design/generate-theme-colors.mjs
-      - scripts/site/check.mjs
+      - scripts/site/**
       - website/**
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Website environment (production requires main)
+        type: choice
+        default: preview
+        required: true
+        options:
+          - preview
+          - production
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: website-${{ inputs.environment || 'production' }}
   cancel-in-progress: true
 
 jobs:
   build:
+    if: github.repository == 'ruban-labs/ruban'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RUBAN_SITE_ENV: ${{ inputs.environment || 'production' }}
+    outputs:
+      environment: ${{ steps.destination.outputs.environment }}
+      repository: ${{ steps.destination.outputs.repository }}
+      repository_name: ${{ steps.destination.outputs.repository_name }}
+      host: ${{ steps.destination.outputs.host }}
+      url: ${{ steps.destination.outputs.url }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Validate publishing destination
+        id: destination
+        run: node scripts/site/deployment.mjs
 
       - uses: pnpm/action-setup@v4
         with:
@@ -41,20 +64,62 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ruban-labs/website install --frozen-lockfile
       - run: pnpm site:check
+      - run: node scripts/site/prepare.mjs
 
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
+          name: website-${{ steps.destination.outputs.environment }}
           path: website/dist
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
 
-  deploy:
+  publish:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      name: website-${{ needs.build.outputs.environment }}
+      url: ${{ needs.build.outputs.url }}
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v5
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: website-${{ needs.build.outputs.environment }}
+          path: site-artifact
+
+      - name: Create destination-scoped publishing token
+        uses: actions/create-github-app-token@v3
+        id: publish-token
+        with:
+          app-id: ${{ secrets.RUBAN_GITHUB_APP_ID }}
+          private-key: ${{ secrets.RUBAN_GITHUB_APP_PRIVATE_KEY }}
+          owner: ruban-labs
+          repositories: ${{ needs.build.outputs.repository_name }}
+          permission-contents: write
+
+      - name: Publish static files
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453
+        with:
+          personal_token: ${{ steps.publish-token.outputs.token }}
+          external_repository: ${{ needs.build.outputs.repository }}
+          publish_branch: main
+          publish_dir: site-artifact
+          cname: ${{ needs.build.outputs.host }}
+          enable_jekyll: false
+          force_orphan: false
+          keep_files: false
+          full_commit_message: 'deploy: ${{ needs.build.outputs.environment }} from ruban-labs/ruban@${{ github.sha }}'
+
+      - name: Publishing receipt
+        env:
+          SITE_REPOSITORY: ${{ needs.build.outputs.repository }}
+          SITE_URL: ${{ needs.build.outputs.url }}
+        run: |
+          echo "Published static files to [$SITE_REPOSITORY](https://github.com/$SITE_REPOSITORY)." >> "$GITHUB_STEP_SUMMARY"
+          echo "Pages must finish its own deployment: [$SITE_URL]($SITE_URL). Verify deployment.json sourceSha equals $GITHUB_SHA." >> "$GITHUB_STEP_SUMMARY"

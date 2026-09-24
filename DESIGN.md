@@ -580,3 +580,24 @@ Agents must not improvise a new visual language screen by screen.
 The long-term design kit should contain semantic tokens, reusable patterns,
 reference screenshots, and deterministic scenario definitions. Those assets
 are executable constraints for agents, not mood-board decoration.
+
+## Website and App continuity
+
+The website and App are two presentations of one visual system, not separate
+design projects. `design/theme-colors.json` owns shared light/dark primitives and
+semantic colors; its generator produces the RN theme package and website CSS.
+Change the source and regenerate, never hand-edit generated outputs. Run
+`pnpm design:theme:check` to catch drift.
+
+Use the existing typography hierarchy, restrained radii, crisp edges, semantic
+icons and sparse copy on both surfaces. New UI uses semantic colors rather than
+page-specific hex values. The App Playground is the reference for components;
+brand assets remain the same approved SVG masters. Platform fonts and responsive
+layout may differ deliberately: a web hero is not a mobile navigation title.
+
+Keep implementation native to each platform (Astro/CSS and React Native); do not
+force shared component code or copy an entire mobile screen into the website.
+Review representative light/dark and narrow/wide screenshots side by side for
+hierarchy, density, alignment, contrast, focus/touch targets and overflow. Visual
+review is a human checkpoint, not a brittle pixel-perfect CI gate. Record accepted
+design decisions here before applying them independently in either surface.

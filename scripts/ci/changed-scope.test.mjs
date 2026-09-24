@@ -4,7 +4,13 @@ import test from "node:test";
 import { buildWorkflowOutputs, classifyChangedPaths } from "./changed-scope.mjs";
 
 test("site-only changes skip package and native matrices", () => {
-  const result = classifyChangedPaths(["website/src/pages/index.astro", "scripts/site/check.mjs"]);
+  const result = classifyChangedPaths([
+    "website/src/pages/index.astro",
+    "website/site-environment.mjs",
+    "scripts/site/check.mjs",
+    "scripts/site/deployment.mjs",
+    ".github/workflows/pages.yml",
+  ]);
 
   assert.equal(result.site, true);
   assert.equal(result.verify, false);
