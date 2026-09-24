@@ -209,6 +209,193 @@ static NSString *RubanJSONString(id object, NSError **error) {
   return data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : nil;
 }
 
+@interface RubanSyncCancellation : NSObject
+@property(nonatomic, readonly) BOOL cancelled;
+@property(nonatomic, copy, readonly) NSString *reason;
+- (BOOL)cancelWithReason:(NSString *)reason;
+- (BOOL)registerTask:(NSURLSessionDataTask *)task;
+- (void)unregisterTask:(NSURLSessionDataTask *)task;
+- (void)abortActiveTasks;
+- (BOOL)sleepForMilliseconds:(long long)milliseconds;
+@end
+
+@implementation RubanSyncCancellation {
+  BOOL _cancelled;
+  NSString *_reason;
+  NSMutableSet<NSURLSessionDataTask *> *_tasks;
+}
+
+- (instancetype)init {
+  self = [super init];
+  if (self) _tasks = [NSMutableSet set];
+  return self;
+}
+
+- (BOOL)cancelled {
+  @synchronized(self) {
+    return _cancelled;
+  }
+}
+
+- (NSString *)reason {
+  @synchronized(self) {
+    return _reason ?: @"sync_cancelled";
+  }
+}
+
+- (BOOL)cancelWithReason:(NSString *)reason {
+  @synchronized(self) {
+    if (_cancelled) return NO;
+    _cancelled = YES;
+    _reason = [reason copy];
+  }
+  [self abortActiveTasks];
+  return YES;
+}
+
+- (BOOL)registerTask:(NSURLSessionDataTask *)task {
+  @synchronized(self) {
+    if (_cancelled) {
+      [task cancel];
+      return NO;
+    }
+    [_tasks addObject:task];
+    return YES;
+  }
+}
+
+- (void)unregisterTask:(NSURLSessionDataTask *)task {
+  @synchronized(self) {
+    [_tasks removeObject:task];
+  }
+}
+
+- (void)abortActiveTasks {
+  NSArray<NSURLSessionDataTask *> *tasks;
+  @synchronized(self) {
+    tasks = _tasks.allObjects;
+  }
+  for (NSURLSessionDataTask *task in tasks) [task cancel];
+}
+
+- (BOOL)sleepForMilliseconds:(long long)milliseconds {
+  long long remaining = milliseconds;
+  while (remaining > 0) {
+    if (self.cancelled) return NO;
+    long long interval = MIN(remaining, 50);
+    [NSThread sleepForTimeInterval:(NSTimeInterval)interval / 1000.0];
+    remaining -= interval;
+  }
+  return !self.cancelled;
+}
+
+@end
+
+@interface RubanSyncRun : NSObject
+@property(nonatomic, copy) NSString *key;
+@property(nonatomic, copy) NSString *providerId;
+@property(nonatomic, copy) NSString *address;
+@property(nonatomic, copy) NSString *optionsJson;
+@property(nonatomic, copy) NSString *forcedMode;
+@property(nonatomic, copy) NSString *fingerprint;
+@property(nonatomic, copy) NSString *runId;
+@property(nonatomic) long long queuedAt;
+@property(nonatomic) NSInteger totalChains;
+@property(nonatomic) RubanSyncCancellation *cancellation;
+- (instancetype)initWithKey:(NSString *)key providerId:(NSString *)providerId
+                     address:(NSString *)address optionsJson:(NSString *)optionsJson
+                  forcedMode:(NSString *)forcedMode fingerprint:(NSString *)fingerprint
+                       runId:(NSString *)runId queuedAt:(long long)queuedAt
+                 totalChains:(NSInteger)totalChains resolve:(RCTPromiseResolveBlock)resolve
+                      reject:(RCTPromiseRejectBlock)reject;
+- (BOOL)addResolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (BOOL)cancelWithReason:(NSString *)reason;
+- (void)markTerminal;
+- (void)resolveAll:(id)value;
+- (void)rejectAllWithCode:(NSString *)code error:(NSError *)error;
+@end
+
+@implementation RubanSyncRun {
+  NSMutableArray<RCTPromiseResolveBlock> *_resolvers;
+  NSMutableArray<RCTPromiseRejectBlock> *_rejecters;
+  BOOL _settled;
+  BOOL _terminal;
+}
+
+- (instancetype)initWithKey:(NSString *)key providerId:(NSString *)providerId
+                     address:(NSString *)address optionsJson:(NSString *)optionsJson
+                  forcedMode:(NSString *)forcedMode fingerprint:(NSString *)fingerprint
+                       runId:(NSString *)runId queuedAt:(long long)queuedAt
+                 totalChains:(NSInteger)totalChains resolve:(RCTPromiseResolveBlock)resolve
+                      reject:(RCTPromiseRejectBlock)reject {
+  self = [super init];
+  if (self) {
+    _key = [key copy];
+    _providerId = [providerId copy];
+    _address = [address copy];
+    _optionsJson = [optionsJson copy];
+    _forcedMode = [forcedMode copy];
+    _fingerprint = [fingerprint copy];
+    _runId = [runId copy];
+    _queuedAt = queuedAt;
+    _totalChains = totalChains;
+    _cancellation = [RubanSyncCancellation new];
+    _resolvers = [NSMutableArray arrayWithObject:[resolve copy]];
+    _rejecters = [NSMutableArray arrayWithObject:[reject copy]];
+  }
+  return self;
+}
+
+- (BOOL)addResolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+  @synchronized(self) {
+    if (_settled || _terminal || self.cancellation.cancelled) return NO;
+    [_resolvers addObject:[resolve copy]];
+    [_rejecters addObject:[reject copy]];
+    return YES;
+  }
+}
+
+- (BOOL)cancelWithReason:(NSString *)reason {
+  @synchronized(self) {
+    if (_settled || _terminal) return NO;
+    return [self.cancellation cancelWithReason:reason];
+  }
+}
+
+- (void)markTerminal {
+  @synchronized(self) {
+    _terminal = YES;
+  }
+}
+
+- (void)resolveAll:(id)value {
+  NSArray<RCTPromiseResolveBlock> *resolvers;
+  @synchronized(self) {
+    if (_settled) return;
+    _settled = YES;
+    resolvers = [_resolvers copy];
+    [_resolvers removeAllObjects];
+    [_rejecters removeAllObjects];
+  }
+  for (RCTPromiseResolveBlock resolve in resolvers) resolve(value);
+}
+
+- (void)rejectAllWithCode:(NSString *)code error:(NSError *)error {
+  NSArray<RCTPromiseRejectBlock> *rejecters;
+  @synchronized(self) {
+    if (_settled) return;
+    _settled = YES;
+    rejecters = [_rejecters copy];
+    [_resolvers removeAllObjects];
+    [_rejecters removeAllObjects];
+  }
+  for (RCTPromiseRejectBlock reject in rejecters) {
+    reject(code, @"Portfolio data engine failed", error);
+  }
+}
+
+@end
+
 @interface RubanNoRedirectDelegate : NSObject <NSURLSessionTaskDelegate>
 @end
 
@@ -226,7 +413,8 @@ willPerformHTTPRedirection:(NSHTTPURLResponse *)response
 @property(nonatomic) NSURLSession *session;
 @property(nonatomic) RubanNoRedirectDelegate *delegate;
 @property(nonatomic) long long lastRequestAt;
-- (NSArray *)executePlan:(NSArray *)plan error:(NSError **)error;
+- (NSArray *)executePlan:(NSArray *)plan cancellation:(RubanSyncCancellation *)cancellation
+                   error:(NSError **)error;
 @end
 
 @implementation RubanDeBankHTTPClient
@@ -239,6 +427,7 @@ willPerformHTTPRedirection:(NSHTTPURLResponse *)response
         NSURLSessionConfiguration.ephemeralSessionConfiguration;
     configuration.URLCache = nil;
     configuration.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
+    configuration.HTTPMaximumConnectionsPerHost = RubanDeBankRequestCount;
     _session = [NSURLSession sessionWithConfiguration:configuration
                                              delegate:_delegate
                                         delegateQueue:nil];
@@ -246,7 +435,8 @@ willPerformHTTPRedirection:(NSHTTPURLResponse *)response
   return self;
 }
 
-- (NSArray *)executePlan:(NSArray *)plan error:(NSError **)error {
+- (NSArray *)executePlan:(NSArray *)plan cancellation:(RubanSyncCancellation *)cancellation
+                   error:(NSError **)error {
   if (plan.count != RubanDeBankRequestCount) {
     if (error) {
       *error = RubanDataEngineError(@"provider_contract_invalid",
@@ -256,15 +446,47 @@ willPerformHTTPRedirection:(NSHTTPURLResponse *)response
   }
   long long deadline = RubanUptimeMs() + RubanDeBankMaxSyncDurationMs;
   NSMutableArray *payloads = [NSMutableArray arrayWithCapacity:plan.count];
-  for (NSDictionary *request in plan) {
-    NSDictionary *payload = [self executeRequest:request deadline:deadline error:error];
-    if (!payload) return nil;
-    [payloads addObject:payload];
+  for (NSUInteger index = 0; index < plan.count; index += 1) {
+    [payloads addObject:NSNull.null];
+  }
+  NSOperationQueue *queue = [NSOperationQueue new];
+  queue.maxConcurrentOperationCount = RubanDeBankRequestCount;
+  __block NSError *firstError = nil;
+  for (NSUInteger index = 0; index < plan.count; index += 1) {
+    NSDictionary *request = plan[index];
+    [queue addOperationWithBlock:^{
+      NSError *requestError = nil;
+      NSDictionary *payload = [self executeRequest:request deadline:deadline
+                                       cancellation:cancellation error:&requestError];
+      @synchronized(payloads) {
+        if (payload) {
+          payloads[index] = payload;
+        } else if (!firstError) {
+          firstError = requestError ?: RubanDataEngineError(
+              @"provider_transport_failed", @"Unable to reach DeBank");
+        }
+      }
+      if (!payload) {
+        [cancellation abortActiveTasks];
+        [queue cancelAllOperations];
+      }
+    }];
+  }
+  [queue waitUntilAllOperationsAreFinished];
+  if (cancellation.cancelled) {
+    if (error) *error = RubanDataEngineError(cancellation.reason,
+                                              @"Portfolio sync was cancelled");
+    return nil;
+  }
+  if (firstError) {
+    if (error) *error = firstError;
+    return nil;
   }
   return payloads;
 }
 
 - (NSDictionary *)executeRequest:(NSDictionary *)request deadline:(long long)deadline
+                     cancellation:(RubanSyncCancellation *)cancellation
                             error:(NSError **)error {
   NSString *endpointId = request[@"endpointId"];
   NSString *path = request[@"path"];
@@ -281,6 +503,11 @@ willPerformHTTPRedirection:(NSHTTPURLResponse *)response
   }
 
   for (NSInteger attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    if (cancellation.cancelled) {
+      if (error) *error = RubanDataEngineError(cancellation.reason,
+                                                @"Portfolio sync was cancelled");
+      return nil;
+    }
     long long remaining = deadline - RubanUptimeMs();
     if (remaining <= 0) {
       if (error) {
@@ -293,7 +520,13 @@ willPerformHTTPRedirection:(NSHTTPURLResponse *)response
     NSDictionary *response = [self executeOnce:path
                                       timeoutMs:MIN(timeoutMs, remaining)
                                    maxBodyBytes:maxBodyBytes
+                                  cancellation:cancellation
                                           error:&attemptError];
+    if (cancellation.cancelled) {
+      if (error) *error = RubanDataEngineError(cancellation.reason,
+                                                @"Portfolio sync was cancelled");
+      return nil;
+    }
     NSInteger statusCode = response ? [response[@"statusCode"] integerValue] : 0;
     long long retryAfterMs = response ? [response[@"retryAfterMs"] longLongValue] : -1;
     if (response && statusCode >= 200 && statusCode < 300) {
@@ -330,7 +563,11 @@ willPerformHTTPRedirection:(NSHTTPURLResponse *)response
       }
       return nil;
     }
-    [NSThread sleepForTimeInterval:(NSTimeInterval)delay / 1000.0];
+    if (![cancellation sleepForMilliseconds:delay]) {
+      if (error) *error = RubanDataEngineError(cancellation.reason,
+                                                @"Portfolio sync was cancelled");
+      return nil;
+    }
   }
   if (error) {
     *error = RubanDataEngineError(@"provider_transport_failed",
@@ -340,11 +577,21 @@ willPerformHTTPRedirection:(NSHTTPURLResponse *)response
 }
 
 - (NSDictionary *)executeOnce:(NSString *)path timeoutMs:(NSInteger)timeoutMs
-                  maxBodyBytes:(NSInteger)maxBodyBytes error:(NSError **)error {
-  long long now = RubanUptimeMs();
-  long long waitMs = RubanDeBankMinimumIntervalMs - (now - self.lastRequestAt);
-  if (waitMs > 0) [NSThread sleepForTimeInterval:(NSTimeInterval)waitMs / 1000.0];
-  self.lastRequestAt = RubanUptimeMs();
+                  maxBodyBytes:(NSInteger)maxBodyBytes
+                 cancellation:(RubanSyncCancellation *)cancellation
+                         error:(NSError **)error {
+  long long waitMs = 0;
+  @synchronized(self) {
+    long long now = RubanUptimeMs();
+    long long scheduledAt = MAX(now, self.lastRequestAt + RubanDeBankMinimumIntervalMs);
+    self.lastRequestAt = scheduledAt;
+    waitMs = scheduledAt - now;
+  }
+  if (waitMs > 0 && ![cancellation sleepForMilliseconds:waitMs]) {
+    if (error) *error = RubanDataEngineError(cancellation.reason,
+                                              @"Portfolio sync was cancelled");
+    return nil;
+  }
 
   NSURL *url = [NSURL URLWithString:[@"https://pro-openapi.debank.com"
                                       stringByAppendingString:path]];
@@ -381,9 +628,20 @@ willPerformHTTPRedirection:(NSHTTPURLResponse *)response
           requestError = failure;
           dispatch_semaphore_signal(semaphore);
         }];
+  if (![cancellation registerTask:task]) {
+    if (error) *error = RubanDataEngineError(cancellation.reason,
+                                              @"Portfolio sync was cancelled");
+    return nil;
+  }
   [task resume];
   long waitStatus = dispatch_semaphore_wait(
       semaphore, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeoutMs + 1000) * NSEC_PER_MSEC));
+  [cancellation unregisterTask:task];
+  if (cancellation.cancelled) {
+    if (error) *error = RubanDataEngineError(cancellation.reason,
+                                              @"Portfolio sync was cancelled");
+    return nil;
+  }
   if (waitStatus != 0) {
     [task cancel];
     if (error) {
@@ -454,7 +712,7 @@ willPerformHTTPRedirection:(NSHTTPURLResponse *)response
 @interface RubanDataEngine ()
 @property(nonatomic, copy) NSString *databasePath;
 @property(nonatomic) dispatch_queue_t writerQueue;
-@property(nonatomic) NSMutableSet<NSString *> *inFlightSyncs;
+@property(nonatomic) NSMutableDictionary<NSString *, RubanSyncRun *> *inFlightSyncs;
 @property(nonatomic) RubanDeBankHTTPClient *httpClient;
 @end
 
@@ -467,7 +725,7 @@ RCT_EXPORT_MODULE()
   if (self) {
     _writerQueue = dispatch_queue_create("com.rubanlabs.data-engine.writer",
                                          DISPATCH_QUEUE_SERIAL);
-    _inFlightSyncs = [NSMutableSet set];
+    _inFlightSyncs = [NSMutableDictionary dictionary];
     _httpClient = [RubanDeBankHTTPClient new];
   }
   return self;
@@ -611,6 +869,34 @@ RCT_REMAP_METHOD(syncMockPortfolio,
           forcedMode:@"mock" resolve:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(cancelPortfolioSync,
+                 cancelPortfolioSyncWithProviderId:(NSString *)providerId
+                 address:(NSString *)address
+                 resolver:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject) {
+  if (![providerId isEqualToString:RubanProviderId] ||
+      ![address isKindOfClass:NSString.class]) {
+    reject(@"invalid_sync_options", @"Invalid portfolio sync options", nil);
+    return;
+  }
+  NSString *normalizedAddress = address.lowercaseString;
+  NSString *key = [NSString stringWithFormat:@"%@:%@", providerId,
+                                             normalizedAddress];
+  RubanSyncRun *run;
+  BOOL cancelled;
+  @synchronized(self.inFlightSyncs) {
+    run = self.inFlightSyncs[key];
+    cancelled = run && [run cancelWithReason:@"sync_cancelled"];
+  }
+  NSMutableDictionary *result = [@{
+    @"providerId" : providerId,
+    @"address" : normalizedAddress,
+    @"cancelled" : @(cancelled)
+  } mutableCopy];
+  if (run) result[@"runId"] = run.runId;
+  resolve(result);
+}
+
 - (void)configureSource:(NSString *)providerId mode:(NSString *)mode
         credentialState:(NSString *)credentialState enabled:(BOOL)enabled
                  resolve:(RCTPromiseResolveBlock)resolve
@@ -667,84 +953,92 @@ RCT_REMAP_METHOD(syncMockPortfolio,
     reject(@"invalid_sync_options", @"Invalid portfolio sync options", jsonError);
     return;
   }
+  NSString *normalizedAddress = address.lowercaseString;
   NSString *key = [NSString stringWithFormat:@"%@:%@", providerId,
-                                             address.lowercaseString];
+                                             normalizedAddress];
+  NSString *fingerprint = [NSString stringWithFormat:@"%@:%@",
+      forcedMode ?: @"current", optionsJson];
+  RubanSyncRun *run;
   @synchronized(self.inFlightSyncs) {
-    if ([self.inFlightSyncs containsObject:key]) {
-      reject(@"sync_already_running", @"A portfolio sync is already running", nil);
+    RubanSyncRun *current = self.inFlightSyncs[key];
+    if (current && [current.fingerprint isEqualToString:fingerprint] &&
+        [current addResolve:resolve reject:reject]) {
       return;
     }
-    [self.inFlightSyncs addObject:key];
+    if (current) [current cancelWithReason:@"sync_superseded"];
+    run = [[RubanSyncRun alloc]
+        initWithKey:key providerId:providerId address:normalizedAddress
+        optionsJson:optionsJson forcedMode:forcedMode fingerprint:fingerprint
+        runId:NSUUID.UUID.UUIDString queuedAt:RubanNowMs()
+        totalChains:[self requestedChainCount:options] resolve:resolve reject:reject];
+    self.inFlightSyncs[key] = run;
   }
-  NSString *runId = NSUUID.UUID.UUIDString;
-  long long queuedAt = RubanNowMs();
-  NSInteger totalChains = [self requestedChainCount:options];
-  [self emitProvider:providerId address:address runId:runId state:@"queued"
-               stage:@"waiting" completedChains:0 totalChains:totalChains
-           updatedAt:queuedAt errorCode:nil];
+  [self emitProvider:providerId address:normalizedAddress runId:run.runId
+               state:@"queued" stage:@"waiting" completedChains:0
+         totalChains:run.totalChains updatedAt:run.queuedAt errorCode:nil];
   dispatch_async(self.writerQueue, ^{
-    [self runSync:providerId address:address optionsJson:optionsJson
-        forcedMode:forcedMode runId:runId queuedAt:queuedAt
-           resolve:resolve reject:reject];
+    [self runSync:run];
     @synchronized(self.inFlightSyncs) {
-      [self.inFlightSyncs removeObject:key];
+      if (self.inFlightSyncs[key] == run) [self.inFlightSyncs removeObjectForKey:key];
     }
   });
 }
 
-- (void)runSync:(NSString *)providerId address:(NSString *)address
-    optionsJson:(NSString *)optionsJson forcedMode:(NSString *)forcedMode
-          runId:(NSString *)runId queuedAt:(long long)queuedAt
-         resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)runSync:(RubanSyncRun *)run {
   long long startedAt = RubanNowMs();
-  NSInteger requestedChains = 0;
-  NSData *optionsData = [optionsJson dataUsingEncoding:NSUTF8StringEncoding];
-  NSDictionary *options = [NSJSONSerialization JSONObjectWithData:optionsData options:0 error:nil];
-  requestedChains = [self requestedChainCount:options];
   NSError *error = nil;
-  if (![providerId isEqualToString:RubanProviderId]) {
+  if (![run.providerId isEqualToString:RubanProviderId]) {
     error = RubanDataEngineError(@"unsupported_provider", @"Unsupported provider");
-  } else if (![self writeSyncStateProvider:providerId address:address runId:runId
-                                     state:@"queued" stage:@"waiting"
-                           completedChains:0 totalChains:requestedChains
-                                 startedAt:queuedAt completedAt:0 updatedAt:queuedAt
-                                 errorCode:nil error:&error] ||
-             ![self writeSyncStateProvider:providerId address:address runId:runId
-                                     state:@"running" stage:@"portfolio"
-                           completedChains:0 totalChains:requestedChains
-                                 startedAt:startedAt completedAt:0 updatedAt:startedAt
-                                 errorCode:nil error:&error]) {
+  } else {
+    @synchronized(self.inFlightSyncs) {
+      if (self.inFlightSyncs[run.key] != run) {
+        error = RubanDataEngineError(@"sync_superseded", @"Portfolio sync was superseded");
+      } else if (run.cancellation.cancelled) {
+        error = RubanDataEngineError(run.cancellation.reason,
+                                     @"Portfolio sync was cancelled");
+      } else if (![self writeSyncStateProvider:run.providerId address:run.address
+                                         runId:run.runId state:@"queued" stage:@"waiting"
+                               completedChains:0 totalChains:run.totalChains
+                                     startedAt:run.queuedAt completedAt:0
+                                     updatedAt:run.queuedAt errorCode:nil error:&error] ||
+                 ![self writeSyncStateProvider:run.providerId address:run.address
+                                         runId:run.runId state:@"running" stage:@"provider"
+                               completedChains:0 totalChains:run.totalChains
+                                     startedAt:startedAt completedAt:0
+                                     updatedAt:startedAt errorCode:nil error:&error]) {
+      }
+    }
   }
   if (error) {
-    [self failRun:providerId address:address runId:runId startedAt:startedAt
-        totalChains:requestedChains errorCode:[self safeErrorCode:error]
-            reject:reject error:error];
+    [self failRun:run startedAt:startedAt errorCode:[self safeErrorCode:error]
+             error:error];
     return;
   }
-  [self emitProvider:providerId address:address runId:runId state:@"running"
-               stage:@"portfolio" completedChains:0 totalChains:requestedChains
-           updatedAt:startedAt errorCode:nil];
+  [self emitProvider:run.providerId address:run.address runId:run.runId
+               state:@"running" stage:@"provider" completedChains:0
+         totalChains:run.totalChains updatedAt:startedAt errorCode:nil];
 
-  NSString *mode = forcedMode ?: [self sourceMode:providerId error:&error];
+  NSString *mode = run.forcedMode ?: [self sourceMode:run.providerId error:&error];
   NSDictionary *result = nil;
   if (!error) {
     try {
       std::string resultJson;
       if ([mode isEqualToString:@"mock"]) {
         resultJson = ruban::data::create_mock_debank_sync_result_json(
-            address.UTF8String, startedAt, optionsJson.UTF8String);
+            run.address.UTF8String, startedAt, run.optionsJson.UTF8String);
       } else if ([mode isEqualToString:@"byok"]) {
         if (!RubanHasAccessKey()) {
           error = RubanDataEngineError(@"credential_missing", @"AccessKey is missing");
         } else {
           std::string planJson = ruban::data::build_debank_request_plan_json(
-              address.UTF8String, optionsJson.UTF8String);
+              run.address.UTF8String, run.optionsJson.UTF8String);
           NSArray *plan = RubanJSONObject(planJson, &error);
-          NSArray *payloads = error ? nil : [self.httpClient executePlan:plan error:&error];
+          NSArray *payloads = error ? nil : [self.httpClient executePlan:plan
+              cancellation:run.cancellation error:&error];
           NSString *payloadsJson = error ? nil : RubanJSONString(payloads, &error);
           if (!error) {
             resultJson = ruban::data::create_debank_sync_result_json(
-                address.UTF8String, startedAt, optionsJson.UTF8String,
+                run.address.UTF8String, startedAt, run.optionsJson.UTF8String,
                 payloadsJson.UTF8String, "debank:cloud");
           }
         }
@@ -763,8 +1057,7 @@ RCT_REMAP_METHOD(syncMockPortfolio,
   }
   if (![result isKindOfClass:NSDictionary.class]) {
     NSString *code = [self safeErrorCode:error];
-    [self failRun:providerId address:address runId:runId startedAt:startedAt
-        totalChains:requestedChains errorCode:code reject:reject error:error];
+    [self failRun:run startedAt:startedAt errorCode:code error:error];
     return;
   }
 
@@ -775,45 +1068,94 @@ RCT_REMAP_METHOD(syncMockPortfolio,
                                    ? chains.count
                                    : replaceChainIds.count;
   long long completedAt = RubanNowMs();
-  sqlite3 *database = RubanOpenDatabase(self.databasePath, &error);
-  if (!database) {
-    [self failRun:providerId address:address runId:runId startedAt:startedAt
-        totalChains:requestedChains errorCode:@"database_open_failed"
-            reject:reject error:error];
-    return;
+  __block BOOL written = NO;
+  @synchronized(self.inFlightSyncs) {
+    if (self.inFlightSyncs[run.key] != run) {
+      error = RubanDataEngineError(@"sync_superseded", @"Portfolio sync was superseded");
+    } else if (run.cancellation.cancelled) {
+      error = RubanDataEngineError(run.cancellation.reason,
+                                   @"Portfolio sync was cancelled");
+    } else {
+      sqlite3 *database = RubanOpenDatabase(self.databasePath, &error);
+      if (database) {
+        written = RubanExecute(database, @"BEGIN IMMEDIATE", @[], &error) &&
+                  [self rejectStaleProjection:database provider:run.providerId
+                                      address:normalizedAddress
+                                   observedAt:[result[@"observedAt"] longLongValue]
+                                        error:&error] &&
+                  [self replaceProjection:result database:database error:&error] &&
+                  [self upsertSyncState:database provider:run.providerId
+                                address:normalizedAddress runId:run.runId
+                                  state:@"succeeded" stage:@"complete"
+                        completedChains:completedChains totalChains:completedChains
+                              startedAt:startedAt completedAt:completedAt
+                             durationMs:completedAt - startedAt
+                              updatedAt:completedAt errorCode:nil error:&error] &&
+                  RubanExecute(database, @"COMMIT", @[], &error);
+        if (!written) RubanExecute(database, @"ROLLBACK", @[], nil);
+        sqlite3_close(database);
+      }
+      if (written) [run markTerminal];
+    }
   }
-  BOOL written = RubanExecute(database, @"BEGIN IMMEDIATE", @[], &error) &&
-                 [self replaceProjection:result database:database error:&error] &&
-                 [self upsertSyncState:database provider:providerId
-                               address:normalizedAddress runId:runId
-                                 state:@"succeeded" stage:@"complete"
-                       completedChains:completedChains totalChains:completedChains
-                             startedAt:startedAt completedAt:completedAt
-                            durationMs:completedAt - startedAt
-                             updatedAt:completedAt errorCode:nil error:&error] &&
-                 RubanExecute(database, @"COMMIT", @[], &error);
-  if (!written) RubanExecute(database, @"ROLLBACK", @[], nil);
-  sqlite3_close(database);
   if (!written) {
-    [self failRun:providerId address:address runId:runId startedAt:startedAt
-        totalChains:requestedChains errorCode:@"database_write_failed"
-            reject:reject error:error];
+    NSString *code = [self safeErrorCode:error];
+    [self failRun:run startedAt:startedAt errorCode:code error:error];
     return;
   }
-  [self emitProvider:providerId address:normalizedAddress runId:runId
+  [self emitProvider:run.providerId address:normalizedAddress runId:run.runId
                state:@"succeeded" stage:@"complete"
      completedChains:completedChains totalChains:completedChains
            updatedAt:completedAt errorCode:nil];
-  resolve(@{
-    @"providerId" : providerId,
+  [run resolveAll:@{
+    @"providerId" : run.providerId,
     @"address" : normalizedAddress,
-    @"runId" : runId,
+    @"runId" : run.runId,
     @"completedChains" : @(completedChains),
     @"totalChains" : @(completedChains),
     @"observedAt" : result[@"observedAt"],
     @"requestCount" : result[@"requestCount"],
     @"attemptCount" : result[@"attemptCount"]
-  });
+  }];
+}
+
+- (BOOL)rejectStaleProjection:(sqlite3 *)database provider:(NSString *)providerId
+                      address:(NSString *)address observedAt:(long long)observedAt
+                        error:(NSError **)error {
+  sqlite3_stmt *statement = nullptr;
+  int status = sqlite3_prepare_v2(
+      database,
+      "SELECT observed_at FROM portfolio_account_snapshots WHERE provider_id = ? AND address = ? LIMIT 1",
+      -1, &statement, nullptr);
+  if (status != SQLITE_OK || statement == nullptr) {
+    if (error) {
+      *error = RubanDataEngineError(@"database_write_failed",
+                                    @"Unable to inspect portfolio storage");
+    }
+    return NO;
+  }
+  if (!RubanBind(statement, @[ providerId, address ], error)) {
+    sqlite3_finalize(statement);
+    return NO;
+  }
+  status = sqlite3_step(statement);
+  if (status == SQLITE_ROW && sqlite3_column_int64(statement, 0) > observedAt) {
+    sqlite3_finalize(statement);
+    if (error) {
+      *error = RubanDataEngineError(@"sync_stale_response",
+                                    @"Portfolio sync result is stale");
+    }
+    return NO;
+  }
+  sqlite3_finalize(statement);
+  if (status != SQLITE_ROW && status != SQLITE_DONE) {
+    if (error) {
+      *error = RubanDataEngineError(@"database_write_failed",
+                                    @"Unable to inspect portfolio storage");
+    }
+    return NO;
+  }
+  return YES;
 }
 
 - (BOOL)replaceProjection:(NSDictionary *)projection database:(sqlite3 *)database
@@ -875,26 +1217,32 @@ RCT_REMAP_METHOD(syncMockPortfolio,
   }
   for (NSDictionary *token in projection[@"tokens"]) {
     NSString *contractAddress = token[@"contractAddress"];
+    NSString *logoUrl = [token[@"logoUrl"] isKindOfClass:NSString.class]
+                            ? token[@"logoUrl"]
+                            : nil;
     if (!RubanExecute(
             database,
             @"INSERT INTO portfolio_token_balances "
-             "(provider_id, address, chain_id, asset_id, symbol, name, contract_address, decimals, balance, display_balance, price_usd, value_usd, observed_at) "
-             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+             "(provider_id, address, chain_id, asset_id, symbol, name, logo_url, contract_address, decimals, balance, display_balance, price_usd, value_usd, observed_at) "
+             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             @[ providerId, address, token[@"chainId"], token[@"assetId"],
-               token[@"symbol"], token[@"name"],
+               token[@"symbol"], token[@"name"], logoUrl ?: NSNull.null,
                contractAddress.length ? contractAddress : NSNull.null,
                token[@"decimals"], token[@"balance"], token[@"displayBalance"],
                token[@"priceUsd"], token[@"valueUsd"], observedAt ], error)) return NO;
   }
   for (NSDictionary *protocol in projection[@"protocols"]) {
+    NSString *logoUrl = [protocol[@"logoUrl"] isKindOfClass:NSString.class]
+                            ? protocol[@"logoUrl"]
+                            : nil;
     if (!RubanExecute(
             database,
             @"INSERT INTO portfolio_protocol_positions "
-             "(provider_id, address, chain_id, protocol_id, position_id, protocol_name, category, asset_value_usd, debt_value_usd, net_value_usd, observed_at) "
-             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+             "(provider_id, address, chain_id, protocol_id, position_id, protocol_name, logo_url, category, asset_value_usd, debt_value_usd, net_value_usd, observed_at) "
+             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             @[ providerId, address, protocol[@"chainId"], protocol[@"protocolId"],
                protocol[@"positionId"], protocol[@"protocolName"],
-               protocol[@"category"], protocol[@"assetValueUsd"],
+               logoUrl ?: NSNull.null, protocol[@"category"], protocol[@"assetValueUsd"],
                protocol[@"debtValueUsd"], protocol[@"netValueUsd"], observedAt ], error)) return NO;
   }
   return YES;
@@ -976,20 +1324,37 @@ RCT_REMAP_METHOD(syncMockPortfolio,
          @(durationMs), @(updatedAt), errorCode ?: NSNull.null ], error);
 }
 
-- (void)failRun:(NSString *)providerId address:(NSString *)address
-          runId:(NSString *)runId startedAt:(long long)startedAt
-    totalChains:(NSInteger)totalChains errorCode:(NSString *)errorCode
-         reject:(RCTPromiseRejectBlock)reject error:(NSError *)error {
+- (void)failRun:(RubanSyncRun *)run startedAt:(long long)startedAt
+      errorCode:(NSString *)errorCode error:(NSError *)error {
   long long failedAt = RubanNowMs();
-  [self writeSyncStateProvider:providerId address:address runId:runId
-                         state:@"failed" stage:@"complete" completedChains:0
-                   totalChains:totalChains startedAt:startedAt completedAt:failedAt
-                     updatedAt:failedAt errorCode:errorCode error:nil];
-  [self emitProvider:providerId address:address runId:runId state:@"failed"
-               stage:@"complete" completedChains:0 totalChains:totalChains
+  @synchronized(self.inFlightSyncs) {
+    BOOL current = self.inFlightSyncs[run.key] == run;
+    if (run.cancellation.cancelled) {
+      errorCode = run.cancellation.reason;
+    } else if (!current) {
+      errorCode = @"sync_superseded";
+    }
+    [run markTerminal];
+    BOOL cancelled = [errorCode isEqualToString:@"sync_cancelled"] ||
+                     [errorCode isEqualToString:@"sync_superseded"];
+    NSString *state = cancelled ? @"cancelled" : @"failed";
+    if (current) {
+      [self writeSyncStateProvider:run.providerId address:run.address runId:run.runId
+                             state:state stage:@"complete" completedChains:0
+                       totalChains:run.totalChains startedAt:startedAt
+                       completedAt:failedAt updatedAt:failedAt
+                         errorCode:errorCode error:nil];
+    }
+  }
+  BOOL cancelled = [errorCode isEqualToString:@"sync_cancelled"] ||
+                   [errorCode isEqualToString:@"sync_superseded"];
+  NSString *state = cancelled ? @"cancelled" : @"failed";
+  [self emitProvider:run.providerId address:run.address runId:run.runId state:state
+               stage:@"complete" completedChains:0 totalChains:run.totalChains
            updatedAt:failedAt errorCode:errorCode];
-  [self reject:reject error:error ?: RubanDataEngineError(errorCode,
-                                                          @"Portfolio sync failed")];
+  [run rejectAllWithCode:errorCode
+                   error:error ?: RubanDataEngineError(errorCode,
+                                                       @"Portfolio sync failed")];
 }
 
 - (void)emitProvider:(NSString *)providerId address:(NSString *)address
@@ -1023,7 +1388,8 @@ RCT_REMAP_METHOD(syncMockPortfolio,
     @"provider_budget_exceeded", @"provider_contract_invalid",
     @"provider_endpoint_rejected", @"provider_http_failed",
     @"provider_response_too_large", @"provider_transport_failed",
-    @"sync_already_running", @"unsupported_provider"
+    @"sync_already_running", @"sync_cancelled", @"sync_stale_response",
+    @"sync_superseded", @"unsupported_provider"
   ]];
   return [allowed containsObject:code] ? code : @"data_engine_failed";
 }

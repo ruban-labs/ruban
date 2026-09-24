@@ -23,6 +23,7 @@ export type PortfolioAsset = {
   chainName: string;
   symbol: string;
   name: string;
+  logoUrl?: string;
   contractAddress?: string;
   balance: string;
   displayBalance: string;

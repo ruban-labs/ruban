@@ -188,6 +188,20 @@ std::string display_symbol(const json::Value& token) {
   return "Unknown";
 }
 
+std::string optional_https_url(const json::Value& value,
+                               std::string_view key) {
+  const json::Value* field = value.find(key);
+  if (field == nullptr || field->is_null() || !field->is_string()) return {};
+  const std::string& result = field->as_string();
+  if (result.size() > 2048 || result.compare(0, 8, "https://") != 0 ||
+      std::any_of(result.begin(), result.end(), [](unsigned char character) {
+        return character <= 0x20 || character == 0x7f;
+      })) {
+    return {};
+  }
+  return result;
+}
+
 struct ChainMetadata {
   std::int64_t id;
   std::string key;
@@ -232,7 +246,7 @@ std::vector<ProviderPayload> mock_payloads() {
        R"([{"id":"eth","chain":"eth","name":"Ether","symbol":"ETH","display_symbol":null,"optimized_symbol":"ETH","decimals":18,"price":2480,"amount":0.2592,"raw_amount":259200000000000000},{"id":"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48","chain":"eth","name":"USD Coin","symbol":"USDC","display_symbol":null,"optimized_symbol":"USDC","decimals":6,"price":1,"amount":378.63,"raw_amount":378630000},{"id":"eth","chain":"base","name":"Ether","symbol":"ETH","optimized_symbol":"ETH","decimals":18,"price":2480,"amount":0.05,"raw_amount":50000000000000000},{"id":"0x833589fcd6edb6e08f4c7c32d4f71b54bda02913","chain":"base","name":"USD Coin","symbol":"USDC","optimized_symbol":"USDC","decimals":6,"price":1,"amount":50.12,"raw_amount":50120000},{"id":"eth","chain":"arb","name":"Ether","symbol":"ETH","optimized_symbol":"ETH","decimals":18,"price":2480,"amount":0.025,"raw_amount":25000000000000000},{"id":"0xaf88d065e77c8cc2239327c5edb3a432268e5831","chain":"arb","name":"USD Coin","symbol":"USDC","optimized_symbol":"USDC","decimals":6,"price":1,"amount":34.31,"raw_amount":34310000},{"id":"eth","chain":"op","name":"Ether","symbol":"ETH","optimized_symbol":"ETH","decimals":18,"price":2480,"amount":0.015,"raw_amount":15000000000000000},{"id":"0x0b2c639c533813f4aa9d7837caf62653d097ff85","chain":"op","name":"USD Coin","symbol":"USDC","optimized_symbol":"USDC","decimals":6,"price":1,"amount":27,"raw_amount":27000000},{"id":"matic","chain":"matic","name":"POL","symbol":"POL","optimized_symbol":"POL","decimals":18,"price":0.42,"amount":40,"raw_amount":40000000000000000000},{"id":"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359","chain":"matic","name":"USD Coin","symbol":"USDC","optimized_symbol":"USDC","decimals":6,"price":1,"amount":27.2,"raw_amount":27200000}])",
        35, 1},
       {"all_simple_protocol_list", 200,
-       R"([{"id":"aave3","chain":"eth","name":"Aave V3","has_supported_portfolio":true,"net_usd_value":210.02,"asset_usd_value":245.02,"debt_usd_value":35},{"id":"aerodrome","chain":"base","name":"Aerodrome","has_supported_portfolio":true,"net_usd_value":80,"asset_usd_value":80,"debt_usd_value":0}])",
+       R"([{"id":"aave3","chain":"eth","name":"Aave V3","logo_url":"https://static.debank.com/image/project/logo_url/aave3/aave.png","has_supported_portfolio":true,"net_usd_value":210.02,"asset_usd_value":245.02,"debt_usd_value":35},{"id":"aerodrome","chain":"base","name":"Aerodrome","logo_url":"https://static.debank.com/image/project/logo_url/aerodrome/aerodrome.png","has_supported_portfolio":true,"net_usd_value":80,"asset_usd_value":80,"debt_usd_value":0}])",
        27, 1},
   };
 }
@@ -443,10 +457,11 @@ ProviderSyncResult parse_debank_payloads(
     const std::string symbol = display_symbol(token);
     std::string name = optional_string(token, "name");
     if (name.empty()) name = symbol;
+    const std::string logo_url = optional_https_url(token, "logo_url");
     const bool contract = asset_id.size() == 42 && asset_id[0] == '0' &&
                           (asset_id[1] == 'x' || asset_id[1] == 'X');
     result.projection.tokens.push_back(
-        {chain->second.id, asset_id, symbol, name,
+        {chain->second.id, asset_id, symbol, name, logo_url,
          contract ? normalize_evm_address(asset_id) : std::string(), decimals,
          raw_amount(token, decimals), display_number(amount, decimals),
          price, amount * price});
@@ -462,6 +477,7 @@ ProviderSyncResult parse_debank_payloads(
     const std::string protocol_id = require_field(protocol, "id").as_string();
     std::string protocol_name = optional_string(protocol, "name");
     if (protocol_name.empty()) protocol_name = protocol_id;
+    const std::string logo_url = optional_https_url(protocol, "logo_url");
     const double asset = require_nonnegative_number(protocol, "asset_usd_value");
     const double debt = require_nonnegative_number(protocol, "debt_usd_value");
     const double net = require_field(protocol, "net_usd_value").as_double();
@@ -470,7 +486,7 @@ ProviderSyncResult parse_debank_payloads(
     }
     result.projection.protocols.push_back(
         {chain->second.id, protocol_id, "aggregate", protocol_name,
-         "protocol", asset, debt, net});
+         logo_url, "protocol", asset, debt, net});
   }
 
   std::sort(result.replace_chain_ids.begin(), result.replace_chain_ids.end());

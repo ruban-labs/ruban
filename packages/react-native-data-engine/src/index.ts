@@ -13,7 +13,8 @@ export type PortfolioSyncStatus =
   | 'queued'
   | 'running'
   | 'succeeded'
-  | 'failed';
+  | 'failed'
+  | 'cancelled';
 
 export type PortfolioDataSource = {
   providerId: PortfolioProviderId;
@@ -44,6 +45,13 @@ export type PortfolioSyncResult = {
   observedAt: number;
   requestCount: number;
   attemptCount: number;
+};
+
+export type PortfolioSyncCancellation = {
+  providerId: PortfolioProviderId;
+  address: string;
+  cancelled: boolean;
+  runId?: string;
 };
 
 export type PortfolioCredentialStatus = {
@@ -81,6 +89,10 @@ type NativeDataEngine = {
     providerId: PortfolioProviderId,
     address: string,
   ): Promise<PortfolioSyncResult>;
+  cancelPortfolioSync(
+    providerId: PortfolioProviderId,
+    address: string,
+  ): Promise<PortfolioSyncCancellation>;
   addListener(eventName: string): void;
   removeListeners(count: number): void;
 };
@@ -89,6 +101,13 @@ const syncStateEvent = 'RubanDataEngineSyncState';
 const nativeDataEngine = NativeModules.RubanDataEngine as
   | NativeDataEngine
   | undefined;
+
+type ActiveSync = {
+  fingerprint: string;
+  promise: Promise<PortfolioSyncResult>;
+};
+
+const activeSyncs = new Map<string, ActiveSync>();
 
 function requireNativeDataEngine(): NativeDataEngine {
   if (!nativeDataEngine) {
@@ -128,6 +147,27 @@ function normalizeSyncOptions(
   return { mode, chains: normalizedChains };
 }
 
+function scheduleSync(
+  address: string,
+  fingerprint: string,
+  start: () => Promise<PortfolioSyncResult>,
+): Promise<PortfolioSyncResult> {
+  const key = `debank:${address.toLowerCase()}`;
+  const current = activeSyncs.get(key);
+  if (current && current.fingerprint === fingerprint) return current.promise;
+
+  const native = requireNativeDataEngine();
+  const pending = current
+    ? native.cancelPortfolioSync('debank', address).then(start)
+    : start();
+  const tracked = pending.finally(() => {
+    const active = activeSyncs.get(key);
+    if (active && active.promise === tracked) activeSyncs.delete(key);
+  });
+  activeSyncs.set(key, { fingerprint, promise: tracked });
+  return tracked;
+}
+
 export const dataEngine = {
   initialize(databasePath: string): Promise<void> {
     return requireNativeDataEngine().initialize(databasePath);
@@ -160,15 +200,27 @@ export const dataEngine = {
     address: string,
     options: PortfolioSyncOptions = {},
   ): Promise<PortfolioSyncResult> {
-    return requireNativeDataEngine().syncPortfolio(
-      'debank',
+    const normalized = normalizeSyncOptions(options);
+    return scheduleSync(
       address,
-      normalizeSyncOptions(options),
+      `current:${JSON.stringify(normalized)}`,
+      () =>
+        requireNativeDataEngine().syncPortfolio(
+          'debank',
+          address,
+          normalized,
+        ),
     );
   },
 
   syncMockPortfolio(address: string): Promise<PortfolioSyncResult> {
-    return requireNativeDataEngine().syncMockPortfolio('debank', address);
+    return scheduleSync(address, 'mock:full', () =>
+      requireNativeDataEngine().syncMockPortfolio('debank', address),
+    );
+  },
+
+  cancelPortfolioSync(address: string): Promise<PortfolioSyncCancellation> {
+    return requireNativeDataEngine().cancelPortfolioSync('debank', address);
   },
 
   addSyncStateListener(

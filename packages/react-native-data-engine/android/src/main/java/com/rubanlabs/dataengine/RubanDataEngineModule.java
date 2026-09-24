@@ -15,10 +15,14 @@ import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -53,14 +57,17 @@ public final class RubanDataEngineModule extends ReactContextBaseJavaModule {
           "provider_response_too_large",
           "provider_transport_failed",
           "secure_storage_unavailable",
+          "sync_cancelled",
           "sync_already_running",
+          "sync_stale_response",
+          "sync_superseded",
           "unsupported_provider")));
 
   private final ReactApplicationContext context;
   private final ExecutorService writer = Executors.newSingleThreadExecutor();
   private final RubanDeBankCredentialStore credentialStore;
   private final RubanDeBankHttpClient httpClient;
-  private final Set<String> inFlightSyncs = Collections.synchronizedSet(new HashSet<>());
+  private final Map<String, SyncRun> inFlightSyncs = new HashMap<>();
   private volatile String databasePath;
 
   RubanDataEngineModule(ReactApplicationContext context) {
@@ -158,6 +165,29 @@ public final class RubanDataEngineModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
+  public void cancelPortfolioSync(String providerId, String address, Promise promise) {
+    try {
+      requireProvider(providerId);
+      if (address == null) throw new IllegalArgumentException("invalid_sync_options");
+      String normalizedAddress = address.toLowerCase(Locale.ROOT);
+      SyncRun run;
+      boolean cancelled;
+      synchronized (inFlightSyncs) {
+        run = inFlightSyncs.get(providerId + ":" + normalizedAddress);
+        cancelled = run != null && run.cancel("sync_cancelled");
+      }
+      WritableMap result = Arguments.createMap();
+      result.putString("providerId", providerId);
+      result.putString("address", normalizedAddress);
+      result.putBoolean("cancelled", cancelled);
+      if (run != null) result.putString("runId", run.runId);
+      promise.resolve(result);
+    } catch (Exception error) {
+      reject(promise, error);
+    }
+  }
+
+  @ReactMethod
   public void addListener(String eventName) {}
 
   @ReactMethod
@@ -196,54 +226,68 @@ public final class RubanDataEngineModule extends ReactContextBaseJavaModule {
     if (providerId == null || address == null) {
       throw new IllegalArgumentException("invalid_sync_options");
     }
-    String normalizedKey = providerId + ":" + address.toLowerCase(Locale.ROOT);
-    if (!inFlightSyncs.add(normalizedKey)) {
-      promise.reject("sync_already_running", "A portfolio sync is already running");
-      return;
+    String normalizedAddress = address.toLowerCase(Locale.ROOT);
+    String normalizedKey = providerId + ":" + normalizedAddress;
+    String fingerprint = (forcedMode == null ? "current" : forcedMode) + ":" + optionsJson;
+    SyncRun run;
+    synchronized (inFlightSyncs) {
+      SyncRun current = inFlightSyncs.get(normalizedKey);
+      if (current != null && fingerprint.equals(current.fingerprint) &&
+          current.addPromise(promise)) {
+        return;
+      }
+      if (current != null) current.cancel("sync_superseded");
+      run = new SyncRun(normalizedKey, providerId, normalizedAddress, optionsJson,
+          forcedMode, fingerprint, UUID.randomUUID().toString(),
+          System.currentTimeMillis(), countRequestedChains(optionsJson), promise);
+      inFlightSyncs.put(normalizedKey, run);
     }
-    String runId = UUID.randomUUID().toString();
-    long queuedAt = System.currentTimeMillis();
-    int totalChains = countRequestedChains(optionsJson);
-    emitSyncState(providerId, address, runId, "queued", "waiting", 0, totalChains,
-        queuedAt, null);
+    emitSyncState(providerId, normalizedAddress, run.runId, "queued", "waiting", 0,
+        run.totalChains, run.queuedAt, null);
     writer.execute(() -> {
       try {
-        runSync(providerId, address, optionsJson, forcedMode, runId, queuedAt, promise);
+        runSync(run);
       } finally {
-        inFlightSyncs.remove(normalizedKey);
+        synchronized (inFlightSyncs) {
+          if (inFlightSyncs.get(normalizedKey) == run) inFlightSyncs.remove(normalizedKey);
+        }
       }
     });
   }
 
-  private void runSync(String providerId, String address, String optionsJson,
-      String forcedMode, String runId, long queuedAt, Promise promise) {
+  private void runSync(SyncRun run) {
     long startedAt = System.currentTimeMillis();
-    int requestedChains = countRequestedChains(optionsJson);
     try {
-      requireProvider(providerId);
-      writeSyncState(providerId, address, runId, "queued", "waiting", 0,
-          requestedChains, queuedAt, 0, queuedAt, null);
-      writeSyncState(providerId, address, runId, "running", "portfolio", 0,
-          requestedChains, startedAt, 0, startedAt, null);
-      emitSyncState(providerId, address, runId, "running", "portfolio", 0,
-          requestedChains, startedAt, null);
+      requireProvider(run.providerId);
+      synchronized (inFlightSyncs) {
+        requireCurrentRun(run);
+        run.cancellation.throwIfCancelled();
+        writeSyncState(run.providerId, run.address, run.runId, "queued", "waiting", 0,
+            run.totalChains, run.queuedAt, 0, run.queuedAt, null);
+        writeSyncState(run.providerId, run.address, run.runId, "running", "provider", 0,
+            run.totalChains, startedAt, 0, startedAt, null);
+      }
+      emitSyncState(run.providerId, run.address, run.runId, "running", "provider", 0,
+          run.totalChains, startedAt, null);
 
-      String mode = forcedMode == null ? readSourceMode(providerId) : forcedMode;
+      run.cancellation.throwIfCancelled();
+      String mode = run.forcedMode == null ? readSourceMode(run.providerId) : run.forcedMode;
       String resultJson;
       if ("mock".equals(mode)) {
         resultJson = RubanDataEngineBindings.createMockSyncResultJson(
-            address, startedAt, optionsJson);
+            run.address, startedAt, run.optionsJson);
       } else if ("byok".equals(mode)) {
         if (!credentialStore.hasCredential()) throw new IllegalStateException("credential_missing");
         JSONArray plan = new JSONArray(
-            RubanDataEngineBindings.createDeBankRequestPlanJson(address, optionsJson));
-        JSONArray payloads = httpClient.execute(plan);
+            RubanDataEngineBindings.createDeBankRequestPlanJson(run.address, run.optionsJson));
+        JSONArray payloads = httpClient.execute(plan, run.cancellation);
         resultJson = RubanDataEngineBindings.createDeBankSyncResultJson(
-            address, startedAt, optionsJson, payloads.toString(), "debank:cloud");
+            run.address, startedAt, run.optionsJson, payloads.toString(), "debank:cloud");
       } else {
         throw new IllegalStateException("data_source_not_configured");
       }
 
+      run.cancellation.throwIfCancelled();
       JSONObject result = new JSONObject(resultJson);
       String normalizedAddress = result.getString("address");
       JSONArray replacedChains = result.getJSONArray("replaceChainIds");
@@ -252,43 +296,90 @@ public final class RubanDataEngineModule extends ReactContextBaseJavaModule {
           : replacedChains.length();
       long completedAt = System.currentTimeMillis();
 
-      withDatabase(database -> {
-        database.beginTransactionNonExclusive();
-        try {
-          replaceProjection(database, result);
-          upsertSyncState(database, providerId, normalizedAddress, runId, "succeeded",
-              "complete", completedChains, completedChains, startedAt, completedAt,
-              completedAt - startedAt, completedAt, null);
-          database.setTransactionSuccessful();
-        } finally {
-          database.endTransaction();
-        }
-      });
+      synchronized (inFlightSyncs) {
+        requireCurrentRun(run);
+        run.cancellation.throwIfCancelled();
+        withDatabase(database -> {
+          database.beginTransactionNonExclusive();
+          try {
+            rejectStaleProjection(database, run.providerId, normalizedAddress,
+                result.getLong("observedAt"));
+            replaceProjection(database, result);
+            upsertSyncState(database, run.providerId, normalizedAddress, run.runId,
+                "succeeded", "complete", completedChains, completedChains, startedAt,
+                completedAt, completedAt - startedAt, completedAt, null);
+            database.setTransactionSuccessful();
+          } finally {
+            database.endTransaction();
+          }
+        });
+        run.markTerminal();
+      }
 
-      emitSyncState(providerId, normalizedAddress, runId, "succeeded", "complete",
+      emitSyncState(run.providerId, normalizedAddress, run.runId, "succeeded", "complete",
           completedChains, completedChains, completedAt, null);
       WritableMap resolved = Arguments.createMap();
-      resolved.putString("providerId", providerId);
+      resolved.putString("providerId", run.providerId);
       resolved.putString("address", normalizedAddress);
-      resolved.putString("runId", runId);
+      resolved.putString("runId", run.runId);
       resolved.putInt("completedChains", completedChains);
       resolved.putInt("totalChains", completedChains);
       resolved.putDouble("observedAt", result.getLong("observedAt"));
       resolved.putInt("requestCount", result.getInt("requestCount"));
       resolved.putInt("attemptCount", result.getInt("attemptCount"));
-      promise.resolve(resolved);
+      run.resolve(resolved);
     } catch (Exception error) {
-      long failedAt = System.currentTimeMillis();
       String errorCode = safeErrorCode(error);
-      try {
-        writeSyncState(providerId, address, runId, "failed", "complete", 0,
-            requestedChains, startedAt, failedAt, failedAt, errorCode);
-      } catch (Exception ignored) {
-      }
-      emitSyncState(providerId, address, runId, "failed", "complete", 0,
-          requestedChains, failedAt, errorCode);
-      reject(promise, error);
+      failRun(run, startedAt, errorCode, error);
     }
+  }
+
+  private void requireCurrentRun(SyncRun run) {
+    if (inFlightSyncs.get(run.key) != run) {
+      throw new IllegalStateException("sync_superseded");
+    }
+  }
+
+  private void rejectStaleProjection(SQLiteDatabase database, String providerId,
+      String address, long observedAt) throws Exception {
+    try (Cursor cursor = database.rawQuery(
+        "SELECT observed_at FROM portfolio_account_snapshots " +
+            "WHERE provider_id = ? AND address = ? LIMIT 1",
+        new String[] {providerId, address})) {
+      if (cursor.moveToFirst() && cursor.getLong(0) > observedAt) {
+        throw new IllegalStateException("sync_stale_response");
+      }
+    }
+  }
+
+  private void failRun(SyncRun run, long startedAt, String errorCode, Exception error) {
+    long failedAt = System.currentTimeMillis();
+    String terminalErrorCode = errorCode;
+    boolean current;
+    synchronized (inFlightSyncs) {
+      current = inFlightSyncs.get(run.key) == run;
+      if (run.cancellation.isCancelled()) {
+        terminalErrorCode = run.cancellation.reason();
+      } else if (!current) {
+        terminalErrorCode = "sync_superseded";
+      }
+      run.markTerminal();
+      String state = "sync_cancelled".equals(terminalErrorCode) ||
+          "sync_superseded".equals(terminalErrorCode) ? "cancelled" : "failed";
+      if (current) {
+        try {
+          writeSyncState(run.providerId, run.address, run.runId, state, "complete", 0,
+              run.totalChains, startedAt, failedAt, failedAt, terminalErrorCode);
+        } catch (Exception ignored) {
+        }
+      }
+      errorCode = terminalErrorCode;
+    }
+    String state = "sync_cancelled".equals(errorCode) || "sync_superseded".equals(errorCode)
+        ? "cancelled" : "failed";
+    emitSyncState(run.providerId, run.address, run.runId, state, "complete", 0,
+        run.totalChains, failedAt, errorCode);
+    run.reject(errorCode, error);
   }
 
   private void replaceProjection(SQLiteDatabase database, JSONObject projection)
@@ -349,12 +440,13 @@ public final class RubanDataEngineModule extends ReactContextBaseJavaModule {
       JSONObject token = tokens.getJSONObject(index);
       database.execSQL(
           "INSERT INTO portfolio_token_balances " +
-              "(provider_id, address, chain_id, asset_id, symbol, name, contract_address, decimals, balance, display_balance, price_usd, value_usd, observed_at) " +
-              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              "(provider_id, address, chain_id, asset_id, symbol, name, logo_url, contract_address, decimals, balance, display_balance, price_usd, value_usd, observed_at) " +
+              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           new Object[] {providerId, address, token.getLong("chainId"),
               token.getString("assetId"), token.getString("symbol"),
-              token.getString("name"), nullableString(token, "contractAddress"),
-              token.getInt("decimals"), token.getString("balance"),
+              token.getString("name"), nullableString(token, "logoUrl"),
+              nullableString(token, "contractAddress"), token.getInt("decimals"),
+              token.getString("balance"),
               token.getString("displayBalance"), token.getDouble("priceUsd"),
               token.getDouble("valueUsd"), observedAt});
     }
@@ -362,11 +454,12 @@ public final class RubanDataEngineModule extends ReactContextBaseJavaModule {
       JSONObject protocol = protocols.getJSONObject(index);
       database.execSQL(
           "INSERT INTO portfolio_protocol_positions " +
-              "(provider_id, address, chain_id, protocol_id, position_id, protocol_name, category, asset_value_usd, debt_value_usd, net_value_usd, observed_at) " +
-              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              "(provider_id, address, chain_id, protocol_id, position_id, protocol_name, logo_url, category, asset_value_usd, debt_value_usd, net_value_usd, observed_at) " +
+              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           new Object[] {providerId, address, protocol.getLong("chainId"),
               protocol.getString("protocolId"), protocol.getString("positionId"),
-              protocol.getString("protocolName"), protocol.getString("category"),
+              protocol.getString("protocolName"), nullableString(protocol, "logoUrl"),
+              protocol.getString("category"),
               protocol.getDouble("assetValueUsd"), protocol.getDouble("debtValueUsd"),
               protocol.getDouble("netValueUsd"), observedAt});
     }
@@ -514,6 +607,72 @@ public final class RubanDataEngineModule extends ReactContextBaseJavaModule {
     }
     String code = safeErrorCode(error);
     promise.reject(code, "Portfolio data engine failed", error);
+  }
+
+  private static final class SyncRun {
+    final String key;
+    final String providerId;
+    final String address;
+    final String optionsJson;
+    final String forcedMode;
+    final String fingerprint;
+    final String runId;
+    final long queuedAt;
+    final int totalChains;
+    final RubanSyncCancellation cancellation = new RubanSyncCancellation();
+    private final List<Promise> promises = new ArrayList<>();
+    private boolean settled;
+    private boolean terminal;
+
+    SyncRun(String key, String providerId, String address, String optionsJson,
+        String forcedMode, String fingerprint, String runId, long queuedAt,
+        int totalChains, Promise promise) {
+      this.key = key;
+      this.providerId = providerId;
+      this.address = address;
+      this.optionsJson = optionsJson;
+      this.forcedMode = forcedMode;
+      this.fingerprint = fingerprint;
+      this.runId = runId;
+      this.queuedAt = queuedAt;
+      this.totalChains = totalChains;
+      promises.add(promise);
+    }
+
+    synchronized boolean addPromise(Promise promise) {
+      if (settled || terminal || cancellation.isCancelled()) return false;
+      promises.add(promise);
+      return true;
+    }
+
+    synchronized boolean cancel(String reason) {
+      if (settled || terminal) return false;
+      return cancellation.cancel(reason);
+    }
+
+    synchronized void markTerminal() {
+      terminal = true;
+    }
+
+    void resolve(WritableMap result) {
+      List<Promise> pending = settle();
+      for (Promise promise : pending) promise.resolve(result);
+    }
+
+    void reject(String code, Exception error) {
+      List<Promise> pending = settle();
+      for (Promise promise : pending) {
+        promise.reject(code, "Portfolio data engine failed", error);
+      }
+    }
+
+    private synchronized List<Promise> settle() {
+      if (settled) return Collections.emptyList();
+      settled = true;
+      List<Promise> pending = new ArrayList<>(promises);
+      promises.clear();
+      return pending;
+    }
   }
 
   private interface DatabaseOperation {

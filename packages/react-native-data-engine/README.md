@@ -5,8 +5,13 @@
 Native portfolio synchronization and SQLite projection primitives for bare
 React Native. C++ owns provider-independent projections and provider response
 mapping. Platform modules own secure credentials, bounded HTTP transport, and
-serialized writes to the application's WAL database. JavaScript reads the
+serialized writes to the application's SQLite database. JavaScript reads the
 normalized tables and observes sync-state events.
+
+When the application and this package use different SQLite implementations,
+use rollback journaling rather than WAL. The package keeps one Native writer,
+while rollback-journal file locks coordinate that writer with the application's
+read connection without sharing WAL/SHM lifecycle state across implementations.
 
 The DeBank adapter supports a deterministic official-shape mock and BYOK. Both
 use the same parser and full or chain-incremental replacement contract. DeBank
@@ -19,14 +24,20 @@ await dataEngine.initialize(databasePath);
 await dataEngine.configureMockDeBank();
 await dataEngine.syncPortfolio(address);
 await dataEngine.syncPortfolio(address, {
-  mode: 'incremental',
-  chains: [{ id: 1, key: 'eth' }],
+  mode: "incremental",
+  chains: [{ id: 1, key: "eth" }],
 });
 
 await dataEngine.importDeBankAccessKey(accessKey);
 await dataEngine.configureByokDeBank();
 await dataEngine.syncPortfolio(address);
+
+await dataEngine.cancelPortfolioSync(address);
 ```
+
+Identical in-flight syncs are coalesced. A different sync for the same address
+supersedes the previous run, active native requests are cancelled, and stale
+results cannot replace a newer committed snapshot.
 
 The application owns the SQLite schema. This package never creates or migrates
 tables. See [`docs/architecture/native-sync-storage.md`](../../docs/architecture/native-sync-storage.md).

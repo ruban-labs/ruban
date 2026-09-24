@@ -4,11 +4,11 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 const sections = [
   {
     title: 'Data collection',
-    body: 'The current release contains no advertising, analytics, or third-party tracking SDK. Ruban Labs does not receive personal information, device identifiers, usage history, or precise location from the app.',
+    body: 'Ruban does not include an advertising or analytics SDK. The earlier store release is a component showcase. The website portfolio preview adds optional third-party data requests described below; it does not route those requests through a Ruban Labs server.',
   },
   {
     title: 'On-device activity',
-    body: 'Interface preferences, component demo state, and deep-link state are handled on the device. Ruban Labs does not receive this state. Removing the app removes its local app data, subject to operating system backup behavior.',
+    body: 'Preferences, saved addresses and cached portfolio snapshots are stored on your device. The example portfolio uses synthetic data and does not need a data-provider request. AccessKeys are stored through native platform credential storage, not in the portfolio database. Builds that offer local wallet import also keep wallet secrets in native device storage; importing them is not needed to watch an address.',
   },
   {
     title: 'Permissions',
@@ -16,11 +16,11 @@ const sections = [
   },
   {
     title: 'External services',
-    body: 'The app can open Ruban pages on GitHub or npm in your browser. Those services process activity under their own privacy policies. Apple or Google may also process store distribution and optional diagnostic information under their respective policies.',
+    body: 'When you refresh a real address with your DeBank Cloud key, the app sends the address and your AccessKey directly to DeBank Cloud. RPC requests send the relevant address or transaction parameters to the selected network endpoint. Providers see your IP address and may retain request records under their own policies. Token and protocol images can be loaded from remote image hosts, which also receive your IP address. Websites opened in the DApp browser have their own data practices; approved connections can disclose the selected public address. GitHub, npm, Apple and Google process downloads or visits under their respective policies.',
   },
   {
     title: 'Retention and deletion',
-    body: 'Because Ruban Labs does not collect personal data through Ruban Mobile, it has no app-collected personal data to retain or delete.',
+    body: 'Remove a DeBank key in Settings → Data source. This stops future authenticated refreshes but does not delete cached portfolios or revoke the key at DeBank. Delete saved addresses through the address selector. Local app storage is subject to operating-system backup and credential-retention behavior. Contact the relevant external provider about its retained request data; deleting local data does not erase provider records.',
   },
   {
     title: 'Policy changes',
@@ -39,14 +39,14 @@ const sections = [
       <p class="kicker">RUBAN MOBILE / DISCLOSURE</p>
       <h1>Privacy</h1>
       <div class="legal-meta">
-        <span><small>EFFECTIVE</small>2026-08-30</span>
+        <span><small>EFFECTIVE</small>2026-09-24</span>
         <span><small>APPLIES TO</small>RUBAN MOBILE</span>
       </div>
     </div>
 
     <p class="legal-lead">
-      Ruban Mobile does not require an account and does not collect, transmit, sell, or share
-      personal data.
+      Ruban Mobile does not require an account with Ruban Labs. Example portfolios work
+      without a key. Live portfolio and DApp features communicate with external providers.
     </p>
 
     <div class="legal-grid">

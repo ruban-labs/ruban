@@ -131,10 +131,29 @@ TEST_CASE("provider JSON fails closed and preserves exact raw balances") {
       address, 1000, {},
       payloads(
           R"({"total_usd_value":1,"chain_list":[{"id":"eth","community_id":1,"name":"Ethereum","usd_value":1}]})",
-          R"([{"id":"eth","chain":"eth","name":"Ether","symbol":"ETH","decimals":18,"price":1,"amount":1,"raw_amount":900719925474099312345}])"),
+          R"([{"id":"eth","chain":"eth","name":"Ether","symbol":"ETH","decimals":18,"logo_url":"https://static.debank.com/image/eth_token/logo_url/eth/token.png","price":1,"amount":1,"raw_amount":900719925474099312345}])"),
       "debank:test");
   REQUIRE(exact.projection.tokens.size() == 1);
   CHECK(exact.projection.tokens[0].balance == "900719925474099312345");
+  CHECK(exact.projection.tokens[0].logo_url ==
+        "https://static.debank.com/image/eth_token/logo_url/eth/token.png");
+  CHECK(ruban::data::serialize_projection_json(exact.projection).find(
+            "\"logoUrl\":\"https://static.debank.com/image/eth_token/logo_url/eth/token.png\"") !=
+        std::string::npos);
+
+  const auto protocol_logo = ruban::data::parse_debank_payloads(
+      address, 1000, {},
+      payloads(
+          R"({"total_usd_value":1,"chain_list":[{"id":"eth","community_id":1,"name":"Ethereum","usd_value":1}]})",
+          "[]",
+          R"([{"id":"aave3","chain":"eth","name":"Aave V3","logo_url":"https://static.debank.com/image/project/logo_url/aave3/protocol.png","net_usd_value":1,"asset_usd_value":1,"debt_usd_value":0}])"),
+      "debank:test");
+  REQUIRE(protocol_logo.projection.protocols.size() == 1);
+  CHECK(protocol_logo.projection.protocols[0].logo_url ==
+        "https://static.debank.com/image/project/logo_url/aave3/protocol.png");
+  CHECK(ruban::data::serialize_projection_json(protocol_logo.projection).find(
+            "\"logoUrl\":\"https://static.debank.com/image/project/logo_url/aave3/protocol.png\"") !=
+        std::string::npos);
 
   const auto derived = ruban::data::parse_debank_payloads(
       address, 1000, {},
@@ -144,6 +163,17 @@ TEST_CASE("provider JSON fails closed and preserves exact raw balances") {
       "debank:test");
   REQUIRE(derived.projection.tokens.size() == 1);
   CHECK(derived.projection.tokens[0].balance == "123456789123456789");
+
+  const auto unsafe_logo = ruban::data::parse_debank_payloads(
+      address, 1000, {},
+      payloads(
+          R"({"total_usd_value":1,"chain_list":[{"id":"eth","community_id":1,"name":"Ethereum","usd_value":1}]})",
+          R"([{"id":"eth","chain":"eth","name":"Ether","symbol":"ETH","decimals":18,"logo_url":"http://example.com/token.png","price":1,"amount":1,"raw_amount":1}])"),
+      "debank:test");
+  REQUIRE(unsafe_logo.projection.tokens.size() == 1);
+  CHECK(unsafe_logo.projection.tokens[0].logo_url.empty());
+  CHECK(ruban::data::serialize_projection_json(unsafe_logo.projection).find(
+            "\"logoUrl\":null") != std::string::npos);
 }
 
 TEST_CASE("incremental absence still requests a chain-scoped replacement") {

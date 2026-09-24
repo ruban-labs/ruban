@@ -69,7 +69,7 @@ iOS and Android vault/platform wrappers
 Ruban application and DApp runtime
 
 C++ provider adapters and normalized projections
-    ↓ serial platform writer + WAL
+    ↓ serial platform writer + rollback journal
 @ruban-labs/react-native-data-engine
     ↓ TypeORM read models and sync-state events
 Ruban portfolio surfaces
@@ -91,7 +91,8 @@ The Ruban App uses `@op-engineering/op-sqlite` and TypeORM for TypeScript-side
 queries. An App process owns one global `DataSource` and one initialization
 promise; Fast Refresh must not open a second JavaScript connection to the same
 database. Native synchronization uses a separate serialized writer against the
-same WAL file.
+same database. Rollback-journal file locks coordinate the two connections
+without sharing WAL/SHM lifecycle state across different SQLite implementations.
 
 - Before the first release, maintain one editable baseline schema without a
   migration class or migration table. Reset test data when that baseline
@@ -105,9 +106,9 @@ same WAL file.
   lists.
 - Mnemonics, private keys, and derived seeds remain inside the native vault.
   SQLite stores no plaintext secret and does not replace Keychain or Keystore.
-- The default connection uses WAL, `synchronous=NORMAL`, and a bounded busy
-  timeout. Native synchronization has one writer queue and atomically replaces
-  one provider/address projection before publishing success.
+- The default connection uses rollback journaling, `synchronous=NORMAL`, and a
+  bounded busy timeout. Native synchronization has one writer queue and
+  atomically replaces one provider/address projection before publishing success.
 - C++ owns provider-independent projection types. Platform adapters write the
   same database and emit a post-commit event; JavaScript and workers re-query
   through TypeORM instead of receiving bulk portfolio payloads over the bridge.

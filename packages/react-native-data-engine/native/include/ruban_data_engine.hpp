@@ -12,6 +12,7 @@ struct TokenBalance {
   std::string asset_id;
   std::string symbol;
   std::string name;
+  std::string logo_url;
   std::string contract_address;
   std::int32_t decimals;
   std::string balance;
@@ -34,6 +35,7 @@ struct ProtocolPosition {
   std::string protocol_id;
   std::string position_id;
   std::string protocol_name;
+  std::string logo_url;
   std::string category;
   double asset_value_usd;
   double debt_value_usd;

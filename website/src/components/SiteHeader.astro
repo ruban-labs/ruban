@@ -2,7 +2,7 @@
 import lockupUrl from '../../../brand/ruban-lockup-horizontal.svg?url';
 
 interface Props {
-  currentPath: '/' | '/privacy/';
+  currentPath: '/' | '/privacy/' | '/download/';
 }
 
 const {currentPath} = Astro.props;
@@ -13,6 +13,7 @@ const {currentPath} = Astro.props;
     <img src={lockupUrl} alt="Ruban" />
   </a>
   <nav class="site-nav" aria-label="Primary navigation">
+    <a href="/download/" aria-current={currentPath === '/download/' ? 'page' : undefined}>Download</a>
     {
       currentPath === '/' ? (
         <>
