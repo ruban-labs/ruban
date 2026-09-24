@@ -791,6 +791,16 @@ a {
 }
 
 @media (max-width: 600px) {
+  .site-header {
+    flex-wrap: wrap;
+    row-gap: 12px;
+    padding-block: 12px;
+  }
+
+  .site-nav {
+    flex-wrap: wrap;
+  }
+
   .brand,
   .brand img {
     width: 116px;

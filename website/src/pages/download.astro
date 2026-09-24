@@ -1,0 +1,46 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+---
+
+<SiteLayout currentPath="/download/" title="Download — Ruban"
+  description="Get the Ruban Android website preview from GitHub Releases. Explore an offline example without an API key, then add your own data source.">
+  <div class="legal frame">
+    <div class="legal-heading">
+      <p class="kicker">RUBAN MOBILE / PREVIEW</p>
+      <h1>Try Ruban.</h1>
+    </div>
+    <p class="legal-lead">Start with an example portfolio. No account, key or API credits needed.</p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="https://github.com/ruban-labs/ruban/releases?q=mobile-v&amp;expanded=true"
+        target="_blank" rel="noreferrer noopener">Android builds <span aria-hidden="true">↗</span></a>
+      <a class="button button-secondary" href="/#support">Support</a>
+    </div>
+    <div class="legal-grid">
+      <aside aria-label="Preview details">
+        <div><span>PLATFORM</span><strong>ANDROID</strong></div>
+        <div><span>CHANNEL</span><strong>WEBSITE PREVIEW</strong></div>
+        <div><span>EXAMPLE</span><strong>OFFLINE</strong></div>
+      </aside>
+      <article>
+        <section><span class="legal-index">01</span><div>
+          <h2>Install</h2>
+          <p>Open a mobile preview release and download its APK under Assets. Android may ask you to allow installation from your browser. Each published build includes a checksum and signing-certificate fingerprint. If no mobile preview is listed yet, the first build is still pending.</p>
+        </div></section>
+        <section><span class="legal-index">02</span><div>
+          <h2>Try example</h2>
+          <p>Choose Try example on first launch. Browse sample tokens, networks and DeFi positions. These are synthetic balances, clearly marked as sample data, not a real wallet or live prices.</p>
+        </div></section>
+        <section><span class="legal-index">03</span><div>
+          <h2>Bring your data</h2>
+          <p>Add your own DeBank Cloud AccessKey in Settings → Data source, add a watch address and refresh. DeBank charges your account for API usage. Saved portfolios remain on your device; opening a saved portfolio does not automatically refresh it.</p>
+        </div></section>
+        <section><span class="legal-index">04</span><div>
+          <h2>Before switching builds</h2>
+          <p>This preview differs from the earlier store app. Website and Play production builds share an app ID: replacing one requires matching signing certificates and a compatible version code. Back up important data first. Avoid importing funded private keys into this early preview.</p>
+          <p>iOS development builds need a separate Apple distribution route; a GitHub IPA is not a universally installable download.</p>
+          <a class="text-link" href="/privacy/">Privacy and data sources →</a>
+        </div></section>
+      </article>
+    </div>
+  </div>
+</SiteLayout>

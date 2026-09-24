@@ -86,7 +86,9 @@ jobs:
         run: node scripts/ci/check-syntax-floor.mjs
       - name: Website check
         if: needs.changes.outputs.site == 'true' && github.event_name != 'push'
-        run: pnpm site:check
+        run: |
+          RUBAN_SITE_ENV=production pnpm site:check
+          RUBAN_SITE_ENV=preview pnpm site:check
       - name: No package verification required
         if: needs.changes.outputs.verify != 'true' && (needs.changes.outputs.site != 'true' || github.event_name == 'push')
         run: echo "The changed paths do not affect package or native build outputs."
