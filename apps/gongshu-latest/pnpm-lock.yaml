@@ -1419,7 +1419,7 @@ packages:
       react-native: '>=0.66.0'
 
   '@ruban-labs/react-native-data-engine@file:ruban-data-engine-local.tgz':
-    resolution: {integrity: sha512-UbZRBaARg0RwcoL93nj8W8PPiv3MeT5+tcoLCnXUfADpT+wbPZRK7wDUhFNBmN63vPveFAWKZnABlWN44ATWjg==, tarball: file:ruban-data-engine-local.tgz}
+    resolution: {integrity: sha512-WxwFHwV0IyTbcFKDyALg9Bh1j2SHgq4YN/bAaJPTh3GC9X2sDprW8VZtj9m7FF9zThQaE27QBhR/4aOwvpYRbg==, tarball: file:ruban-data-engine-local.tgz}
     version: 0.1.0
     peerDependencies:
       react: '>=17.0.0'

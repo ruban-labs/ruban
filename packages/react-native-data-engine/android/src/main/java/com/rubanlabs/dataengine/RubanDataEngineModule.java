@@ -520,6 +520,7 @@ public final class RubanDataEngineModule extends ReactContextBaseJavaModule {
   }
 
   private String nullableString(JSONObject value, String key) {
+    if (value.isNull(key)) return null;
     String result = value.optString(key, "");
     return result.isEmpty() ? null : result;
   }
