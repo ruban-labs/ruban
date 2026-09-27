@@ -123,13 +123,21 @@ const scenarios = [
           verify: result => result.chainId === 8453,
         },
         {
+          name: 'open offline example',
+          path: 'portfolio/demo',
+          action: 'wallet.open-demo',
+          query: {},
+          verify: result => result.address === '0x0000000000000000000000000000000000000000',
+        },
+        {
           name: 'mock portfolio sync',
           path: 'portfolio/sync',
           action: 'portfolio.sync',
-          query: {address: addressA, provider: 'mock'},
+          query: {address: '0x0000000000000000000000000000000000000000', provider: 'mock'},
           verify: result =>
-            result.address === addressA &&
+            result.address === '0x0000000000000000000000000000000000000000' &&
             result.providerMode === 'mock' &&
+            result.requestCount === 0 &&
             result.completedChains > 0 &&
             result.assetCount > 0,
         },
@@ -153,6 +161,14 @@ const scenarios = [
           action: 'wallet.delete-account',
           query: {address: addressB},
           verify: result => result.address === addressB,
+        },
+        {
+          name: 'select persisted example after restart',
+          restart: true,
+          path: 'address/select',
+          action: 'wallet.select-account',
+          query: {address: '0x0000000000000000000000000000000000000000'},
+          verify: result => result.address === '0x0000000000000000000000000000000000000000',
         },
         {
           name: 'verify address A after restart',

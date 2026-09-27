@@ -45,5 +45,6 @@ export type RootStackParamList = {
   DAppBrowser: { url: string; title?: string };
   DAppTest: DAppTestRouteParams;
   NetworkSettings: undefined;
+  DataSource: undefined;
   ComponentDetail: ComponentDetailRouteParams;
 };

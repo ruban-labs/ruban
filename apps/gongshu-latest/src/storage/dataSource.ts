@@ -38,7 +38,7 @@ async function initializeDataSource(): Promise<DataSource> {
   const dataSource = new DataSource(options);
   try {
     await dataSource.initialize();
-    await dataSource.query('PRAGMA journal_mode = WAL');
+    await dataSource.query('PRAGMA journal_mode = DELETE');
     await dataSource.query('PRAGMA synchronous = NORMAL');
     await dataSource.query('PRAGMA busy_timeout = 5000');
     if (!state.schemaReady) {
@@ -70,9 +70,8 @@ export function getDataSource(): Promise<DataSource> {
   return getOrInitializeDataSource();
 }
 
-export async function checkpointDataSourceForNativeWrite(): Promise<void> {
-  const dataSource = await getOrInitializeDataSource();
-  await dataSource.query('PRAGMA wal_checkpoint(TRUNCATE)');
+export async function prepareDataSourceForNativeWrite(): Promise<void> {
+  await getOrInitializeDataSource();
 }
 
 export async function getDatabasePath(): Promise<string> {

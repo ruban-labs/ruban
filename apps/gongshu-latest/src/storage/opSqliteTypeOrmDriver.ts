@@ -31,7 +31,7 @@ type TypeOrmConnection = {
   attach: (
     databaseName: string,
     alias: string,
-    location: string | undefined,
+    secondaryLocation: string | undefined,
     success: () => void,
   ) => void;
   detach: (alias: string, success: () => void) => void;
@@ -53,6 +53,12 @@ function resolveLocation(location?: string): string | undefined {
   return !location || location === 'default' ? undefined : location;
 }
 
+function isTransactionControlStatement(sql: string): boolean {
+  return /^(?:BEGIN(?:\s+TRANSACTION)?|COMMIT|ROLLBACK(?:\s+TO\s+SAVEPOINT)?|SAVEPOINT|RELEASE\s+SAVEPOINT)\b/i.test(
+    sql.trim(),
+  );
+}
+
 export const opSqliteTypeOrmDriver = {
   openDatabase(
     options: OpenDatabaseOptions,
@@ -69,6 +75,19 @@ export const opSqliteTypeOrmDriver = {
           : {}),
       });
       activeDatabase = database;
+      let operationQueue: Promise<void> = Promise.resolve();
+
+      function enqueue<Result>(
+        operation: () => Result | Promise<Result>,
+      ): Promise<Result> {
+        const execution = operationQueue.then(operation, operation);
+        operationQueue = execution.then(
+          () => undefined,
+          () => undefined,
+        );
+        return execution;
+      }
+
       const connection: TypeOrmConnection = {
         getDb: () => database,
         async executeSql<Result = QueryResult>(
@@ -77,15 +96,19 @@ export const opSqliteTypeOrmDriver = {
           onSuccess?: (result: QueryResult) => void,
           onFailure?: (error: unknown) => void,
         ): Promise<Result> {
-          try {
-            const result = await database.execute(sql, params);
-            enhanceQueryResult(result);
-            onSuccess?.(result);
-            return result as Result;
-          } catch (error) {
-            onFailure?.(error);
-            throw error;
-          }
+          return enqueue(async () => {
+            try {
+              const result = isTransactionControlStatement(sql)
+                ? database.executeSync(sql, params)
+                : await database.execute(sql, params);
+              enhanceQueryResult(result);
+              onSuccess?.(result);
+              return result as Result;
+            } catch (error) {
+              onFailure?.(error);
+              throw error;
+            }
+          });
         },
         transaction: operation => database.transaction(operation),
         close(onSuccess, onFailure) {
@@ -97,11 +120,11 @@ export const opSqliteTypeOrmDriver = {
             onFailure(error);
           }
         },
-        attach(databaseName, alias, location, onSuccess) {
+        attach(databaseName, alias, secondaryLocation, onSuccess) {
           database.attach({
             secondaryDbFileName: databaseName,
             alias,
-            ...(location ? { location } : {}),
+            ...(secondaryLocation ? { location: secondaryLocation } : {}),
           });
           onSuccess();
         },

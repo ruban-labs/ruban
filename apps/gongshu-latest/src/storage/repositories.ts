@@ -18,6 +18,7 @@ import {
   PortfolioSyncStateEntity,
   PortfolioTokenBalanceEntity,
   WalletAccountEntity,
+  type PortfolioChainSnapshotRow,
   type PortfolioProtocolPositionRow,
   type WalletAccountRow,
 } from './entities';
@@ -211,10 +212,12 @@ export const repositories = {
 
     const assets = tokens.map(token => ({
       chainId: token.chainId,
-      chainName: chains.find(chain => chain.chainId === token.chainId)
-        ?.chainName || String(token.chainId),
+      chainName:
+        chains.find(chain => chain.chainId === token.chainId)?.chainName ||
+        String(token.chainId),
       symbol: token.symbol,
       name: token.name,
+      ...(token.logoUrl ? { logoUrl: token.logoUrl } : {}),
       ...(token.contractAddress
         ? { contractAddress: token.contractAddress }
         : {}),
@@ -261,6 +264,19 @@ export const repositories = {
       enabled: row.enabled === 1,
       updatedAt: row.updatedAt,
     };
+  },
+
+  async listPortfolioChainSnapshots(
+    address: string,
+  ): Promise<PortfolioChainSnapshotRow[]> {
+    const dataSource = await getDataSource();
+    return dataSource.getRepository(PortfolioChainSnapshotEntity).find({
+      where: {
+        providerId: portfolioProviderId,
+        address: address.toLowerCase(),
+      },
+      order: { valueUsd: 'DESC', chainId: 'ASC' },
+    });
   },
 
   async getPortfolioSyncState(

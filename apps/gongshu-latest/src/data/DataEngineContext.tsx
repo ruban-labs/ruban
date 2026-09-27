@@ -9,6 +9,7 @@ type DataEngineContextValue = {
   ready: boolean;
   source: PortfolioDataSource | null;
   error: string | null;
+  refreshSource: () => Promise<PortfolioDataSource>;
 };
 
 type RuntimeState = {
@@ -32,12 +33,7 @@ export function ensureDataEngine(): Promise<PortfolioDataSource> {
   if (!runtime.initialization) {
     runtime.initialization = getDatabasePath()
       .then(databasePath => dataEngine.initialize(databasePath))
-      .then(() => dataEngine.getDeBankCredentialState())
-      .then(credential =>
-        credential.credentialState === 'configured'
-          ? dataEngine.configureByokDeBank()
-          : dataEngine.configureMockDeBank(),
-      )
+      .then(() => dataEngine.configureByokDeBank())
       .catch(error => {
         runtime.initialization = null;
         throw error;
@@ -53,6 +49,13 @@ export function DataEngineProvider({
 }): React.ReactElement {
   const [source, setSource] = React.useState<PortfolioDataSource | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const refreshSource = React.useCallback(async () => {
+    await ensureDataEngine();
+    const value = await dataEngine.configureByokDeBank();
+    runtime.initialization = Promise.resolve(value);
+    setSource(value);
+    return value;
+  }, []);
 
   React.useEffect(() => {
     let active = true;
@@ -76,7 +79,7 @@ export function DataEngineProvider({
 
   return (
     <DataEngineContext.Provider
-      value={{ ready: source?.enabled === true, source, error }}
+      value={{ ready: source !== null, source, error, refreshSource }}
     >
       {children}
     </DataEngineContext.Provider>

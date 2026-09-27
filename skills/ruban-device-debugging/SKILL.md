@@ -57,6 +57,10 @@ Current actions:
 - `dev/chain/select`: select one supported chain through the wallet use case.
 - `dev/portfolio/sync`: synchronize one validated address through `current` or
   deterministic `mock` provider mode.
+- `dev/portfolio/demo`: prepare and select the dedicated offline example through
+  the same use case as the Home and Data source actions. Sample refreshes must
+  report zero requests even when a paid key exists. Mock mode is rejected for
+  real addresses; opening a screen or importing a key must not trigger paid sync.
 - `dev/dapp/review`: approve or reject one matching pending Provider request;
   accepts no secret material and is disabled in Production.
 - `dev/dapp-provider`: execute one bounded EIP-1193 request; follow

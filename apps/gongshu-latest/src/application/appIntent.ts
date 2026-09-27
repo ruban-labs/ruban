@@ -4,6 +4,9 @@ export type AppIntentSource = 'ui' | 'deep-link' | 'background' | 'worker';
 
 export type AppIntent =
   | { action: 'runtime.ready' }
+  | { action: 'wallet.open-demo' }
+  | { action: 'data-source.import-key'; accessKey: string }
+  | { action: 'data-source.clear-key' }
   | {
       action: 'wallet.add-watch-address';
       address: string;
@@ -42,10 +45,7 @@ export type AppIntentEnvelope = {
   receiptUrl?: string;
 };
 
-export type AppIntentResult = Record<
-  string,
-  string | number | boolean | null
->;
+export type AppIntentResult = Record<string, string | number | boolean | null>;
 
 export type AppIntentReceipt = {
   runId: string;
@@ -75,9 +75,9 @@ export function createAppIntentEnvelope(
 ): AppIntentEnvelope {
   generatedRunIdCounter = (generatedRunIdCounter + 1) % 1_000_000;
   return {
-    runId: `${source}-${Date.now().toString(36)}-${generatedRunIdCounter.toString(
+    runId: `${source}-${Date.now().toString(
       36,
-    )}`,
+    )}-${generatedRunIdCounter.toString(36)}`,
     source,
     intent,
   };
@@ -111,9 +111,7 @@ function isRunId(value: string | undefined): value is string {
 
 function normalizeAddress(value: string | undefined): string | null {
   const normalized = value?.toLowerCase();
-  return normalized && /^0x[0-9a-f]{40}$/.test(normalized)
-    ? normalized
-    : null;
+  return normalized && /^0x[0-9a-f]{40}$/.test(normalized) ? normalized : null;
 }
 
 function normalizeLabel(value: string | undefined): string | null {
@@ -126,7 +124,9 @@ function normalizeLabel(value: string | undefined): string | null {
   return hasControlCharacter ? null : label;
 }
 
-function parseCanonicalPositiveInteger(value: string | undefined): number | null {
+function parseCanonicalPositiveInteger(
+  value: string | undefined,
+): number | null {
   if (!value || !/^[1-9][0-9]*$/.test(value)) return null;
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) ? parsed : null;
@@ -163,6 +163,7 @@ export function parseDeveloperAppIntent(
 
   const allowedKeysByPath: Record<string, ReadonlySet<string>> = {
     'runtime-ready': new Set(['runId', 'receiptUrl']),
+    'portfolio/demo': new Set(['runId', 'receiptUrl']),
     'address/add': new Set(['runId', 'receiptUrl', 'address', 'label']),
     'address/select': new Set(['runId', 'receiptUrl', 'address']),
     'address/delete': new Set(['runId', 'receiptUrl', 'address']),
@@ -184,6 +185,8 @@ export function parseDeveloperAppIntent(
   let intent: AppIntent | null = null;
   if (actionPath === 'runtime-ready') {
     intent = { action: 'runtime.ready' };
+  } else if (actionPath === 'portfolio/demo') {
+    intent = { action: 'wallet.open-demo' };
   } else if (actionPath === 'address/add') {
     const address = normalizeAddress(query.address);
     const label = normalizeLabel(query.label);

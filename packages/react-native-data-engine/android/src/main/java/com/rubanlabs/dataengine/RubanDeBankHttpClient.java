@@ -7,6 +7,14 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import javax.net.ssl.HttpsURLConnection;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,25 +26,58 @@ final class RubanDeBankHttpClient {
   private static final long MAX_SYNC_DURATION_MS = 30000;
   private static final int REQUEST_COUNT = 3;
   private final RubanDeBankCredentialStore credentialStore;
+  private final ExecutorService requestExecutor =
+      Executors.newFixedThreadPool(REQUEST_COUNT);
   private long lastRequestAt;
 
   RubanDeBankHttpClient(RubanDeBankCredentialStore credentialStore) {
     this.credentialStore = credentialStore;
   }
 
-  JSONArray execute(JSONArray plan) throws Exception {
+  JSONArray execute(JSONArray plan, RubanSyncCancellation cancellation) throws Exception {
     if (plan.length() != REQUEST_COUNT) {
       throw new IllegalArgumentException("provider_contract_invalid");
     }
     long deadline = SystemClock.elapsedRealtime() + MAX_SYNC_DURATION_MS;
-    JSONArray payloads = new JSONArray();
+    CompletionService<IndexedPayload> completions =
+        new ExecutorCompletionService<>(requestExecutor);
+    List<Future<IndexedPayload>> requests = new ArrayList<>(plan.length());
     for (int index = 0; index < plan.length(); index += 1) {
-      payloads.put(executeRequest(plan.getJSONObject(index), deadline));
+      JSONObject request = plan.getJSONObject(index);
+      int payloadIndex = index;
+      requests.add(completions.submit(() -> new IndexedPayload(
+          payloadIndex, executeRequest(request, deadline, cancellation))));
     }
+    JSONObject[] ordered = new JSONObject[plan.length()];
+    try {
+      for (int index = 0; index < plan.length(); index += 1) {
+        IndexedPayload payload = completions.take().get();
+        ordered[payload.index] = payload.payload;
+      }
+    } catch (ExecutionException error) {
+      cancellation.abortActiveRequests();
+      for (Future<IndexedPayload> request : requests) request.cancel(true);
+      Throwable cause = error.getCause();
+      if (cause instanceof Exception) throw (Exception) cause;
+      throw new IOException("provider_transport_failed", cause);
+    } catch (InterruptedException error) {
+      Thread.currentThread().interrupt();
+      cancellation.abortActiveRequests();
+      for (Future<IndexedPayload> request : requests) request.cancel(true);
+      throw new IOException("provider_transport_failed", error);
+    }
+    cancellation.throwIfCancelled();
+    JSONArray payloads = new JSONArray();
+    for (JSONObject payload : ordered) payloads.put(payload);
     return payloads;
   }
 
-  private JSONObject executeRequest(JSONObject request, long deadline) throws Exception {
+  void shutdown() {
+    requestExecutor.shutdownNow();
+  }
+
+  private JSONObject executeRequest(JSONObject request, long deadline,
+      RubanSyncCancellation cancellation) throws Exception {
     String endpointId = request.getString("endpointId");
     String path = request.getString("path");
     int timeoutMs = request.getInt("timeoutMs");
@@ -46,17 +87,20 @@ final class RubanDeBankHttpClient {
 
     int completedAttempts = 0;
     while (completedAttempts < maxAttempts) {
+      cancellation.throwIfCancelled();
       long remaining = deadline - SystemClock.elapsedRealtime();
       if (remaining <= 0) throw new IOException("provider_budget_exceeded");
       completedAttempts += 1;
       HttpResult result;
       try {
-        result = executeOnce(path, (int) Math.min(timeoutMs, remaining), maxBodyBytes);
+        result = executeOnce(path, (int) Math.min(timeoutMs, remaining), maxBodyBytes,
+            cancellation);
       } catch (IOException error) {
+        cancellation.throwIfCancelled();
         long delay = RubanDataEngineBindings.retryDelayMs(
             0, completedAttempts, -1, maxAttempts);
         if (delay < 0) throw new IOException("provider_transport_failed", error);
-        sleepWithinBudget(delay, deadline);
+        sleepWithinBudget(delay, deadline, cancellation);
         continue;
       }
       if (result.statusCode >= 200 && result.statusCode < 300) {
@@ -65,26 +109,33 @@ final class RubanDeBankHttpClient {
       long delay = RubanDataEngineBindings.retryDelayMs(
           result.statusCode, completedAttempts, result.retryAfterMs, maxAttempts);
       if (delay < 0) return payload(endpointId, result, completedAttempts);
-      sleepWithinBudget(delay, deadline);
+      sleepWithinBudget(delay, deadline, cancellation);
     }
     throw new IOException("provider_transport_failed");
   }
 
-  private synchronized void applyRateLimit() throws InterruptedException {
-    long now = SystemClock.elapsedRealtime();
-    long wait = MINIMUM_INTERVAL_MS - (now - lastRequestAt);
-    if (wait > 0) Thread.sleep(wait);
-    lastRequestAt = SystemClock.elapsedRealtime();
+  private void applyRateLimit(RubanSyncCancellation cancellation) throws Exception {
+    long wait;
+    synchronized (this) {
+      long now = SystemClock.elapsedRealtime();
+      long scheduledAt = Math.max(now, lastRequestAt + MINIMUM_INTERVAL_MS);
+      lastRequestAt = scheduledAt;
+      wait = scheduledAt - now;
+    }
+    if (wait > 0) cancellation.sleep(wait);
   }
 
-  private HttpResult executeOnce(String path, int timeoutMs, int maxBodyBytes)
+  private HttpResult executeOnce(String path, int timeoutMs, int maxBodyBytes,
+      RubanSyncCancellation cancellation)
       throws Exception {
-    applyRateLimit();
+    cancellation.throwIfCancelled();
+    applyRateLimit(cancellation);
     URL url = new URL(BASE_URL + path);
     if (!"https".equals(url.getProtocol()) || !HOST.equals(url.getHost())) {
       throw new IllegalArgumentException("provider_endpoint_rejected");
     }
     HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+    cancellation.register(connection);
     long startedAt = SystemClock.elapsedRealtime();
     try {
       connection.setRequestMethod("GET");
@@ -98,29 +149,33 @@ final class RubanDeBankHttpClient {
       InputStream stream = statusCode >= 200 && statusCode < 400
           ? connection.getInputStream()
           : connection.getErrorStream();
-      String body = stream == null ? "" : readBounded(stream, maxBodyBytes);
+      String body = stream == null ? "" : readBounded(stream, maxBodyBytes, cancellation);
       return new HttpResult(statusCode, body,
           Math.max(0, SystemClock.elapsedRealtime() - startedAt),
           parseRetryAfter(connection.getHeaderField("Retry-After")));
     } finally {
+      cancellation.unregister(connection);
       connection.disconnect();
     }
   }
 
-  private void sleepWithinBudget(long delay, long deadline) throws Exception {
+  private void sleepWithinBudget(long delay, long deadline,
+      RubanSyncCancellation cancellation) throws Exception {
     if (delay < 0 || SystemClock.elapsedRealtime() + delay > deadline) {
       throw new IOException("provider_budget_exceeded");
     }
-    Thread.sleep(delay);
+    cancellation.sleep(delay);
   }
 
-  private String readBounded(InputStream stream, int maxBodyBytes) throws IOException {
+  private String readBounded(InputStream stream, int maxBodyBytes,
+      RubanSyncCancellation cancellation) throws IOException {
     try (InputStream input = stream;
          ByteArrayOutputStream output = new ByteArrayOutputStream()) {
       byte[] buffer = new byte[8192];
       int total = 0;
       int read;
       while ((read = input.read(buffer)) != -1) {
+        cancellation.throwIfCancelled();
         total += read;
         if (total > maxBodyBytes) throw new IOException("provider_response_too_large");
         output.write(buffer, 0, read);
@@ -174,6 +229,16 @@ final class RubanDeBankHttpClient {
       this.body = body;
       this.latencyMs = latencyMs;
       this.retryAfterMs = retryAfterMs;
+    }
+  }
+
+  private static final class IndexedPayload {
+    final int index;
+    final JSONObject payload;
+
+    IndexedPayload(int index, JSONObject payload) {
+      this.index = index;
+      this.payload = payload;
     }
   }
 }

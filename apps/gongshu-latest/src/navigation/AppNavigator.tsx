@@ -56,6 +56,7 @@ const linking: LinkingOptions<RootStackParamList> = {
       DAppBrowser: 'dapp',
       DAppTest: 'dev/dapp-provider',
       NetworkSettings: 'settings/networks',
+      DataSource: 'settings/data-source',
       ComponentDetail: 'components/:component',
     },
   },
@@ -204,7 +205,7 @@ function MainTabs(): React.ReactElement {
       <Tab.Navigator
         initialRouteName="Home"
         tabBar={renderRubanTabBar}
-        screenOptions={{ headerShown: false, lazy: false }}
+        screenOptions={{ headerShown: false, lazy: true }}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="DApps" component={DAppsScreen} />
@@ -272,6 +273,10 @@ export default function AppNavigator({
         <RootStack.Screen
           name="NetworkSettings"
           component={NetworkSettingsScreen}
+        />
+        <RootStack.Screen
+          name="DataSource"
+          getComponent={() => require('../screens/DataSourceScreen').default}
         />
         <RootStack.Screen
           name="ComponentDetail"

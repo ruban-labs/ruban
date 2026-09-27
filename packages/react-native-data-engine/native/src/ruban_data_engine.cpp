@@ -39,6 +39,15 @@ void string_field(std::ostringstream& stream, const char* name,
   stream << '"' << name << "\":\"" << escape_json(value) << '"';
 }
 
+void nullable_string_field(std::ostringstream& stream, const char* name,
+                           std::string_view value) {
+  if (value.empty()) {
+    stream << '"' << name << "\":null";
+    return;
+  }
+  string_field(stream, name, value);
+}
+
 }
 
 std::string normalize_evm_address(std::string_view address) {
@@ -95,6 +104,8 @@ std::string serialize_projection_json(const PortfolioProjection& projection) {
     stream << ',';
     string_field(stream, "name", token.name);
     stream << ',';
+    nullable_string_field(stream, "logoUrl", token.logo_url);
+    stream << ',';
     string_field(stream, "contractAddress", token.contract_address);
     stream << ",\"decimals\":" << token.decimals << ',';
     string_field(stream, "balance", token.balance);
@@ -113,6 +124,8 @@ std::string serialize_projection_json(const PortfolioProjection& projection) {
     string_field(stream, "positionId", protocol.position_id);
     stream << ',';
     string_field(stream, "protocolName", protocol.protocol_name);
+    stream << ',';
+    nullable_string_field(stream, "logoUrl", protocol.logo_url);
     stream << ',';
     string_field(stream, "category", protocol.category);
     stream << ",\"assetValueUsd\":" << protocol.asset_value_usd

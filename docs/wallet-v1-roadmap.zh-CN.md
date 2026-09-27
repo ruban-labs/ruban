@@ -59,7 +59,7 @@ iOS / Android Vault 与平台包装层
 Ruban App 与 DApp Runtime
 
 C++ Provider Adapter 与规范化投影
-    ↓ 平台串行写入 + WAL
+    ↓ 平台串行写入 + rollback journal
 @ruban-labs/react-native-data-engine
     ↓ TypeORM 读取模型与同步状态事件
 Ruban Portfolio 界面
@@ -75,7 +75,8 @@ Ruban Portfolio 界面
 
 Ruban App 使用 `@op-engineering/op-sqlite` 和 TypeORM 完成 TypeScript 侧查询。一个 App
 进程只允许存在一个全局 `DataSource` 和一个初始化 Promise；Fast Refresh 也不得重复打开
-第二个 JavaScript 连接。Native 同步器通过独立串行写入器访问同一个 WAL 文件。
+第二个 JavaScript 连接。Native 同步器通过独立串行写入器访问同一个数据库；rollback
+journal 文件锁协调两条连接，避免不同 SQLite 实现共享 WAL/SHM 生命周期状态。
 
 - 首个版本发布前只维护一份可直接修改的基线 schema，不创建 migration class 或
   migration 表；测试数据在基线变化后直接重置。
@@ -85,8 +86,8 @@ Ruban App 使用 `@op-engineering/op-sqlite` 和 TypeORM 完成 TypeScript 侧�
   排序和筛选走 Repository 或 QueryBuilder，不退回 KV JSON 列表。
 - 助记词、私钥和派生种子仍由 Native Vault 持有；SQLite 不保存这些明文，也不成为
   Keychain/Keystore 的替代品。
-- 默认使用 WAL、`synchronous=NORMAL` 和有限 `busy_timeout`。Native 同步只有一个写入
-  队列，并在发布成功状态前，以事务原子替换一个 Provider/Address 的完整投影。
+- 默认使用 rollback journal、`synchronous=NORMAL` 和有限 `busy_timeout`。Native 同步
+  只有一个写入队列，并在发布成功状态前，以事务原子替换一个 Provider/Address 的完整投影。
 - C++ 持有与数据供应商无关的投影类型。平台适配器写入同一数据库，并在提交后发出事件；
   JavaScript 与 Worker 通过 TypeORM 重新查询，不在 Bridge 上传输大块 Portfolio 数据。
 - Provider 凭据只进入 Keychain 或 Keystore。SQLite 只保存非敏感来源元数据、规范化投影

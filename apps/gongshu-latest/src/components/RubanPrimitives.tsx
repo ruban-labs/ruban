@@ -17,6 +17,7 @@ type ScreenProps = {
   testID?: string;
   contentStyle?: ViewStyle;
   scrollProps?: ScrollViewProps;
+  scroll?: boolean;
 };
 
 export function RubanScreen({
@@ -24,25 +25,42 @@ export function RubanScreen({
   testID,
   contentStyle,
   scrollProps,
+  scroll = true,
 }: ScreenProps): React.ReactElement {
   const colors = useRubanColors();
 
   useFocusedRubanSystemBars(colors.mode, colors.canvas);
+
+  const content = scroll ? (
+    <ScrollView
+      {...scrollProps}
+      testID={testID}
+      style={[styles.scroll, { backgroundColor: colors.canvas }]}
+      contentContainerStyle={[styles.content, contentStyle]}
+      showsVerticalScrollIndicator={false}
+    >
+      {children}
+    </ScrollView>
+  ) : (
+    <View
+      testID={testID}
+      style={[
+        styles.scroll,
+        styles.content,
+        { backgroundColor: colors.canvas },
+        contentStyle,
+      ]}
+    >
+      {children}
+    </View>
+  );
 
   return (
     <SafeAreaView
       edges={['top']}
       style={[styles.safeArea, { backgroundColor: colors.canvas }]}
     >
-      <ScrollView
-        {...scrollProps}
-        testID={testID}
-        style={[styles.scroll, { backgroundColor: colors.canvas }]}
-        contentContainerStyle={[styles.content, contentStyle]}
-        showsVerticalScrollIndicator={false}
-      >
-        {children}
-      </ScrollView>
+      {content}
     </SafeAreaView>
   );
 }
