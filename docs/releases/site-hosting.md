@@ -15,6 +15,19 @@ at the root as their Pages publishing source. They need no dependencies, secrets
 or custom Actions workflows. Do not add hand-maintained content there: each
 publication replaces the generated tree while preserving Git history.
 
+## Recorded deployment state
+
+Production moved to `ruban-labs/mobile-site` on **2026-09-24**. The production
+domain is bound there, HTTPS is enforced, and both the source publication and
+hosting deployment passed verification. The old `ruban-labs/ruban` Pages custom
+domain is unset; do not repeat the cutover during routine publication.
+
+See the [production publication record](2026-09-24-site-production.md) for exact
+revisions, run links, live checks and the recovery baseline, and the
+[release index](README.md) for subsequent records. Preview acceptance was
+deferred during that production cutover; do not infer its live status from the
+production result.
+
 ## One-time setup
 
 1. Create both hosting repositories as **public**. In the organization's GitHub
@@ -22,6 +35,11 @@ publication replaces the generated tree while preserving Git history.
    Its repository **Contents** permission must be **Read and write**. Selecting a
    repository and granting an App permission are different settings. Pages admin
    access is unnecessary for CI because the owner performs the setup below.
+   If setup is automated through the Pages settings API, its separate scoped
+   token needs both **Pages** and **Administration** write permissions. Check the
+   token's requested and granted permissions as well as the App installation:
+   an approved installation does not add omitted permissions to an existing
+   token. Keep routine publication tokens limited to destination Contents writes.
 2. In `ruban-labs/ruban`, verify the existing Actions secrets
    `RUBAN_GITHUB_APP_ID` and `RUBAN_GITHUB_APP_PRIVATE_KEY`. Reuse them; never copy
    the private key into either public hosting repository. CI issues an expiring
@@ -51,10 +69,12 @@ Settings shortcuts:
 - [Preview Pages](https://github.com/ruban-labs/mobile-site-preview/settings/pages)
 - [Production Pages](https://github.com/ruban-labs/mobile-site/settings/pages)
 
-## Move the existing production domain explicitly
+## Production domain cutover (completed)
 
-The existing live site is bound to Pages in `ruban-labs/ruban`. Do not unpublish
-it while preparing these repositories. DNS alone cannot move the domain between
+Before the recorded cutover, the live site was bound to Pages in
+`ruban-labs/ruban`. The sequence below is retained for recovery planning or a
+future explicitly approved move, not as unfinished setup. Keep the current site
+online while preparing any replacement. DNS alone cannot move a domain between
 repositories owned by the same organization.
 
 1. Finish preview acceptance first. Merge the reviewed publishing workflow and
@@ -98,8 +118,15 @@ repositories owned by the same organization.
   compact PREVIEW footer marker. These discourage indexing; they do not provide
   access control. Everything in both hosting repos and sites is public.
 - To recover a bad preview, rerun a reviewed branch. To recover production
-  content, revert the source change on `main` and publish a new build. Do not
+  content, correct or revert the affected website content on `main` while
+  retaining the current hosting workflow and environment mapping, then publish
+  a new build. Do not revert a whole infrastructure cutover as a content fix,
   force-push hosting history or casually select an old feature branch for prod.
+- After acceptance, add a dated record to `docs/releases/` and link it from the
+  release index. Capture source and hosting run links, the served source SHA,
+  verified domain/HTTPS state, recovery baseline and any deferred checks. Keep
+  private operator details local; do not rely only on an ignored local note or
+  the mutable live `deployment.json` for publication history.
 
 Local checks, with no credentials or remote publication:
 
@@ -113,4 +140,5 @@ website publishing neither signs nor publishes an App. APK publication is a
 separate release decision, not a side effect of deploying either website.
 
 References: [GitHub branch publishing](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site),
-[custom domain setup](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site).
+[custom domain setup](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site),
+[Pages settings API permissions](https://docs.github.com/en/rest/pages/pages#update-information-about-a-github-pages-site).
