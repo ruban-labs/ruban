@@ -16,6 +16,11 @@ on:
           - ios-regression-matrix
           - android-regression-matrix
           - all-packages
+      publish_website:
+        description: Publish the Android website APK as a GitHub prerelease (not a store submission)
+        required: true
+        type: boolean
+        default: false
 permissions:
   contents: read
 
@@ -35,7 +40,13 @@ jobs:
       - id: plan
         env:
           TARGET: ${{ inputs.target || 'bootstrap-ci' }}
-        run: echo "matrix=$(node scripts/ci/mobile-release-plan.mjs --target "$TARGET")" >> "$GITHUB_OUTPUT"
+          PUBLISH_WEBSITE: ${{ inputs.publish_website }}
+        run: |
+          if [ "$PUBLISH_WEBSITE" = true ] && [ "$TARGET" != android-latest-website ]; then
+            echo 'Publishing requires target android-latest-website'; exit 1
+          fi
+          node --test scripts/release/website-release.test.mjs
+          echo "matrix=$(node scripts/ci/mobile-release-plan.mjs --target "$TARGET")" >> "$GITHUB_OUTPUT"
 
   package:
     needs: plan
@@ -49,6 +60,7 @@ jobs:
       CI: "1"
       RUBAN_BUILD_CACHE_ROOT: ${{ github.workspace }}/.cache/release
       RUBAN_BUILD_NUMBER: ${{ github.run_number }}
+      RUBAN_PACKAGE_MODE: ${{ inputs.publish_website && 'release-clean' || 'release-fast' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -178,7 +190,7 @@ jobs:
             --platform android \
             --lane ${{ matrix.lane }} \
             --arch ${{ matrix.arch }} \
-            --mode release-fast \
+            --mode "$RUBAN_PACKAGE_MODE" \
             --android-distribution ${{ matrix.distribution }} \
             --skip-sync
 
@@ -195,14 +207,14 @@ jobs:
             --platform ios \
             --lane ${{ matrix.lane }} \
             --arch ${{ matrix.arch }} \
-            --mode release-fast \
+            --mode "$RUBAN_PACKAGE_MODE" \
             --ios-distribution ${{ matrix.distribution }} \
             --skip-sync
 
       - name: Resolve release outputs
         id: release-output
         env:
-          RELEASE_ROOT: artifacts/${{ matrix.app }}/${{ matrix.platform }}/${{ matrix.lane }}/${{ matrix.arch }}/release-fast
+          RELEASE_ROOT: artifacts/${{ matrix.app }}/${{ matrix.platform }}/${{ matrix.lane }}/${{ matrix.arch }}/${{ env.RUBAN_PACKAGE_MODE }}
         run: |
           manifest_count=$(find "$RELEASE_ROOT" -type f -name manifest.json | wc -l | tr -d ' ')
           test "$manifest_count" = 1
@@ -232,6 +244,21 @@ jobs:
         if: matrix.platform == 'android' && (matrix.era == '0.77' || matrix.era == 'latest')
         run: pnpm check:android-page-size "${{ steps.release-output.outputs.artifact }}"
 
+      - name: Prepare public website package
+        if: inputs.publish_website
+        env:
+          MANIFEST_PATH: ${{ steps.release-output.outputs.manifest }}
+        run: node scripts/release/website-release.mjs "$MANIFEST_PATH" public-release
+
+      - name: Upload public release payload
+        if: inputs.publish_website
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-release-${{ github.run_number }}
+          path: public-release/*
+          if-no-files-found: error
+          retention-days: 14
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.id }}-${{ github.run_number }}
@@ -253,3 +280,31 @@ jobs:
         run: |
           rm -rf _private
           rm -f "$RUNNER_TEMP/AuthKey_Ruban.p8"
+
+  publish-website:
+    if: inputs.publish_website
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: website-release-${{ github.run_number }}
+          path: public-release
+      - name: Publish immutable Android preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cd public-release
+          sha256sum --check SHA256SUMS
+          tag=$(node -p 'JSON.parse(require("fs").readFileSync("release.json", "utf8")).tag')
+          gh release create "$tag" ./*.apk SHA256SUMS release.json \
+            --target "$GITHUB_SHA" --draft --prerelease --latest=false \
+            --title "Ruban Android preview $tag" \
+            --notes-file ../docs/releases/android-preview-notes.md
+          gh release edit "$tag" --draft=false --prerelease --latest=false

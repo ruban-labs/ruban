@@ -22,7 +22,21 @@ Three surfaces, one program:
   DApp workbench. Security is an engineering baseline; inspectability and
   measurable speed are the public promise.
 
-## Charter
+## Try the mobile preview
+
+[Website](https://mobile.ruban-labs.work/) ·
+[Android download guide](https://mobile.ruban-labs.work/download/) ·
+[Mobile preview releases](https://github.com/ruban-labs/ruban/releases?q=mobile-v&expanded=true)
+
+In the portfolio preview, choose **Try example** to explore an explicitly labelled,
+synthetic portfolio without an API key. For real addresses, add your own DeBank Cloud
+key in **Settings → Data source**; live refreshes use your provider units. Cached data
+stays on the device. The old store showcase is not the current portfolio preview.
+
+Maintainers: see [Android website release delivery](docs/releases/website-preview.md)
+and [production / preview website hosting](docs/releases/site-hosting.md).
+
+## Library charter
 
 **Bare React Native first. No platform dependency.** Every library here must
 work in a bare RN project out of the box, keep runtime dependencies at zero,
