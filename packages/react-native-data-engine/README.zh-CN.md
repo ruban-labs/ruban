@@ -14,6 +14,11 @@ DeBank 适配器同时支持确定性的官方数据结构 Mock 与 BYOK，两�
 并共享全量或按链增量替换契约。DeBank 凭据只进入 iOS Keychain 或由 Android
 Keystore 保护的应用私有存储，原生模块不会把它返回给 JavaScript。
 
+未导入 Key 时也可调用 `configureByokDeBank()`：返回停用状态的来源，
+`credentialState` 为 `missing`，不会回退到 Mock。`syncMockPortfolio(address)`
+显式使用示例提供器，不修改已保存的 Key 或来源配置；结果不含远程图标 URL，网络请求数
+为零。应用必须将示例资产与真实地址隔离，并明确标记为示例。
+
 ```ts
 await dataEngine.initialize(databasePath);
 

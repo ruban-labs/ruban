@@ -792,12 +792,9 @@ RCT_REMAP_METHOD(configureByokSource,
                  resolver:(RCTPromiseResolveBlock)resolve
                  rejecter:(RCTPromiseRejectBlock)reject) {
   dispatch_async(self.writerQueue, ^{
-    if (!RubanHasAccessKey()) {
-      reject(@"credential_missing", @"Import a DeBank AccessKey first", nil);
-      return;
-    }
-    [self configureSource:providerId mode:@"byok" credentialState:@"configured"
-                  enabled:YES resolve:resolve reject:reject];
+    BOOL configured = RubanHasAccessKey();
+    [self configureSource:providerId mode:@"byok" credentialState:configured ? @"configured" : @"missing"
+                  enabled:configured resolve:resolve reject:reject];
   });
 }
 

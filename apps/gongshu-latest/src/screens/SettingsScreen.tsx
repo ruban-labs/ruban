@@ -371,6 +371,14 @@ export default function SettingsScreen({
 
       <SettingsGroup label="APP">
         <SettingsRow
+          testID="settings-data-source"
+          label="Data source"
+          value="DeBank / Example"
+          icon={GlobeIcon}
+          action="navigate"
+          onPress={() => rootNavigation?.navigate('DataSource')}
+        />
+        <SettingsRow
           testID="settings-appearance"
           label="Appearance"
           value={appearance.toUpperCase()}

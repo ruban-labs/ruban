@@ -108,11 +108,8 @@ public final class RubanDataEngineModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void configureByokSource(String providerId, Promise promise) {
     writer.execute(() -> {
-      if (!credentialStore.hasCredential()) {
-        promise.reject("credential_missing", "Import a DeBank AccessKey first");
-        return;
-      }
-      configureSource(providerId, "byok", "configured", true, promise);
+      boolean configured = credentialStore.hasCredential();
+      configureSource(providerId, "byok", configured ? "configured" : "missing", configured, promise);
     });
   }
 

@@ -14,6 +14,7 @@ import type {
   PortfolioProtocolPositionRow,
 } from '../storage/entities';
 import { repositories } from '../storage/repositories';
+import { hasSampleData, isDemoAddress } from './demoPortfolio';
 
 export const evmClient = createEvmClient({ timeoutMs: 7000 });
 
@@ -130,7 +131,7 @@ export function usePortfolio(
       updateSync(() => ({
         ...IDLE_SYNC,
         address: normalizedAddress,
-        refreshing: true,
+        refreshing: !engine.error,
         error: engine.error,
       }));
       return () => {
@@ -156,13 +157,17 @@ export function usePortfolio(
         repositories.listPortfolioProtocolPositions(normalizedAddress),
         repositories.getPortfolioSyncState(normalizedAddress),
       ])
-        .then(([cached, cachedChains, cachedProtocols, cachedSyncState]) => {
+        .then(([stored, cachedChains, cachedProtocols, cachedSyncState]) => {
+          const cached =
+            stored && !isDemoAddress(normalizedAddress) && hasSampleData(stored)
+              ? null
+              : stored;
           if (!active) return cached;
           setData({
             address: normalizedAddress,
             snapshot: cached,
-            chains: cachedChains,
-            protocols: cachedProtocols,
+            chains: cached ? cachedChains : [],
+            protocols: cached ? cachedProtocols : [],
           });
           updateSync(current => ({
             ...current,
@@ -170,9 +175,7 @@ export function usePortfolio(
             refreshing: cachedSyncState
               ? cachedSyncState.state === 'queued' ||
                 cachedSyncState.state === 'running'
-              : cached
-              ? false
-              : current.refreshing,
+              : false,
           }));
           return cached;
         })
@@ -223,9 +226,32 @@ export function usePortfolio(
     );
 
     loadSnapshot()
-      .catch(() => null)
       .then(async cached => {
-        if (cached && !forceRefresh) return;
+        if (!active) return;
+        if (!forceRefresh) {
+          if (!cached) {
+            updateSync(current => ({
+              ...current,
+              error:
+                !isDemoAddress(normalizedAddress) &&
+                engine.source?.credentialState !== 'configured'
+                  ? 'Add your DeBank key in Settings → Data source.'
+                  : 'Pull to refresh.',
+            }));
+          }
+          return;
+        }
+        if (
+          !isDemoAddress(normalizedAddress) &&
+          engine.source?.credentialState !== 'configured'
+        ) {
+          updateSync(current => ({
+            ...current,
+            refreshing: false,
+            error: 'Add your DeBank key in Settings → Data source.',
+          }));
+          return;
+        }
         initiatedSync = true;
         await runUiAppIntent({
           action: 'portfolio.sync',
@@ -257,7 +283,14 @@ export function usePortfolio(
       active = false;
       subscription.remove();
     };
-  }, [address, engine.error, engine.ready, publishUpdates, refreshNonce]);
+  }, [
+    address,
+    engine.error,
+    engine.ready,
+    engine.source?.credentialState,
+    publishUpdates,
+    refreshNonce,
+  ]);
 
   const normalizedAddress = address?.toLowerCase() || null;
   const hasCurrentData = data.address === normalizedAddress;

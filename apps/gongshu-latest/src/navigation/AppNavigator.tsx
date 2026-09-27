@@ -56,6 +56,7 @@ const linking: LinkingOptions<RootStackParamList> = {
       DAppBrowser: 'dapp',
       DAppTest: 'dev/dapp-provider',
       NetworkSettings: 'settings/networks',
+      DataSource: 'settings/data-source',
       ComponentDetail: 'components/:component',
     },
   },
@@ -272,6 +273,10 @@ export default function AppNavigator({
         <RootStack.Screen
           name="NetworkSettings"
           component={NetworkSettingsScreen}
+        />
+        <RootStack.Screen
+          name="DataSource"
+          getComponent={() => require('../screens/DataSourceScreen').default}
         />
         <RootStack.Screen
           name="ComponentDetail"

@@ -18,6 +18,12 @@ use the same parser and full or chain-incremental replacement contract. DeBank
 credentials live in iOS Keychain or Android Keystore-backed app storage and are
 never returned from the native module.
 
+`configureByokDeBank()` also works before importing a key: it returns a disabled
+source with `credentialState: 'missing'`. It never falls back to mock data.
+`syncMockPortfolio(address)` explicitly bypasses the live provider without changing
+the saved key or source. Its result has no remote logo URLs and reports zero network
+requests. Apps must isolate synthetic portfolios from real addresses and label them.
+
 ```ts
 await dataEngine.initialize(databasePath);
 

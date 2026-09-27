@@ -14,6 +14,11 @@ import {
   type RpcReviewRequest,
 } from '../dapp/rpcReviewQueue';
 import { ensureDataEngine } from '../data/DataEngineContext';
+import {
+  DEMO_ADDRESS,
+  DEMO_LABEL,
+  isDemoAddress,
+} from '../portfolio/demoPortfolio';
 import { prepareDataSourceForNativeWrite } from '../storage/dataSource';
 import { repositories } from '../storage/repositories';
 import {
@@ -95,6 +100,27 @@ function waitForReview(
   });
 }
 
+let openingDemo: Promise<AppIntentResult> | null = null;
+
+function openDemo(): Promise<AppIntentResult> {
+  if (!openingDemo) {
+    openingDemo = (async () => {
+      await ensureDataEngine();
+      await prepareDataSourceForNativeWrite();
+      await dataEngine.syncMockPortfolio(DEMO_ADDRESS);
+      const existing = (await repositories.listWalletAccounts()).find(account =>
+        isDemoAddress(account.address),
+      );
+      return saveAndSelectAccount(
+        existing || (await addWatchOnly(DEMO_LABEL, DEMO_ADDRESS)),
+      );
+    })().finally(() => {
+      openingDemo = null;
+    });
+  }
+  return openingDemo;
+}
+
 async function execute(intent: AppIntent): Promise<AppIntentResult> {
   switch (intent.action) {
     case 'runtime.ready':
@@ -106,7 +132,26 @@ async function execute(intent: AppIntent): Promise<AppIntentResult> {
         platform: buildInfo.platform,
         environment: buildInfo.environment,
       };
+    case 'wallet.open-demo':
+      return openDemo();
+    case 'data-source.import-key':
+    case 'data-source.clear-key': {
+      await ensureDataEngine();
+      try {
+        const status =
+          intent.action === 'data-source.import-key'
+            ? await dataEngine.importDeBankAccessKey(intent.accessKey)
+            : await dataEngine.clearDeBankAccessKey();
+        await dataEngine.configureByokDeBank();
+        return { credentialState: status.credentialState };
+      } catch {
+        throw new AppIntentFailure('credential_update_failed');
+      }
+    }
     case 'wallet.add-watch-address': {
+      if (isDemoAddress(intent.address)) {
+        throw new AppIntentFailure('reserved_demo_address');
+      }
       const existing = (await repositories.listWalletAccounts()).find(
         account =>
           account.address.toLowerCase() === intent.address.toLowerCase(),
@@ -167,16 +212,26 @@ async function execute(intent: AppIntent): Promise<AppIntentResult> {
       return { chainId: intent.chainId };
     case 'portfolio.sync': {
       await ensureDataEngine();
+      const demo = isDemoAddress(intent.address);
+      if (intent.providerMode === 'mock' && !demo) {
+        throw new AppIntentFailure('sample_requires_demo_address');
+      }
+      if (!demo) {
+        const status = await dataEngine.getDeBankCredentialState();
+        if (status.credentialState !== 'configured') {
+          throw new AppIntentFailure('credential_missing');
+        }
+        await dataEngine.configureByokDeBank();
+      }
       await prepareDataSourceForNativeWrite();
-      const result =
-        intent.providerMode === 'mock'
-          ? await dataEngine.syncMockPortfolio(intent.address)
-          : await dataEngine.syncPortfolio(intent.address);
+      const result = demo
+        ? await dataEngine.syncMockPortfolio(intent.address)
+        : await dataEngine.syncPortfolio(intent.address);
       const snapshot = await repositories.getPortfolioSnapshot(intent.address);
       if (!snapshot) throw new AppIntentFailure('portfolio_snapshot_missing');
       return {
         address: result.address.toLowerCase(),
-        providerMode: intent.providerMode,
+        providerMode: demo ? 'mock' : 'current',
         completedChains: result.completedChains,
         requestCount: result.requestCount,
         assetCount: snapshot.assets.length,

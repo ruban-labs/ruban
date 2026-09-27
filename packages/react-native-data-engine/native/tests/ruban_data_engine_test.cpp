@@ -72,6 +72,10 @@ TEST_CASE("incremental projections replace only selected chains") {
   CHECK(result.projection.chains[0].chain_key == "base");
   CHECK(result.projection.tokens.size() == 2);
   CHECK(result.projection.protocols.size() == 1);
+  for (const auto& token : result.projection.tokens) CHECK(token.logo_url.empty());
+  for (const auto& protocol : result.projection.protocols) CHECK(protocol.logo_url.empty());
+  CHECK(result.request_count == 0);
+  CHECK(result.attempt_count == 0);
   CHECK(result.projection.total_value_usd == doctest::Approx(1400.08));
 }
 

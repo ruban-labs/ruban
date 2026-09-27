@@ -20,6 +20,8 @@ import {
 import { usePortfolio } from '../portfolio/usePortfolio';
 import { useWallet } from '../wallet/WalletContext';
 import { AddressSelectorSheet } from '../wallet/WalletSelectors';
+import { runUiAppIntent } from '../application/AppIntentRuntime';
+import { isDemoAddress } from '../portfolio/demoPortfolio';
 
 function shortAddress(address: string): string {
   return `${address.slice(0, 7)}…${address.slice(-5)}`;
@@ -100,7 +102,10 @@ export default function HomeScreen(): React.ReactElement {
   const otherShare = portfolio.snapshot?.totalValueUsd
     ? otherValue / portfolio.snapshot.totalValueUsd
     : 0;
-  const syncLabel = portfolio.snapshot
+  const demo = isDemoAddress(wallet.selectedAccount?.address);
+  const syncLabel = demo
+    ? 'Sample data · offline'
+    : portfolio.snapshot
     ? formatPortfolioAge(portfolio.snapshot.updatedAt)
     : '';
 
@@ -169,8 +174,11 @@ export default function HomeScreen(): React.ReactElement {
                   numberOfLines={1}
                   style={[styles.accountMeta, { color: colors.faint }]}
                 >
-                  {wallet.selectedAccount.label} ·{' '}
-                  {shortAddress(wallet.selectedAccount.address)}
+                  {demo
+                    ? 'Example portfolio'
+                    : `${wallet.selectedAccount.label} · ${shortAddress(
+                        wallet.selectedAccount.address,
+                      )}`}
                 </Text>
 
                 <View
@@ -270,22 +278,43 @@ export default function HomeScreen(): React.ReactElement {
                 </View>
               </>
             ) : (
-              <Pressable
-                testID="empty-portfolio-add-address"
-                accessibilityRole="button"
-                accessibilityLabel="Add address"
-                onPress={() => setActiveSelector('address')}
-                style={({ pressed }) => [
-                  styles.emptyHero,
-                  { backgroundColor: colors.contrast },
-                  pressed ? styles.pressed : undefined,
-                ]}
-              >
-                <WalletIcon size={26} color={colors.contrastAccent} />
-                <Text style={[styles.emptyTitle, { color: colors.inverse }]}>
-                  Add address
-                </Text>
-              </Pressable>
+              <View>
+                <Pressable
+                  testID="empty-portfolio-demo"
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: busy }}
+                  disabled={busy}
+                  onPress={() =>
+                    run(async () => {
+                      await runUiAppIntent({ action: 'wallet.open-demo' });
+                    })
+                  }
+                  style={[
+                    styles.emptyHero,
+                    { backgroundColor: colors.accentSoft },
+                  ]}
+                >
+                  <Text style={[styles.emptyTitle, { color: colors.ink }]}>
+                    {busy ? 'Opening…' : 'Try example'}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  testID="empty-portfolio-add-address"
+                  accessibilityRole="button"
+                  accessibilityLabel="Add address"
+                  onPress={() => setActiveSelector('address')}
+                  style={({ pressed }) => [
+                    styles.emptyHero,
+                    { backgroundColor: colors.contrast },
+                    pressed ? styles.pressed : undefined,
+                  ]}
+                >
+                  <WalletIcon size={26} color={colors.contrastAccent} />
+                  <Text style={[styles.emptyTitle, { color: colors.inverse }]}>
+                    Add address
+                  </Text>
+                </Pressable>
+              </View>
             )}
           </>
         }

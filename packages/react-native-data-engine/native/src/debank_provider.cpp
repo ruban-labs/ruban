@@ -500,8 +500,13 @@ ProviderSyncResult parse_debank_payloads(
 ProviderSyncResult create_mock_debank_sync(std::string_view address,
                                            std::int64_t observed_at,
                                            const SyncOptions& options) {
-  return parse_debank_payloads(address, observed_at, options, mock_payloads(),
-                               "debank:mock");
+  auto result = parse_debank_payloads(address, observed_at, options, mock_payloads(),
+                                     "debank:mock");
+  for (auto& token : result.projection.tokens) token.logo_url.clear();
+  for (auto& protocol : result.projection.protocols) protocol.logo_url.clear();
+  result.request_count = 0;
+  result.attempt_count = 0;
+  return result;
 }
 
 std::string create_debank_sync_result_json(
